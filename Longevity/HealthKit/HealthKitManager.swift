@@ -215,9 +215,8 @@ final class HealthKitManager {
 
     // MARK: - Sen
 
-    /// Ile dni wstecz sięga okno liczenia SRI. Osiem dób daje siedem porównań
-    /// „ta minuta vs ta sama minuta dobę wcześniej" — minimum, przy którym
-    /// wskaźnik regularności cokolwiek znaczy.
+    /// Ile dni wstecz sięgamy po próbki snu. Serwer liczy SRI z okna ośmiu dób,
+    /// więc przy backfillu musi dostać także noce sprzed początku zakresu.
     private static let regularityWindowDays = 8
 
     private func applySleep(
@@ -244,8 +243,6 @@ final class HealthKitManager {
         let segments = samples.compactMap(Self.sleepSegment)
         guard !segments.isEmpty else { return }
 
-        let allAsleep = segments.filter { $0.stage.isAsleep }.map(\.interval)
-
         for day in days {
             let key = HealthDates.day(day, calendar: calendar)
             guard metrics[key] != nil else { continue }
@@ -256,6 +253,7 @@ final class HealthKitManager {
                 else { return nil }
                 return SleepSegment(stage: segment.stage, start: clipped.start, end: clipped.end)
             }
+            guard !inWindow.isEmpty else { continue }
 
             if let summary = SleepMath.summarize(inWindow) {
                 metrics[key]?.sleepStartAt = HealthDates.iso(summary.start)
@@ -267,15 +265,15 @@ final class HealthKitManager {
                 metrics[key]?.sleepAwakeMinutes = summary.awakeMinutes
             }
 
-            metrics[key]?.sleepRegularityIndex = SleepMath.regularityIndex(
-                asleep: allAsleep,
-                window: SleepMath.regularityWindow(
-                    endingOn: day,
-                    days: Self.regularityWindowDays,
-                    calendar: calendar
-                ),
-                calendar: calendar
-            )
+            // Odcinki jadą surowe (po scaleniu duplikatów) — SRI liczy serwer,
+            // bo wskaźnik obejmuje osiem dób i ma być wspólny dla wszystkich źródeł.
+            metrics[key]?.sleepSegments = inWindow.map {
+                SleepSegmentPayload(
+                    stage: $0.stage.payloadName,
+                    start: HealthDates.iso($0.start),
+                    end: HealthDates.iso($0.end)
+                )
+            }
         }
     }
 

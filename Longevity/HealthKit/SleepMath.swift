@@ -14,6 +14,20 @@ struct SleepSegment: Sendable, Equatable {
             case .awake, .inBed: false
             }
         }
+
+        /// Nazwa w ładunku wysyłanym na serwer. Musi się zgadzać z `ASLEEP_STAGES`
+        /// w `lib/scoring-v3.ts` — to serwer rozstrzyga, co liczy się jako sen
+        /// przy wyliczaniu SRI.
+        var payloadName: String {
+            switch self {
+            case .rem: "rem"
+            case .deep: "deep"
+            case .core: "core"
+            case .unspecified: "unspecified"
+            case .awake: "awake"
+            case .inBed: "inBed"
+            }
+        }
     }
 
     let stage: Stage
@@ -44,15 +58,6 @@ enum SleepMath {
         let start = calendar.date(byAdding: .hour, value: -6, to: startOfDay) ?? startOfDay
         let end = calendar.date(byAdding: .hour, value: 12, to: startOfDay) ?? startOfDay
         return DateInterval(start: start, end: end)
-    }
-
-    /// Okno liczenia SRI: równe `days` dób, od południa do południa. Podział
-    /// w południe sprawia, że noc dzieli się tylko raz, a porównanie „ta sama
-    /// minuta dobę wcześniej" wypada zawsze w środku snu, nie na jego granicy.
-    static func regularityWindow(endingOn day: Date, days: Int, calendar: Calendar) -> DateInterval {
-        let noon = calendar.date(bySettingHour: 12, minute: 0, second: 0, of: day) ?? day
-        let start = calendar.date(byAdding: .day, value: -days, to: noon) ?? noon
-        return DateInterval(start: start, end: noon)
     }
 
     /// Suma mnogościowa odcinków. HealthKit trzyma próbki z każdego źródła osobno,
@@ -105,49 +110,5 @@ enum SleepMath {
             coreMinutes: stageMinutes(.core),
             awakeMinutes: minutes(awake)
         )
-    }
-
-    /// Sleep Regularity Index — procent minut, w których stan sen/czuwanie zgadza
-    /// się ze stanem dokładnie 24 h wcześniej, przeskalowany na -100…100
-    /// (SRI = 2 × zgodność − 100). Mierzy REGULARNOŚĆ rytmu, nie długość snu:
-    /// osiem godzin co noc o tej samej porze da ~90, ta sama ilość snu o losowych
-    /// porach ~40.
-    ///
-    /// Zwraca `nil`, gdy okno jest krótsze niż dwie doby albo gdy dni bez danych
-    /// jest za dużo — brak zegarka na ręce wygląda w danych jak całonocne czuwanie
-    /// i zaniżyłby wynik bez żadnego powodu.
-    static func regularityIndex(
-        asleep: [DateInterval],
-        window: DateInterval,
-        calendar: Calendar,
-        minimumDaysWithSleep: Int = 5
-    ) -> Double? {
-        let minutesInDay = 24 * 60
-        let totalMinutes = Int(window.duration / 60)
-        guard totalMinutes >= 2 * minutesInDay else { return nil }
-
-        let clipped = merged(asleep).compactMap { $0.intersection(with: window) }
-        guard !clipped.isEmpty else { return nil }
-
-        let daysWithSleep = Set(clipped.map { calendar.startOfDay(for: $0.start) })
-        guard daysWithSleep.count >= minimumDaysWithSleep else { return nil }
-
-        var state = [Bool](repeating: false, count: totalMinutes)
-        for interval in clipped {
-            let from = Int(interval.start.timeIntervalSince(window.start) / 60)
-            let to = Int((interval.end.timeIntervalSince(window.start) / 60).rounded(.up))
-            for index in max(0, from)..<min(totalMinutes, to) {
-                state[index] = true
-            }
-        }
-
-        let comparisons = totalMinutes - minutesInDay
-        var matches = 0
-        for index in 0..<comparisons where state[index] == state[index + minutesInDay] {
-            matches += 1
-        }
-
-        let agreement = Double(matches) / Double(comparisons)
-        return ((200 * agreement - 100) * 100).rounded() / 100
     }
 }

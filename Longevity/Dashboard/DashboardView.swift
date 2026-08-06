@@ -1,6 +1,10 @@
 import SwiftUI
 
 struct DashboardView: View {
+    /// Rozwinięte komponenty rozbicia — id zamiast indeksu, bo lista zmienia
+    /// długość razem z pokryciem danych.
+    @State private var expanded: Set<String> = []
+
     @State private var model: DashboardViewModel
 
     init(model: DashboardViewModel = DashboardViewModel()) {
@@ -179,7 +183,7 @@ struct DashboardView: View {
     private func todayCard(_ data: DashboardData) -> some View {
         card {
             Kicker(text: "Dziś", color: Palette.ochreInk)
-            Text("z check-inu i posiłków")
+            Text("z dzisiejszych pomiarów")
                 .font(AtlasFont.body(11))
                 .foregroundStyle(Palette.muted)
                 .padding(.top, 3)
@@ -282,22 +286,53 @@ struct DashboardView: View {
             Kicker(text: "co składa się na wynik")
                 .padding(.bottom, 1)
 
-            ForEach(data.breakdown, id: \.label) { row in
-                HStack(spacing: 10) {
-                    Text(row.label)
-                        .font(AtlasFont.body(12.5))
-                        .foregroundStyle(Palette.ink)
-                        .frame(width: 118, alignment: .leading)
+            ForEach(data.breakdown) { row in
+                componentRow(row)
+            }
 
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Palette.panel)
-                            Capsule()
-                                .fill(Palette.ochre)
-                                .frame(width: geo.size.width * CGFloat(row.value / 100))
+            if data.breakdown.contains(where: \.hasParts) {
+                Text("Dotknij komponentu, żeby zobaczyć, z czego się składa.")
+                    .font(AtlasFont.mono(9.5))
+                    .foregroundStyle(Palette.tick)
+                    .padding(.top, 2)
+            }
+        }
+        .padding(.top, 20)
+    }
+
+    @ViewBuilder
+    private func componentRow(_ row: ScoreComponentRow) -> some View {
+        let isOpen = expanded.contains(row.id)
+
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                withAnimation(.easeOut(duration: 0.18)) {
+                    if isOpen { expanded.remove(row.id) } else { expanded.insert(row.id) }
+                }
+            } label: {
+                HStack(spacing: 10) {
+                    HStack(spacing: 4) {
+                        Text(row.label)
+                            .font(AtlasFont.body(12.5))
+                            .foregroundStyle(Palette.ink)
+                        // Waga mówi, ile ten komponent w ogóle waży w wyniku —
+                        // bez niej pasek na 100 przy metabolizmie wygląda tak
+                        // samo ważnie jak pasek na 100 przy śnie.
+                        if let weight = row.weight {
+                            Text("\(Int((weight * 100).rounded()))%")
+                                .font(AtlasFont.mono(9.5))
+                                .foregroundStyle(Palette.tick)
+                        }
+                        if row.hasParts {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(Palette.tick)
+                                .rotationEffect(.degrees(isOpen ? 90 : 0))
                         }
                     }
-                    .frame(height: 7)
+                    .frame(width: 118, alignment: .leading)
+
+                    bar(value: row.value, color: Palette.ochre, height: 7)
 
                     Text("\(Int(row.value.rounded()))")
                         .font(AtlasFont.mono(11))
@@ -305,15 +340,69 @@ struct DashboardView: View {
                         .foregroundStyle(Palette.muted)
                         .frame(width: 34, alignment: .trailing)
                 }
-                .accessibilityElement(children: .combine)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!row.hasParts)
+            .accessibilityElement(children: .combine)
+            .accessibilityHint(row.hasParts ? "Dotknij, żeby rozwinąć składowe" : "")
+
+            if isOpen {
+                VStack(alignment: .leading, spacing: 7) {
+                    ForEach(row.parts) { part in
+                        HStack(spacing: 10) {
+                            HStack(spacing: 4) {
+                                Text(part.label)
+                                    .font(AtlasFont.body(11.5))
+                                    .foregroundStyle(Palette.muted)
+                                    .lineLimit(1)
+                                Text("\(Int((part.weight * 100).rounded()))%")
+                                    .font(AtlasFont.mono(9))
+                                    .foregroundStyle(Palette.tick)
+                            }
+                            .frame(width: 128, alignment: .leading)
+
+                            if let value = part.value {
+                                bar(value: value, color: Palette.stem, height: 5)
+                                Text("\(Int(value.rounded()))")
+                                    .font(AtlasFont.mono(10))
+                                    .monospacedDigit()
+                                    .foregroundStyle(Palette.tick)
+                                    .frame(width: 34, alignment: .trailing)
+                            } else {
+                                // Brak pomiaru nie dostaje paska — pusty pasek
+                                // czytałby się jak wynik zerowy.
+                                Text("nie zmierzono")
+                                    .font(AtlasFont.mono(9.5))
+                                    .foregroundStyle(Palette.tick)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Spacer().frame(width: 34)
+                            }
+                        }
+                        .accessibilityElement(children: .combine)
+                    }
+                }
+                .padding(.leading, 10)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(.top, 20)
+    }
+
+    private func bar(value: Double, color: Color, height: CGFloat) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Palette.panel)
+                Capsule()
+                    .fill(color)
+                    .frame(width: geo.size.width * CGFloat(max(0, min(value, 100)) / 100))
+            }
+        }
+        .frame(height: height)
     }
 
     private var footer: some View {
         VStack(spacing: 14) {
-            Text("Wynik v2 — średnia ważona: sen, aktywność, odżywianie, stres, nastrój.\nDane z Supabase, wspólne z wersją web.")
+            Text("Wynik v3 — średnia ważona pomiarów. Komponenty bez danych są pomijane,\na wagi pozostałych przenormowane.")
                 .font(AtlasFont.mono(10.5))
                 .foregroundStyle(Palette.muted)
                 .multilineTextAlignment(.center)

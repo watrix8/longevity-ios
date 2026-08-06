@@ -132,3 +132,83 @@ struct MissingNoteTests {
         #expect(!note.contains("%"))
     }
 }
+
+@Suite("Skład komponentów")
+struct ScorePartsTests {
+    private static let payload = """
+    {"sleep":84,"regeneration":75,
+     "coverage":0.45,
+     "weights":{"sleep":0.3,"vo2max":0.25,"body":0.2,"regeneration":0.15,"metabolic":0.1},
+     "parts":{
+       "sleep":[{"key":"duration","weight":0.6,"value":94},
+                {"key":"deep","weight":0.25,"value":71},
+                {"key":"consistency","weight":0.15,"value":62}],
+       "vo2max":[],
+       "regeneration":[{"key":"resting_heart_rate","weight":0.4,"value":100},
+                       {"key":"hrv_trend","weight":0.6,"value":null}]}}
+    """
+
+    private static func components() throws -> ScoreComponents {
+        try makeSnapshot("2026-08-06", 80, components: payload).components
+    }
+
+    @Test("Wiersz komponentu niesie swoją wagę w całym score")
+    func carriesWeight() throws {
+        let sleep = try #require(try Self.components().breakdown.first { $0.id == "sleep" })
+        #expect(sleep.weight == 0.3)
+        #expect(sleep.value == 84)
+    }
+
+    @Test("Składowe mają polskie etykiety i wagi wewnątrz komponentu")
+    func mapsPartLabels() throws {
+        let regeneration = try #require(
+            try Self.components().breakdown.first { $0.id == "regeneration" }
+        )
+
+        #expect(regeneration.parts.map(\.label) == ["Tętno spoczynkowe", "Trend HRV"])
+        #expect(regeneration.parts.map(\.weight) == [0.4, 0.6])
+    }
+
+    /// Brak pomiaru w składowej zostaje nilem — widok pokazuje „nie zmierzono",
+    /// a nie pasek na zerze.
+    @Test("Niezmierzona składowa nie udaje zera")
+    func missingPartStaysNil() throws {
+        let regeneration = try #require(
+            try Self.components().breakdown.first { $0.id == "regeneration" }
+        )
+        let hrv = try #require(regeneration.parts.first { $0.id == "hrv_trend" })
+
+        #expect(hrv.value == nil)
+    }
+
+    @Test("Komponent bez składowych nie udaje rozwijalnego")
+    func vo2maxHasNoParts() throws {
+        let rows = try Self.components().breakdown
+        #expect(rows.first { $0.id == "vo2max" } == nil)
+
+        let sleep = try #require(rows.first { $0.id == "sleep" })
+        #expect(sleep.hasParts)
+    }
+
+    /// Snapshoty sprzed tej zmiany nie mają ani wag, ani składu — rozbicie musi
+    /// się dalej renderować, tylko bez rozwijania.
+    @Test("Stary snapshot bez parts i weights nadal daje rozbicie")
+    func legacySnapshot() throws {
+        let old = try makeSnapshot("2026-08-01", 70, components: #"{"sleep":70,"body":60}"#).components
+        let rows = old.breakdown
+
+        #expect(rows.map(\.label) == ["Sen", "Ciało"])
+        #expect(rows.allSatisfy { $0.weight == nil })
+        #expect(rows.allSatisfy { !$0.hasParts })
+    }
+
+    @Test("Nieznany klucz składowej pokazuje się surowy, zamiast znikać")
+    func unknownKeyFallsBack() throws {
+        let odd = try makeSnapshot("2026-08-06", 50, components: """
+        {"sleep":50,"parts":{"sleep":[{"key":"nowa_metryka","weight":1,"value":50}]}}
+        """).components
+        let sleep = try #require(odd.breakdown.first)
+
+        #expect(sleep.parts.first?.label == "nowa_metryka")
+    }
+}

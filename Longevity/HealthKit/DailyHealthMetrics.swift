@@ -24,7 +24,10 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
     var sleepDeepMinutes: Int?
     var sleepCoreMinutes: Int?
     var sleepAwakeMinutes: Int?
-    var sleepRegularityIndex: Double?
+    /// Odcinki snu doby po scaleniu duplikatów. SRI liczy z nich SERWER —
+    /// wskaźnik obejmuje osiem dób i musi wychodzić tak samo dla każdego
+    /// źródła, także dla Garmina, który nie przechodzi przez to urządzenie.
+    var sleepSegments: [SleepSegmentPayload]?
 
     // Ruch
     var steps: Int?
@@ -66,7 +69,7 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
         case sleepDeepMinutes = "sleep_deep_minutes"
         case sleepCoreMinutes = "sleep_core_minutes"
         case sleepAwakeMinutes = "sleep_awake_minutes"
-        case sleepRegularityIndex = "sleep_regularity_index"
+        case sleepSegments = "sleep_segments"
         case steps
         case exerciseMinutes = "exercise_minutes"
         case activeEnergyKcal = "active_energy_kcal"
@@ -87,12 +90,19 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
         vo2max == nil && restingHeartRate == nil && hrvSdnnMs == nil && walkingHeartRate == nil
             && sleepStartAt == nil && sleepEndAt == nil && sleepAsleepMinutes == nil
             && sleepRemMinutes == nil && sleepDeepMinutes == nil && sleepCoreMinutes == nil
-            && sleepAwakeMinutes == nil && sleepRegularityIndex == nil
+            && sleepAwakeMinutes == nil && sleepSegments == nil
             && steps == nil && exerciseMinutes == nil && activeEnergyKcal == nil && standHours == nil
             && weightKg == nil && bodyFatPct == nil && leanBodyMassKg == nil
             && waistCm == nil && hipCm == nil
             && respiratoryRate == nil && spo2Pct == nil && wristTemperatureC == nil
     }
+}
+
+/// Jeden odcinek snu w ładunku wysyłanym na serwer.
+struct SleepSegmentPayload: Codable, Sendable, Equatable {
+    let stage: String
+    let start: String
+    let end: String
 }
 
 /// Formatowanie dat bez `DateFormatter`. HealthKit woła handlery zapytań na

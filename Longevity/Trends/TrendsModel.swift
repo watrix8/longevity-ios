@@ -6,6 +6,33 @@ struct SeriesPoint: Sendable {
     let value: Double
 }
 
+/// Skąd metryka bierze się w score. Kafelek bez tej informacji wygląda tak
+/// samo ważnie jak ten, który realnie waży 30% wyniku.
+enum MetricRole: Sendable, Equatable {
+    /// Wchodzi do komponentu score'u — etykieta komponentu i jego waga.
+    case feeds(component: String, weight: Double)
+    /// Nie wchodzi do wyniku, ale opisuje dzień.
+    case informational
+    /// Sam wynik — nie jest ani składnikiem, ani metryką poboczną.
+    case total
+
+    var badge: String {
+        switch self {
+        case .feeds(let component, let weight):
+            "\(component) · \(Int((weight * 100).rounded()))%"
+        case .informational:
+            "poza wynikiem"
+        case .total:
+            "wynik"
+        }
+    }
+
+    var countsToScore: Bool {
+        if case .feeds = self { return true }
+        return false
+    }
+}
+
 /// Jedna karta metryki — odpowiednik `MetricCard` z `app/trends/page.tsx`.
 struct Metric: Identifiable, Sendable {
     let id: String
@@ -15,6 +42,7 @@ struct Metric: Identifiable, Sendable {
     let points: [SeriesPoint]
     /// Czy wyższa wartość jest lepsza (waga, WHR i tętno spoczynkowe odwrotnie).
     let positiveHigher: Bool
+    let role: MetricRole
 
     var last: Double? { points.last?.value }
     var previous: Double? { points.dropLast().last?.value }
@@ -184,44 +212,44 @@ final class TrendsViewModel {
         let kcalPoints = dailyKcal(meals.map { ($0.loggedDate, $0.kcalMin, $0.kcalMax) })
 
         return [
-            Metric(id: "score", title: "Longevity Score", unit: "/100", positiveHigher: true,
+            Metric(id: "score", title: "Longevity Score", unit: "/100", positiveHigher: true, role: .total,
                    points: scores.map { SeriesPoint(date: $0.scoreDate, value: $0.scoreTotal) }),
 
             // Sen — 30% w v3
-            Metric(id: "sleep_hours", title: "Sen", unit: "h", positiveHigher: true,
+            Metric(id: "sleep_hours", title: "Sen", unit: "h", positiveHigher: true, role: .feeds(component: "Sen", weight: 0.30),
                    points: series(health) { $0.sleepAsleepMinutes.map { round1(Double($0) / 60) } }),
-            Metric(id: "sleep_deep", title: "Sen głęboki", unit: "%", positiveHigher: true,
+            Metric(id: "sleep_deep", title: "Sen głęboki", unit: "%", positiveHigher: true, role: .feeds(component: "Sen", weight: 0.30),
                    points: series(health) {
                        deepSleepShare(deep: $0.sleepDeepMinutes, asleep: $0.sleepAsleepMinutes)
                    }),
-            Metric(id: "sleep_regularity", title: "Regularność snu (SRI)", unit: "", positiveHigher: true,
+            Metric(id: "sleep_regularity", title: "Regularność snu (SRI)", unit: "", positiveHigher: true, role: .informational,
                    points: series(health) { $0.sleepRegularityIndex }),
 
             // Wydolność — 25%
-            Metric(id: "vo2max", title: "VO₂max", unit: "ml/kg/min", positiveHigher: true,
+            Metric(id: "vo2max", title: "VO₂max", unit: "ml/kg/min", positiveHigher: true, role: .feeds(component: "VO₂max", weight: 0.25),
                    points: series(health) { $0.vo2max }),
 
             // Skład ciała — 20%
-            Metric(id: "weight", title: "Waga", unit: "kg", positiveHigher: false,
+            Metric(id: "weight", title: "Waga", unit: "kg", positiveHigher: false, role: .feeds(component: "Ciało", weight: 0.20),
                    points: weights.map { SeriesPoint(date: $0.measuredAt, value: $0.weightKg) }),
-            Metric(id: "whr", title: "WHR (talia/biodra)", unit: "", positiveHigher: false,
+            Metric(id: "whr", title: "WHR (talia/biodra)", unit: "", positiveHigher: false, role: .feeds(component: "Ciało", weight: 0.20),
                    points: series(health) { waistToHipRatio(waist: $0.waistCm, hip: $0.hipCm) }),
-            Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false,
+            Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false, role: .informational,
                    points: series(health) { $0.bodyFatPct }),
 
             // Regeneracja — 15%
-            Metric(id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm", positiveHigher: false,
+            Metric(id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm", positiveHigher: false, role: .feeds(component: "Regeneracja", weight: 0.15),
                    points: series(health) { $0.restingHeartRate }),
-            Metric(id: "hrv", title: "HRV (SDNN)", unit: "ms", positiveHigher: true,
+            Metric(id: "hrv", title: "HRV (SDNN)", unit: "ms", positiveHigher: true, role: .feeds(component: "Regeneracja", weight: 0.15),
                    points: series(health) { $0.hrvSdnnMs }),
 
             // Ruch
-            Metric(id: "steps", title: "Kroki", unit: "", positiveHigher: true,
+            Metric(id: "steps", title: "Kroki", unit: "", positiveHigher: true, role: .informational,
                    points: series(health) { $0.steps.map(Double.init) }),
-            Metric(id: "activity", title: "Ruch", unit: "min", positiveHigher: true,
+            Metric(id: "activity", title: "Ruch", unit: "min", positiveHigher: true, role: .informational,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
 
-            Metric(id: "kcal", title: "Kalorie (est.)", unit: "kcal", positiveHigher: true,
+            Metric(id: "kcal", title: "Kalorie (est.)", unit: "kcal", positiveHigher: true, role: .informational,
                    points: kcalPoints),
         ].filter { !$0.points.isEmpty }
     }
@@ -279,11 +307,21 @@ final class TrendsViewModel {
 }
 
 extension Metric {
-    init(id: String, title: String, unit: String, positiveHigher: Bool, points: [SeriesPoint]) {
+    /// Sortowanie po dacie jest w inicjalizatorze, bo szeregi sklejają się
+    /// z kilku tabel i nie wszystkie przychodzą uporządkowane.
+    init(
+        id: String,
+        title: String,
+        unit: String,
+        positiveHigher: Bool,
+        role: MetricRole,
+        points: [SeriesPoint]
+    ) {
         self.id = id
         self.title = title
         self.unit = unit
         self.positiveHigher = positiveHigher
+        self.role = role
         self.points = points.sorted { $0.date < $1.date }
     }
 }

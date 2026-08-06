@@ -12,7 +12,8 @@ struct MetricTests {
         let points = values.enumerated().map {
             SeriesPoint(date: String(format: "2026-08-%02d", $0.offset + 1), value: $0.element)
         }
-        return Metric(id: "t", title: "T", unit: "", positiveHigher: positiveHigher, points: points)
+        return Metric(id: "t", title: "T", unit: "", positiveHigher: positiveHigher,
+                      role: .informational, points: points)
     }
 
     @Test("Init sortuje punkty po dacie")
@@ -22,7 +23,7 @@ struct MetricTests {
             SeriesPoint(date: "2026-08-01", value: 1),
             SeriesPoint(date: "2026-08-02", value: 2),
         ]
-        let m = Metric(id: "t", title: "T", unit: "", positiveHigher: true, points: unsorted)
+        let m = Metric(id: "t", title: "T", unit: "", positiveHigher: true, role: .informational, points: unsorted)
 
         #expect(m.points.map(\.value) == [1, 2, 3])
         #expect(m.last == 3)
@@ -132,7 +133,8 @@ struct MetricArrowAtIndexTests {
         let points = values.enumerated().map {
             SeriesPoint(date: String(format: "2026-08-%02d", $0.offset + 1), value: $0.element)
         }
-        return Metric(id: "t", title: "T", unit: "", positiveHigher: positiveHigher, points: points)
+        return Metric(id: "t", title: "T", unit: "", positiveHigher: positiveHigher,
+                      role: .informational, points: points)
     }
 
     @Test("Porównanie idzie z dniem poprzedzającym wskazany, nie z ostatnim")
@@ -180,5 +182,33 @@ struct MetricArrowAtIndexTests {
     func emptySeries() {
         #expect(metric([]).arrow == "→")
         #expect(metric([]).arrow(at: 0) == "→")
+    }
+}
+
+@Suite("Rola metryki w wyniku")
+struct MetricRoleTests {
+    @Test("Etykieta składnika podaje komponent i jego wagę")
+    func feedsBadge() {
+        #expect(MetricRole.feeds(component: "Sen", weight: 0.30).badge == "Sen · 30%")
+        #expect(MetricRole.feeds(component: "Regeneracja", weight: 0.15).badge == "Regeneracja · 15%")
+    }
+
+    /// Kroki, ruch i kalorie nie wchodzą dziś do v3 — kafelek ma to mówić
+    /// wprost, zamiast wyglądać tak samo ważnie jak sen.
+    @Test("Metryka poboczna jest oznaczona i nie liczy się do wyniku")
+    func informationalBadge() {
+        #expect(MetricRole.informational.badge == "poza wynikiem")
+        #expect(!MetricRole.informational.countsToScore)
+    }
+
+    @Test("Sam wynik nie udaje ani składnika, ani metryki pobocznej")
+    func totalBadge() {
+        #expect(MetricRole.total.badge == "wynik")
+        #expect(!MetricRole.total.countsToScore)
+    }
+
+    @Test("Tylko składniki liczą się do wyniku")
+    func onlyFeedsCounts() {
+        #expect(MetricRole.feeds(component: "Ciało", weight: 0.2).countsToScore)
     }
 }

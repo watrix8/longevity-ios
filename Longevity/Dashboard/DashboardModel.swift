@@ -33,7 +33,7 @@ struct DashboardData: Sendable {
     let todayWord: String
 
     let points: [DayPoint]
-    let breakdown: [(label: String, value: Double)]
+    let breakdown: [ScoreComponentRow]
 
     /// Ile dni z ostatnich 30 ma snapshot — odpowiednik "pewności" z makiety.
     let coverageDays: Int
@@ -75,7 +75,28 @@ extension DashboardData {
             todayWord: "dobrze",
             points: points,
             breakdown: [
-                ("Sen", 84), ("Ciało", 72), ("Regeneracja", 75),
+                ScoreComponentRow(
+                    id: "sleep", label: "Sen", weight: 0.30, value: 84,
+                    parts: [
+                        ScorePartRow(id: "duration", label: "Długość snu", weight: 0.6, value: 94),
+                        ScorePartRow(id: "deep", label: "Sen głęboki", weight: 0.25, value: 71),
+                        ScorePartRow(id: "consistency", label: "Równa długość snu", weight: 0.15, value: 62),
+                    ]
+                ),
+                ScoreComponentRow(
+                    id: "body", label: "Ciało", weight: 0.20, value: 72,
+                    parts: [
+                        ScorePartRow(id: "bmi", label: "BMI", weight: 0.5, value: 72),
+                        ScorePartRow(id: "whr", label: "Talia/biodra", weight: 0.5, value: nil),
+                    ]
+                ),
+                ScoreComponentRow(
+                    id: "regeneration", label: "Regeneracja", weight: 0.15, value: 75,
+                    parts: [
+                        ScorePartRow(id: "resting_heart_rate", label: "Tętno spoczynkowe", weight: 0.4, value: 100),
+                        ScorePartRow(id: "hrv_trend", label: "Trend HRV", weight: 0.6, value: nil),
+                    ]
+                ),
             ],
             coverageDays: 14,
             note: "Score policzony z 65% wag. Brakuje: VO₂max, Metabolizm."

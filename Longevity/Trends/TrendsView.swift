@@ -79,9 +79,22 @@ struct MetricCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
-                Text(metric.title)
-                    .font(AtlasFont.display(16, .semibold))
-                    .foregroundStyle(Palette.ink)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(metric.title)
+                        .font(AtlasFont.display(16, .semibold))
+                        .foregroundStyle(Palette.ink)
+                    // Bez tej etykiety kafelek kroków wygląda tak samo ważnie
+                    // jak sen, który odpowiada za 30% wyniku.
+                    Text(metric.role.badge)
+                        .font(AtlasFont.mono(9))
+                        .foregroundStyle(metric.role.countsToScore ? Palette.pine : Palette.tick)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2.5)
+                        .background(
+                            metric.role.countsToScore ? Palette.pineSoft : Palette.panel,
+                            in: Capsule()
+                        )
+                }
                 Spacer()
                 // Data zastępuje licznik punktów dopiero po dotknięciu wykresu —
                 // bez niej nie wiadomo, czy wielka liczba to dziś, czy 12 lipca.
@@ -294,19 +307,20 @@ struct MetricChart: View {
         SeriesPoint(date: String(format: "2026-07-%02d", index + 18), value: value)
     }
 
-    return ScrollView {
+    ScrollView {
         VStack(spacing: 14) {
             MetricCardView(
                 metric: Metric(
-                    id: "sleep_hours", title: "Sen", unit: "h",
-                    points: points, positiveHigher: true
+                    id: "sleep_hours", title: "Sen", unit: "h", positiveHigher: true,
+                    role: .feeds(component: "Sen", weight: 0.30), points: points
                 )
             )
             MetricCardView(
                 metric: Metric(
                     id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm",
-                    points: points.map { SeriesPoint(date: $0.date, value: $0.value * 6.4) },
-                    positiveHigher: false
+                    positiveHigher: false,
+                    role: .feeds(component: "Regeneracja", weight: 0.15),
+                    points: points.map { SeriesPoint(date: $0.date, value: $0.value * 6.4) }
                 )
             )
         }

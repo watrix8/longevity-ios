@@ -37,7 +37,11 @@ struct DailyHealthMetricsTests {
         ("sleep_deep_minutes", { $0.sleepDeepMinutes = 55 }),
         ("sleep_core_minutes", { $0.sleepCoreMinutes = 294 }),
         ("sleep_awake_minutes", { $0.sleepAwakeMinutes = 30 }),
-        ("sleep_regularity_index", { $0.sleepRegularityIndex = 68.2 }),
+        ("sleep_segments", {
+            $0.sleepSegments = [
+                SleepSegmentPayload(stage: "core", start: "2026-08-05T21:00:00Z", end: "2026-08-06T02:00:00Z")
+            ]
+        }),
         ("steps", { $0.steps = 8431 }),
         ("exercise_minutes", { $0.exerciseMinutes = 44 }),
         ("active_energy_kcal", { $0.activeEnergyKcal = 620 }),
@@ -81,7 +85,6 @@ struct DailyHealthMetricsTests {
         metrics.restingHeartRate = 52
         metrics.hrvSdnnMs = 61.25
         metrics.sleepAsleepMinutes = 431
-        metrics.sleepRegularityIndex = 82.5
         metrics.exerciseMinutes = 44
         metrics.weightKg = 78.4
         metrics.wristTemperatureC = 34.12
@@ -96,7 +99,6 @@ struct DailyHealthMetricsTests {
         #expect(json["resting_heart_rate"] as? Double == 52)
         #expect(json["hrv_sdnn_ms"] as? Double == 61.25)
         #expect(json["sleep_asleep_minutes"] as? Int == 431)
-        #expect(json["sleep_regularity_index"] as? Double == 82.5)
         #expect(json["exercise_minutes"] as? Int == 44)
         #expect(json["weight_kg"] as? Double == 78.4)
         #expect(json["wrist_temperature_c"] as? Double == 34.12)
