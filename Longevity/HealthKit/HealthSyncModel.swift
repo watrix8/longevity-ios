@@ -1,6 +1,41 @@
 import Foundation
 import Observation
 
+/// Ile dni ciągnąć przy danym wywołaniu — i czy w ogóle.
+///
+/// Wydzielone z modelu, bo to jedyna decyzja w tym pliku, która ma warianty.
+/// Reszta jest sekwencją wywołań, której bez HealthKit i tak nie da się odpalić
+/// w teście.
+enum HealthSyncPlan: Equatable {
+    case sync(days: Int)
+    case skip
+
+    /// Pierwsze uruchomienie ciąga miesiąc wstecz.
+    static let backfillDays = 30
+
+    /// Kolejne tylko ostatnie dni. Trzy, a nie jeden: dane z Watcha dochodzą
+    /// z opóźnieniem, a sen z ostatniej nocy potrafi się doprecyzować jeszcze
+    /// następnego dnia.
+    static let incrementalDays = 3
+
+    /// Auto-sync po powrocie z tła nie częściej niż raz na godzinę — HealthKit
+    /// nie zmienia się co minutę, a każdy odczyt to kilkanaście zapytań.
+    static let autoSyncInterval: TimeInterval = 3600
+
+    /// `automatic` odróżnia powrót apki na wierzch od kliknięcia w Opcjach.
+    /// Odstęp obowiązuje wyłącznie automat — jeśli użytkownik prosi, to
+    /// synchronizujemy, choćby minutę po poprzednim razie.
+    static func next(
+        lastSyncedAt: Date?,
+        now: Date = Date(),
+        automatic: Bool
+    ) -> HealthSyncPlan {
+        guard let lastSyncedAt else { return .sync(days: backfillDays) }
+        if automatic, now.timeIntervalSince(lastSyncedAt) < autoSyncInterval { return .skip }
+        return .sync(days: incrementalDays)
+    }
+}
+
 /// Spina odczyt z HealthKit z wysyłką do backendu i trzyma stan widoczny
 /// w Opcjach. Jedna instancja na aplikację, bo synchronizację odpalają dwa
 /// miejsca: przycisk w ustawieniach i powrót apki na wierzch.
@@ -19,16 +54,6 @@ final class HealthSyncModel {
     private(set) var state: State = .idle
     private(set) var isConnected = false
     private(set) var lastSyncedAt: Date?
-
-    /// Pierwsze uruchomienie ciąga miesiąc wstecz, kolejne tylko ostatnie dni.
-    /// Trzy, a nie jeden: dane z Watcha dochodzą z opóźnieniem, a sen z ostatniej
-    /// nocy potrafi się doprecyzować jeszcze następnego dnia.
-    private static let backfillDays = 30
-    private static let incrementalDays = 3
-
-    /// Auto-sync po powrocie z tła nie częściej niż raz na godzinę — HealthKit
-    /// nie zmienia się co minutę, a każdy odczyt to kilkanaście zapytań.
-    private static let autoSyncInterval: TimeInterval = 3600
 
     private static let lastSyncKey = "health.lastSyncedAt"
 
@@ -75,14 +100,16 @@ final class HealthSyncModel {
         do {
             try await HealthKitManager.shared.requestAuthorization()
             isConnected = true
-            await sync(days: Self.backfillDays)
+            await sync(days: HealthSyncPlan.backfillDays)
         } catch {
             state = .failed(error.localizedDescription)
         }
     }
 
     func syncNow() async {
-        await sync(days: lastSyncedAt == nil ? Self.backfillDays : Self.incrementalDays)
+        guard case .sync(let days) = HealthSyncPlan.next(lastSyncedAt: lastSyncedAt, automatic: false)
+        else { return }
+        await sync(days: days)
     }
 
     /// Wejście apki na wierzch. Cicho odpuszcza, gdy nie ma zgody albo gdy
@@ -93,10 +120,9 @@ final class HealthSyncModel {
         await refreshConnection()
         guard isConnected else { return }
 
-        if let lastSyncedAt, Date().timeIntervalSince(lastSyncedAt) < Self.autoSyncInterval {
-            return
-        }
-        await syncNow()
+        guard case .sync(let days) = HealthSyncPlan.next(lastSyncedAt: lastSyncedAt, automatic: true)
+        else { return }
+        await sync(days: days)
     }
 
     // MARK: - Synchronizacja

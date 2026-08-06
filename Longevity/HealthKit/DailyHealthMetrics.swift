@@ -50,7 +50,10 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
         self.metricDate = metricDate
     }
 
-    enum CodingKeys: String, CodingKey {
+    /// `CaseIterable` nie jest tu ozdobą: pozwala testowi sprawdzić, czy
+    /// `isEmpty` uwzględnia każdą kolumnę. Pominięcie jednej po dodaniu nowej
+    /// metryki oznacza po cichu wyrzucony dzień danych.
+    enum CodingKeys: String, CodingKey, CaseIterable {
         case metricDate = "metric_date"
         case vo2max
         case restingHeartRate = "resting_heart_rate"

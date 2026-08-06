@@ -123,3 +123,62 @@ struct DailyKcalTests {
         #expect(TrendsViewModel.dailyKcal([]).isEmpty)
     }
 }
+
+/// Strzałka przy przeciąganiu po wykresie. Musi opisywać wskazany dzień,
+/// bo inaczej karta pokazuje wartość z 12 lipca i kierunek z dziś.
+@Suite("Kierunek dla wybranego dnia")
+struct MetricArrowAtIndexTests {
+    private func metric(_ values: [Double], positiveHigher: Bool = true) -> Metric {
+        let points = values.enumerated().map {
+            SeriesPoint(date: String(format: "2026-08-%02d", $0.offset + 1), value: $0.element)
+        }
+        return Metric(id: "t", title: "T", unit: "", positiveHigher: positiveHigher, points: points)
+    }
+
+    @Test("Porównanie idzie z dniem poprzedzającym wskazany, nie z ostatnim")
+    func comparesWithPrecedingDay() {
+        let m = metric([10, 30, 20, 50])
+
+        #expect(m.arrow(at: 1) == "↗")
+        #expect(m.arrow(at: 2) == "↘")
+        #expect(m.arrow(at: 3) == "↗")
+    }
+
+    @Test("Odwrócenie działa też dla wskazanego dnia")
+    func invertedAtIndex() {
+        let m = metric([10, 30, 20], positiveHigher: false)
+
+        #expect(m.arrow(at: 1) == "↘")
+        #expect(m.arrow(at: 2) == "↗")
+    }
+
+    @Test("Pierwszy punkt nie ma z czym porównywać")
+    func firstPointHasNoDirection() {
+        #expect(metric([10, 30, 20]).arrow(at: 0) == "→")
+    }
+
+    /// `selection` przeżywa odświeżenie danych, więc indeks bywa poza zakresem
+    /// krótszego szeregu. Nie może wtedy wysypać widoku.
+    @Test("Indeks poza zakresem i nil dają neutralną strzałkę")
+    func toleratesBadIndex() {
+        let m = metric([10, 30, 20])
+
+        #expect(m.arrow(at: 99) == "→")
+        #expect(m.arrow(at: -1) == "→")
+        #expect(m.arrow(at: nil) == "→")
+    }
+
+    @Test("Bez wskazania strzałka opisuje ostatni punkt")
+    func defaultsToLastPoint() {
+        let m = metric([10, 30, 20])
+
+        #expect(m.arrow == m.arrow(at: 2))
+        #expect(m.arrow == "↘")
+    }
+
+    @Test("Pusty szereg nie wywraca wyliczeń")
+    func emptySeries() {
+        #expect(metric([]).arrow == "→")
+        #expect(metric([]).arrow(at: 0) == "→")
+    }
+}

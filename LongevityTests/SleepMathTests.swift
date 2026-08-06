@@ -99,6 +99,78 @@ struct SleepMathTests {
         #expect(SleepMath.summarize([Self.segment(.inBed, "2026-08-05 22:00", "2026-08-06 06:00")]) == nil)
     }
 
+    /// Starsze zegarki i część aplikacji trzecich nie rozbijają snu na fazy,
+    /// tylko piszą jeden odcinek `asleepUnspecified`. Taka noc musi liczyć się
+    /// jako przespana, choć REM i deep wyjdą zerowe.
+    @Test("Sen bez rozbicia na fazy liczy się jako sen")
+    func unspecifiedCountsAsSleep() throws {
+        let summary = try #require(
+            SleepMath.summarize([Self.segment(.unspecified, "2026-08-05 23:00", "2026-08-06 06:30")])
+        )
+
+        #expect(summary.asleepMinutes == 450)
+        #expect(summary.remMinutes == 0)
+        #expect(summary.deepMinutes == 0)
+        #expect(summary.coreMinutes == 0)
+    }
+
+    @Test("Fazy sumują się do całości snu")
+    func stagesAddUp() throws {
+        let segments = [
+            Self.segment(.core, "2026-08-05 23:00", "2026-08-06 01:00"),
+            Self.segment(.deep, "2026-08-06 01:00", "2026-08-06 02:00"),
+            Self.segment(.rem, "2026-08-06 02:00", "2026-08-06 03:00"),
+        ]
+        let summary = try #require(SleepMath.summarize(segments))
+
+        #expect(summary.asleepMinutes == 240)
+        #expect(summary.coreMinutes + summary.deepMinutes + summary.remMinutes == 240)
+    }
+
+    @Test("Przerwa w środku nocy nie jest doliczana do snu")
+    func gapIsNotSleep() throws {
+        let segments = [
+            Self.segment(.core, "2026-08-05 23:00", "2026-08-06 01:00"),
+            Self.segment(.core, "2026-08-06 02:00", "2026-08-06 05:00"),
+        ]
+        let summary = try #require(SleepMath.summarize(segments))
+
+        // Okno nocy to 6 h, ale przespane są 5 h.
+        #expect(summary.asleepMinutes == 300)
+        #expect(summary.start == Self.date("2026-08-05 23:00"))
+        #expect(summary.end == Self.date("2026-08-06 05:00"))
+    }
+
+    /// Drzemka z popołudnia poprzedniego dnia nie należy do nocy — okno zaczyna
+    /// się o 18:00 właśnie po to.
+    @Test("Drzemka sprzed okna nie wchodzi do doby snu")
+    func napBeforeWindowIsExcluded() {
+        let window = SleepMath.window(forWakeDay: Self.date("2026-08-06 09:00"), calendar: Self.calendar)
+        let nap = Self.segment(.core, "2026-08-05 14:00", "2026-08-05 15:30")
+
+        #expect(nap.interval.intersection(with: window) == nil)
+    }
+
+    /// Odcinek zaczęty przed 18:00 ma wejść do nocy częścią po 18:00, a nie
+    /// wypaść w całości — inaczej ktoś, kto zasnął przed telewizorem, gubi sen.
+    @Test("Odcinek na granicy okna wchodzi przyciętą częścią")
+    func segmentClippedAtWindowEdge() throws {
+        let window = SleepMath.window(forWakeDay: Self.date("2026-08-06 09:00"), calendar: Self.calendar)
+        let long = Self.segment(.core, "2026-08-05 17:00", "2026-08-05 20:00")
+        let clipped = try #require(long.interval.intersection(with: window))
+
+        #expect(clipped.start == Self.date("2026-08-05 18:00"))
+        #expect(clipped.duration == 2 * 3600)
+    }
+
+    @Test("Odcinek o zerowej długości jest pomijany")
+    func zeroLengthIgnored() {
+        let zero = DateInterval(start: Self.date("2026-08-06 02:00"), end: Self.date("2026-08-06 02:00"))
+
+        #expect(SleepMath.merged([zero]).isEmpty)
+        #expect(SleepMath.minutes([zero]) == 0)
+    }
+
     // MARK: - Okno doby snu
 
     /// Noc 5→6 sierpnia jest snem "z 6 sierpnia" — tak samo pokazuje to Zdrowie.
