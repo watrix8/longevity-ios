@@ -20,9 +20,14 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: pl.tippin.longevity
-        INFOPLIST_FILE: Longevity/Info.plist
+        GENERATE_INFOPLIST_FILE: YES
+        # Bez tego iOS uruchamia app w trybie zgodności i letterboxuje ją (czarne pasy).
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Longevity uses your health data to calculate your personalized longevity score and track wellness metrics over time."
         SWIFT_VERSION: "6.0"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: JFP5D78785
     dependencies:
       - package: Supabase
     entitlements:
