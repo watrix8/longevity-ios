@@ -284,8 +284,18 @@ struct MetricChart: View {
                     let geometry = ChartGeometry(values: points.map(\.value), size: size)
                     selection = geometry.index(atX: drag.location.x)
                 }
+                // Podniesienie palca kasuje wybór: karta wraca do ostatniego
+                // pomiaru, a linia znika. Zostawiona kreska sugerowałaby, że
+                // wykres jest w jakimś trybie, z którego trzeba wyjść.
+                .onEnded { _ in
+                    withAnimation(.easeOut(duration: 0.15)) { selection = nil }
+                }
         )
-        .sensoryFeedback(.selection, trigger: selection)
+        // Haptyk tylko przy wskazywaniu dnia — przy zwalnianiu byłby drugim,
+        // niepotrzebnym sygnałem tuż po ostatnim.
+        .sensoryFeedback(trigger: selection) { _, new in
+            new == nil ? nil : .selection
+        }
         .padding(.horizontal, 4)
         .padding(.vertical, 8)
         .background(Palette.panel, in: RoundedRectangle(cornerRadius: 10))
