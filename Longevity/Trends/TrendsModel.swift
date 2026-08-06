@@ -77,6 +77,36 @@ private struct ActivityRow: Decodable {
     }
 }
 
+/// Podzbiór `health_metrics` potrzebny na wykresy. Reszta kolumn (fazy snu poza
+/// deep, SpO2, temperatura) jest w bazie, ale na razie nie ma własnego kafelka.
+private struct HealthRow: Decodable {
+    let metricDate: String
+    let sleepAsleepMinutes: Int?
+    let sleepDeepMinutes: Int?
+    let sleepRegularityIndex: Double?
+    let vo2max: Double?
+    let restingHeartRate: Double?
+    let hrvSdnnMs: Double?
+    let steps: Int?
+    let bodyFatPct: Double?
+    let waistCm: Double?
+    let hipCm: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case metricDate = "metric_date"
+        case sleepAsleepMinutes = "sleep_asleep_minutes"
+        case sleepDeepMinutes = "sleep_deep_minutes"
+        case sleepRegularityIndex = "sleep_regularity_index"
+        case vo2max
+        case restingHeartRate = "resting_heart_rate"
+        case hrvSdnnMs = "hrv_sdnn_ms"
+        case steps
+        case bodyFatPct = "body_fat_pct"
+        case waistCm = "waist_cm"
+        case hipCm = "hip_cm"
+    }
+}
+
 private struct MealRow: Decodable {
     let loggedDate: String
     let kcalMin: Double?
@@ -129,11 +159,19 @@ final class TrendsViewModel {
                 .select("logged_date, kcal_min, kcal_max")
                 .gte("logged_date", value: from)
                 .order("logged_date").execute().value
+            async let health: [HealthRow] = db.from("health_metrics")
+                .select("""
+                    metric_date, sleep_asleep_minutes, sleep_deep_minutes, \
+                    sleep_regularity_index, vo2max, resting_heart_rate, hrv_sdnn_ms, \
+                    steps, body_fat_pct, waist_cm, hip_cm
+                    """)
+                .gte("metric_date", value: from)
+                .order("metric_date").execute().value
 
             state = .loaded(
                 try await Self.build(
                     scores: scores, weights: weights, checkins: checkins,
-                    activity: activity, meals: meals
+                    activity: activity, meals: meals, health: health
                 )
             )
         } catch {
@@ -141,24 +179,64 @@ final class TrendsViewModel {
         }
     }
 
+    /// Kolejność kafelków idzie za wagami z formuły v3: najpierw score, potem
+    /// sen (30%), wydolność (25%), skład ciała (20%), regeneracja (15%),
+    /// a na końcu to, co zostało z check-inu.
+    ///
+    /// Metryki bez ani jednego punktu są odsiewane — kafelek metryki, której
+    /// nigdy nie zmierzono, nie niesie żadnej informacji. Pojawi się sam, gdy
+    /// pierwsza wartość wejdzie z zegarka albo z „Pomiarów" w czacie.
     private static func build(
         scores: [ScoreRow],
         weights: [WeightRow],
         checkins: [CheckinRow],
         activity: [ActivityRow],
-        meals: [MealRow]
+        meals: [MealRow],
+        health: [HealthRow]
     ) -> [Metric] {
         let kcalPoints = dailyKcal(meals.map { ($0.loggedDate, $0.kcalMin, $0.kcalMax) })
 
         return [
             Metric(id: "score", title: "Longevity Score", unit: "/100", positiveHigher: true,
                    points: scores.map { SeriesPoint(date: $0.scoreDate, value: $0.scoreTotal) }),
+
+            // Sen — 30% w v3
+            Metric(id: "sleep_hours", title: "Sen", unit: "h", positiveHigher: true,
+                   points: series(health) { $0.sleepAsleepMinutes.map { round1(Double($0) / 60) } }),
+            Metric(id: "sleep_deep", title: "Sen głęboki", unit: "%", positiveHigher: true,
+                   points: series(health) {
+                       deepSleepShare(deep: $0.sleepDeepMinutes, asleep: $0.sleepAsleepMinutes)
+                   }),
+            Metric(id: "sleep_regularity", title: "Regularność snu (SRI)", unit: "", positiveHigher: true,
+                   points: series(health) { $0.sleepRegularityIndex }),
+
+            // Wydolność — 25%
+            Metric(id: "vo2max", title: "VO₂max", unit: "ml/kg/min", positiveHigher: true,
+                   points: series(health) { $0.vo2max }),
+
+            // Skład ciała — 20%
             Metric(id: "weight", title: "Waga", unit: "kg", positiveHigher: false,
                    points: weights.map { SeriesPoint(date: $0.measuredAt, value: $0.weightKg) }),
-            Metric(id: "sleep", title: "Sen", unit: "/5", positiveHigher: true,
-                   points: checkins.map { SeriesPoint(date: $0.checkinDate, value: $0.sleepQuality) }),
+            Metric(id: "whr", title: "WHR (talia/biodra)", unit: "", positiveHigher: false,
+                   points: series(health) { waistToHipRatio(waist: $0.waistCm, hip: $0.hipCm) }),
+            Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false,
+                   points: series(health) { $0.bodyFatPct }),
+
+            // Regeneracja — 15%
+            Metric(id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm", positiveHigher: false,
+                   points: series(health) { $0.restingHeartRate }),
+            Metric(id: "hrv", title: "HRV (SDNN)", unit: "ms", positiveHigher: true,
+                   points: series(health) { $0.hrvSdnnMs }),
+
+            // Ruch
+            Metric(id: "steps", title: "Kroki", unit: "", positiveHigher: true,
+                   points: series(health) { $0.steps.map(Double.init) }),
             Metric(id: "activity", title: "Ruch", unit: "min", positiveHigher: true,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
+
+            // Check-in — subiektywne, stąd osobne etykiety obok pomiarów z zegarka
+            Metric(id: "sleep", title: "Sen (ocena)", unit: "/5", positiveHigher: true,
+                   points: checkins.map { SeriesPoint(date: $0.checkinDate, value: $0.sleepQuality) }),
             Metric(id: "nutrition", title: "Odżywianie", unit: "/5", positiveHigher: true,
                    points: checkins.map { SeriesPoint(date: $0.checkinDate, value: $0.nutritionQuality) }),
             Metric(id: "stress", title: "Stres", unit: "/5", positiveHigher: false,
@@ -167,7 +245,37 @@ final class TrendsViewModel {
                    points: checkins.map { SeriesPoint(date: $0.checkinDate, value: $0.mood) }),
             Metric(id: "kcal", title: "Kalorie (est.)", unit: "kcal", positiveHigher: true,
                    points: kcalPoints),
-        ]
+        ].filter { !$0.points.isEmpty }
+    }
+
+    /// `health_metrics` ma prawie wszystkie kolumny opcjonalne, więc każdy
+    /// szereg powstaje z pominięciem dni bez pomiaru.
+    private static func series(
+        _ rows: [HealthRow],
+        _ value: (HealthRow) -> Double?
+    ) -> [SeriesPoint] {
+        rows.compactMap { row in
+            value(row).map { SeriesPoint(date: row.metricDate, value: $0) }
+        }
+    }
+
+    private static func round1(_ value: Double) -> Double { (value * 10).rounded() / 10 }
+
+    /// Udział snu głębokiego w całości snu. Internal, nie private — razem z WHR
+    /// to jedyne miejsca w tym pliku, gdzie coś się liczy, a nie przepisuje.
+    ///
+    /// Mianownikiem jest czas SNU, nie czas w łóżku — inaczej wynik zależałby od
+    /// tego, jak długo ktoś czyta przed zaśnięciem.
+    static func deepSleepShare(deep: Int?, asleep: Int?) -> Double? {
+        guard let deep, let asleep, asleep > 0 else { return nil }
+        return round1(Double(deep) / Double(asleep) * 100)
+    }
+
+    /// Waist-to-hip ratio. Biodra mogą przyjść tylko z ręcznego wpisu, więc
+    /// najczęstszym wynikiem jest `nil` i to jest poprawne zachowanie.
+    static func waistToHipRatio(waist: Double?, hip: Double?) -> Double? {
+        guard let waist, let hip, hip > 0 else { return nil }
+        return (waist / hip * 100).rounded() / 100
     }
 
     /// Kalorie: środek widełek kcal zsumowany per dzień — ta sama arytmetyka

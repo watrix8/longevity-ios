@@ -9,6 +9,7 @@ struct ChatView: View {
     @State private var showCamera = false
     @State private var showActivity = false
     @State private var showCheckin = false
+    @State private var showMarkers = false
     @State private var photoItem: PhotosPickerItem?
     @FocusState private var composerFocused: Bool
 
@@ -53,6 +54,11 @@ struct ChatView: View {
         .sheet(isPresented: $showCheckin) {
             CheckinSheet { sleep, stress, mood in
                 Task { await model.saveCheckin(sleep: sleep, stress: stress, mood: mood) }
+            }
+        }
+        .sheet(isPresented: $showMarkers) {
+            MarkersSheet { markers in
+                Task { await model.saveMarkers(markers) }
             }
         }
         .onChange(of: photoItem) { _, item in
@@ -231,6 +237,7 @@ struct ChatView: View {
                 chip("🍽️", "Posiłek") { showMealOptions = true }
                 chip("🏃", "Aktywność") { showActivity = true }
                 chip("✅", "Check-in") { showCheckin = true }
+                chip("📏", "Pomiary") { showMarkers = true }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)

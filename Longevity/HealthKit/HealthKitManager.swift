@@ -143,6 +143,8 @@ final class HealthKitManager {
         // `.percent()` zwraca 0…1, a kolumna trzyma punkty procentowe.
         .init(.bodyFatPercentage, .percent(), .mostRecent) { $0.bodyFatPct = $1 * 100 },
         .init(.leanBodyMass, .gramUnit(with: .kilo), .mostRecent) { $0.leanBodyMassKg = $1 },
+        // Obwód bioder nie ma odpowiednika w HealthKit — idzie tylko z czatu.
+        .init(.waistCircumference, .meterUnit(with: .centi), .mostRecent) { $0.waistCm = $1 },
 
         // Regeneracja
         .init(.respiratoryRate, perMinute, .average) { $0.respiratoryRate = $1 },

@@ -84,6 +84,152 @@ struct ActivitySheet: View {
     }
 }
 
+/// Ręczne uzupełnienie markerów, których HealthKit nie dostarcza.
+///
+/// Wszystkie pola opcjonalne — wpisuje się to, co akurat się ma pod ręką.
+/// Zapisują się tylko wypełnione.
+struct MarkersSheet: View {
+    let onSave: (HealthMarkers) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var vo2max = ""
+    @State private var hrv = ""
+    @State private var restingHeartRate = ""
+    @State private var weight = ""
+    @State private var bodyFat = ""
+    @State private var leanMass = ""
+    @State private var waist = ""
+    @State private var hip = ""
+
+    private var markers: HealthMarkers {
+        HealthMarkers(
+            vo2max: HealthMarkers.parse(vo2max),
+            hrvSdnnMs: HealthMarkers.parse(hrv),
+            restingHeartRate: HealthMarkers.parse(restingHeartRate),
+            weightKg: HealthMarkers.parse(weight),
+            bodyFatPct: HealthMarkers.parse(bodyFat),
+            leanBodyMassKg: HealthMarkers.parse(leanMass),
+            waistCm: HealthMarkers.parse(waist),
+            hipCm: HealthMarkers.parse(hip)
+        )
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    group("wydolność") {
+                        field("VO₂max", $vo2max, "ml/kg/min")
+                        rule
+                        field("HRV (SDNN)", $hrv, "ms")
+                        rule
+                        field("Tętno spoczynkowe", $restingHeartRate, "bpm")
+                    }
+
+                    group("ciało") {
+                        field("Waga", $weight, "kg")
+                        rule
+                        field("Tkanka tłuszczowa", $bodyFat, "%")
+                        rule
+                        field("Masa beztłuszczowa", $leanMass, "kg")
+                        rule
+                        field("Obwód talii", $waist, "cm")
+                        rule
+                        field("Obwód bioder", $hip, "cm")
+                    }
+
+                    Text("""
+                        Wpisane wartości mają pierwszeństwo — synchronizacja \
+                        z Apple Health ich nie nadpisze. Obwodu bioder HealthKit \
+                        nie zna w ogóle, a VO₂max liczy tylko przy marszu, biegu \
+                        i wędrówce na zewnątrz.
+                        """)
+                        .font(AtlasFont.body(11.5))
+                        .foregroundStyle(Palette.muted)
+                        .lineSpacing(2)
+                        .padding(.horizontal, 4)
+
+                    Button {
+                        onSave(markers)
+                        dismiss()
+                    } label: {
+                        Text("Zapisz")
+                            .font(AtlasFont.body(15, .semibold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 15)
+                            .background(
+                                markers.isEmpty ? Palette.tick : Palette.pine,
+                                in: RoundedRectangle(cornerRadius: 14)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(markers.isEmpty)
+                    .padding(.top, 18)
+                }
+                .padding(20)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(Palette.panel)
+            .navigationTitle("Pomiary")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Anuluj") { dismiss() }.tint(Palette.muted)
+                }
+            }
+        }
+        .presentationDetents([.large])
+    }
+
+    // MARK: - Klocki
+
+    private func group<C: View>(_ kicker: String, @ViewBuilder _ content: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Kicker(text: kicker)
+                .padding(.bottom, 10)
+
+            VStack(alignment: .leading, spacing: 0) { content() }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Palette.card, in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Palette.line, lineWidth: 1))
+        }
+        .padding(.bottom, 20)
+    }
+
+    private func field(_ label: String, _ value: Binding<String>, _ unit: String) -> some View {
+        HStack(spacing: 12) {
+            Text(label)
+                .font(AtlasFont.body(14))
+                .foregroundStyle(Palette.ink)
+                .lineLimit(1)
+            Spacer(minLength: 8)
+            TextField("—", text: value)
+                .font(AtlasFont.body(14))
+                .foregroundStyle(Palette.ink)
+                .multilineTextAlignment(.trailing)
+                .keyboardType(.decimalPad)
+                .tint(Palette.ochre)
+                .frame(minWidth: 52, alignment: .trailing)
+                .fixedSize(horizontal: true, vertical: false)
+            Text(unit)
+                .font(AtlasFont.body(13))
+                .foregroundStyle(Palette.muted)
+                .frame(width: 66, alignment: .leading)
+        }
+        .padding(.horizontal, 15)
+        .padding(.vertical, 11)
+    }
+
+    private var rule: some View {
+        Rectangle()
+            .fill(Palette.line)
+            .frame(height: 1)
+            .padding(.leading, 15)
+    }
+}
+
 /// Trzy pytania, które bot zadaje w `/checkin` — sen, stres, nastrój.
 struct CheckinSheet: View {
     let onSave: (Int, Int, Int) -> Void

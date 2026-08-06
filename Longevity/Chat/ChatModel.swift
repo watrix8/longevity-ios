@@ -226,6 +226,25 @@ final class ChatViewModel {
         }
     }
 
+    // MARK: - Markery
+
+    /// Uzupełnienie tego, czego HealthKit nie daje: VO2max rowerzysty, obwód
+    /// bioder, odczyty przepisane z Garmina. Idzie przez serwer, bo to on
+    /// pilnuje, żeby sync z zegarka tych pól nie nadpisał.
+    func saveMarkers(_ markers: HealthMarkers) async {
+        guard !isBusy, !markers.isEmpty else { return }
+        isBusy = true
+        defer { isBusy = false }
+
+        do {
+            try await LongevityAPI.saveHealthMarkers(markers)
+            append(.confirmation("📏 Zapisano: \(markers.summary)"))
+            await LongevityAPI.refreshScore()
+        } catch {
+            append(.failure(error.localizedDescription))
+        }
+    }
+
     // MARK: - Check-in
 
     func saveCheckin(sleep: Int, stress: Int, mood: Int) async {

@@ -138,6 +138,12 @@ enum LongevityAPI {
         try await send("/api/v1/health/sync", method: "POST", body: HealthSyncPayload(days: days))
     }
 
+    /// Wpis ręczny z czatu. Serwer dopisuje podane pola do `manual_fields`,
+    /// przez co kolejny sync z zegarka ich nie ruszy.
+    static func saveHealthMarkers(_ markers: HealthMarkers) async throws {
+        let _: Empty = try await send("/api/v1/health/sync", method: "PATCH", body: markers)
+    }
+
     /// `GET /score/today` przelicza i zapisuje snapshot po drodze, więc to jest
     /// odświeżenie Longevity Score — nie tylko odczyt. Wołane po każdym zapisie.
     static func refreshScore() async {

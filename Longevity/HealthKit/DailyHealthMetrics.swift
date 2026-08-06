@@ -36,6 +36,10 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
     var weightKg: Double?
     var bodyFatPct: Double?
     var leanBodyMassKg: Double?
+    var waistCm: Double?
+    /// HealthKit nie zna obwodu bioder w żadnej postaci — to pole wypełnia
+    /// wyłącznie wpis ręczny z czatu. Bez niego WHR jest nieliczalny.
+    var hipCm: Double?
 
     // Regeneracja
     var respiratoryRate: Double?
@@ -67,6 +71,8 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
         case weightKg = "weight_kg"
         case bodyFatPct = "body_fat_pct"
         case leanBodyMassKg = "lean_body_mass_kg"
+        case waistCm = "waist_cm"
+        case hipCm = "hip_cm"
         case respiratoryRate = "respiratory_rate"
         case spo2Pct = "spo2_pct"
         case wristTemperatureC = "wrist_temperature_c"
@@ -81,6 +87,7 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
             && sleepAwakeMinutes == nil && sleepRegularityIndex == nil
             && steps == nil && exerciseMinutes == nil && activeEnergyKcal == nil && standHours == nil
             && weightKg == nil && bodyFatPct == nil && leanBodyMassKg == nil
+            && waistCm == nil && hipCm == nil
             && respiratoryRate == nil && spo2Pct == nil && wristTemperatureC == nil
     }
 }
