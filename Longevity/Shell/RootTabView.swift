@@ -1,8 +1,11 @@
 import SwiftUI
 
-/// Odpowiednik `NAV_ITEMS` z `app/components/AppShell.tsx` w repo webowym —
-/// te same trzy pozycje i ta sama kolejność. Emoji z weba zastąpione
-/// SF Symbols, bo to natywny odpowiednik na iOS.
+/// Pierwsze trzy pozycje odpowiadają `NAV_ITEMS` z `app/components/AppShell.tsx`
+/// w repo webowym. Emoji z weba zastąpione SF Symbols, bo to natywny
+/// odpowiednik na iOS.
+///
+/// Czwarta pozycja nie ma odpowiednika na webie — zastępuje bota Telegram:
+/// posiłki, aktywność, check-in i pytania do asystenta.
 struct RootTabView: View {
     var body: some View {
         TabView {
@@ -11,6 +14,9 @@ struct RootTabView: View {
             }
             Tab("Trendy", systemImage: "chart.line.uptrend.xyaxis") {
                 TrendsView()
+            }
+            Tab("Asystent", systemImage: "bubble.left.and.text.bubble.right.fill") {
+                ChatView()
             }
             Tab("Opcje", systemImage: "gearshape.fill") {
                 SettingsView()

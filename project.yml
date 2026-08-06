@@ -24,6 +24,7 @@ targets:
         # Bez tego iOS uruchamia app w trybie zgodności i letterboxuje ją (czarne pasy).
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Longevity uses your health data to calculate your personalized longevity score and track wellness metrics over time."
+        INFOPLIST_KEY_NSCameraUsageDescription: "Longevity uses the camera so you can photograph a meal and get its calories and macros estimated."
         SWIFT_VERSION: "6.0"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
         CODE_SIGN_STYLE: Automatic
