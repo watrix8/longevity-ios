@@ -23,9 +23,15 @@ struct Metric: Identifiable, Sendable {
 
     /// Strzałka jak w webie: porównanie z poprzednim punktem, odwrócona
     /// dla metryk, w których mniej znaczy lepiej.
-    var arrow: String {
-        guard let last, let previous else { return "→" }
-        let raw = last > previous ? "↗" : (last < previous ? "↘" : "→")
+    var arrow: String { arrow(at: points.indices.last) }
+
+    /// Kierunek dla dowolnego dnia — przy przeciąganiu po wykresie strzałka ma
+    /// opisywać wskazany punkt, a nie w kółko ostatni.
+    func arrow(at index: Int?) -> String {
+        guard let index, points.indices.contains(index), index > 0 else { return "→" }
+        let current = points[index].value
+        let earlier = points[index - 1].value
+        let raw = current > earlier ? "↗" : (current < earlier ? "↘" : "→")
         guard !positiveHigher else { return raw }
         return raw == "↗" ? "↘" : (raw == "↘" ? "↗" : "→")
     }

@@ -107,3 +107,55 @@ struct DerivedMetricTests {
         #expect(TrendsViewModel.waistToHipRatio(waist: 92, hip: 0) == nil)
     }
 }
+
+@Suite("Odczyt dnia z wykresu")
+struct ChartGeometryTests {
+    private static let size = CGSize(width: 300, height: 92)
+    private static let values: [Double] = [10, 40, 25, 60, 30]
+
+    private static var geometry: ChartGeometry {
+        ChartGeometry(values: values, size: size)
+    }
+
+    @Test("Pierwszy punkt siedzi na lewej krawędzi, ostatni na prawej")
+    func spansFullWidth() {
+        #expect(Self.geometry.point(at: 0).x == 0)
+        #expect(Self.geometry.point(at: Self.values.count - 1).x == Self.size.width)
+    }
+
+    /// To jest test, dla którego geometria jest osobnym typem: kropka pod palcem
+    /// musi trafiać dokładnie tam, gdzie narysowana jest linia.
+    @Test("Trafienie w narysowany punkt zwraca jego indeks")
+    func hitTestMatchesDrawing() {
+        for index in Self.values.indices {
+            let x = Self.geometry.point(at: index).x
+            #expect(Self.geometry.index(atX: x) == index)
+        }
+    }
+
+    @Test("Wybierany jest punkt najbliższy, nie ten po lewej")
+    func snapsToNearest() {
+        let step = Self.size.width / CGFloat(Self.values.count - 1)
+
+        #expect(Self.geometry.index(atX: step * 0.4) == 0)
+        #expect(Self.geometry.index(atX: step * 0.6) == 1)
+    }
+
+    @Test("Poza wykresem przywiera do skrajnego dnia")
+    func clampsOutside() {
+        #expect(Self.geometry.index(atX: -50) == 0)
+        #expect(Self.geometry.index(atX: 5000) == Self.values.count - 1)
+    }
+
+    @Test("Wyższa wartość leży wyżej, czyli ma mniejsze y")
+    func higherValueSitsHigher() {
+        #expect(Self.geometry.point(at: 3).y < Self.geometry.point(at: 0).y)
+    }
+
+    @Test("Jeden punkt albo zero punktów nie wywraca wyliczeń")
+    func degenerateInputs() {
+        #expect(ChartGeometry(values: [], size: Self.size).index(atX: 100) == 0)
+        #expect(ChartGeometry(values: [5], size: Self.size).index(atX: 100) == 0)
+        #expect(ChartGeometry(values: [], size: Self.size).point(at: 0) == .zero)
+    }
+}

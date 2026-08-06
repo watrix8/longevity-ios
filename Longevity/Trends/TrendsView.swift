@@ -53,7 +53,7 @@ struct TrendsView: View {
             Text("Trendy")
                 .font(AtlasFont.display(28, .heavy))
                 .foregroundStyle(Palette.ink)
-            Text("Ostatnie 30 dni — wszystkie wskaźniki w jednym miejscu.")
+            Text("Ostatnie 30 dni. Przeciągnij po wykresie, żeby odczytać dzień.")
                 .font(AtlasFont.body(13))
                 .foregroundStyle(Palette.muted)
         }
@@ -64,6 +64,18 @@ struct TrendsView: View {
 struct MetricCardView: View {
     let metric: Metric
 
+    /// Dzień wskazany palcem. `nil` = karta pokazuje ostatni pomiar.
+    @State private var selection: Int?
+
+    /// Zawężenie do istniejącego indeksu, bo `selection` przeżywa odświeżenie
+    /// danych — a po nim szereg bywa krótszy niż przy poprzednim wczytaniu.
+    private var shownIndex: Int? {
+        if let selection, metric.points.indices.contains(selection) { return selection }
+        return metric.points.indices.last
+    }
+
+    private var shown: SeriesPoint? { shownIndex.map { metric.points[$0] } }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
@@ -71,30 +83,40 @@ struct MetricCardView: View {
                     .font(AtlasFont.display(16, .semibold))
                     .foregroundStyle(Palette.ink)
                 Spacer()
-                Text("\(metric.points.count) pkt")
-                    .font(AtlasFont.mono(10.5))
-                    .foregroundStyle(Palette.muted)
+                // Data zastępuje licznik punktów dopiero po dotknięciu wykresu —
+                // bez niej nie wiadomo, czy wielka liczba to dziś, czy 12 lipca.
+                if selection != nil, let shown {
+                    Text(Self.polishDay(shown.date))
+                        .font(AtlasFont.mono(10.5))
+                        .foregroundStyle(Palette.ochreInk)
+                } else {
+                    Text("\(metric.points.count) pkt")
+                        .font(AtlasFont.mono(10.5))
+                        .foregroundStyle(Palette.muted)
+                }
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(metric.last.map(Self.format) ?? "—")
+                Text(shown.map { Self.format($0.value) } ?? "—")
                     .font(AtlasFont.display(34))
                     .monospacedDigit()
+                    .contentTransition(.numericText())
                     // Placeholder nie może krzyczeć kolorem akcentu — w 34 pt
                     // ochrowy myślnik wygląda jak pasek danych.
-                    .foregroundStyle(metric.last == nil ? Palette.muted : Palette.ochre)
+                    .foregroundStyle(shown == nil ? Palette.muted : Palette.ochre)
                 Text(metric.unit)
                     .font(AtlasFont.body(12))
                     .foregroundStyle(Palette.muted)
                 Spacer()
-                Text(metric.arrow)
+                Text(metric.arrow(at: shownIndex))
                     .font(AtlasFont.body(20))
                     .foregroundStyle(Palette.pine)
             }
             .padding(.top, 8)
+            .animation(.easeOut(duration: 0.12), value: shownIndex)
 
             if metric.points.count > 1 {
-                MetricChart(points: metric.points)
+                MetricChart(points: metric.points, selection: $selection)
                     .padding(.top, 10)
 
                 HStack {
@@ -134,52 +156,161 @@ struct MetricCardView: View {
             ? String(Int(value))
             : String(format: "%.1f", value)
     }
+
+    /// "2026-08-06" → "6 sierpnia". `FormatStyle` zamiast `DateFormatter`,
+    /// bo ten drugi nie jest `Sendable` i musiałby wisieć jako współdzielony stan.
+    /// Południe w parsowanym znaczniku chroni przed przeskokiem daty o strefę.
+    private static func polishDay(_ iso: String) -> String {
+        guard let date = try? Date("\(iso)T12:00:00Z", strategy: .iso8601) else { return iso }
+        return date.formatted(
+            .dateTime.locale(Locale(identifier: "pl_PL")).day().month(.wide)
+        )
+    }
 }
 
-/// Linia 30 dni z zaznaczonym ostatnim punktem — odpowiednik SVG z weba.
+/// Geometria wykresu — jedno źródło prawdy dla rysowania linii i dla trafiania
+/// w punkt palcem.
+///
+/// To nie jest nadmiarowa abstrakcja: gdyby obie te rzeczy liczyły pozycję
+/// osobno, wystarczyłaby inna kolejność zaokrągleń, żeby marker stanął obok
+/// linii zamiast na niej.
+struct ChartGeometry: Equatable {
+    let size: CGSize
+    let count: Int
+
+    private let lo: Double
+    private let span: Double
+    private let step: CGFloat
+    private let values: [Double]
+
+    init(values: [Double], size: CGSize) {
+        self.values = values
+        self.size = size
+        count = values.count
+
+        // Skala jak w webie: dół przyklejony do zera (albo minimum, gdy ujemne).
+        lo = min(values.min() ?? 0, 0)
+        let hi = max(values.max() ?? 1, 1)
+        span = max(1, hi - lo)
+        step = values.count > 1 ? size.width / CGFloat(values.count - 1) : 0
+    }
+
+    func point(at index: Int) -> CGPoint {
+        guard values.indices.contains(index) else { return .zero }
+        return CGPoint(
+            x: CGFloat(index) * step,
+            y: size.height - CGFloat((values[index] - lo) / span) * size.height
+        )
+    }
+
+    /// Punkt NAJBLIŻSZY, a nie ten po lewej — pod palcem ma się zaznaczyć to,
+    /// co widać pod palcem. Poza wykresem przywiera do skrajnego dnia.
+    func index(atX x: CGFloat) -> Int {
+        guard count > 1, step > 0 else { return 0 }
+        return min(max(Int((x / step).rounded()), 0), count - 1)
+    }
+}
+
+/// Linia 30 dni. Przeciągnięcie po niej wybiera dzień, który karta pokazuje
+/// wielką liczbą.
 struct MetricChart: View {
     let points: [SeriesPoint]
+    @Binding var selection: Int?
+
+    @State private var size: CGSize = .zero
 
     var body: some View {
-        Canvas { context, size in
+        Canvas { context, canvasSize in
             guard points.count > 1 else { return }
-            let values = points.map(\.value)
-            // Skala jak w webie: dół przyklejony do zera (albo minimum, gdy ujemne).
-            let lo = min(values.min() ?? 0, 0)
-            let hi = max(values.max() ?? 1, 1)
-            let span = max(1, hi - lo)
-            let step = size.width / CGFloat(points.count - 1)
+            let geometry = ChartGeometry(values: points.map(\.value), size: canvasSize)
 
-            var path = Path()
-            for (i, p) in points.enumerated() {
-                let pt = CGPoint(
-                    x: CGFloat(i) * step,
-                    y: size.height - CGFloat((p.value - lo) / span) * size.height
-                )
-                if i == 0 { path.move(to: pt) } else { path.addLine(to: pt) }
+            var line = Path()
+            for index in points.indices {
+                let point = geometry.point(at: index)
+                if index == 0 { line.move(to: point) } else { line.addLine(to: point) }
             }
             context.stroke(
-                path,
+                line,
                 with: .color(Palette.pine),
                 style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)
             )
 
-            if let lastValue = values.last {
-                let cx = CGFloat(points.count - 1) * step
-                let cy = size.height - CGFloat((lastValue - lo) / span) * size.height
+            if let selection, points.indices.contains(selection) {
+                let point = geometry.point(at: selection)
+
+                var rule = Path()
+                rule.move(to: CGPoint(x: point.x, y: 0))
+                rule.addLine(to: CGPoint(x: point.x, y: canvasSize.height))
+                context.stroke(
+                    rule,
+                    with: .color(Palette.tick),
+                    style: StrokeStyle(lineWidth: 1, dash: [3, 3])
+                )
+
+                // Obwódka w kolorze tła odcina kropkę od linii pod nią.
+                let dot = CGRect(x: point.x - 5, y: point.y - 5, width: 10, height: 10)
+                context.fill(Path(ellipseIn: dot), with: .color(Palette.ochre))
+                context.stroke(Path(ellipseIn: dot), with: .color(Palette.panel), lineWidth: 2)
+            } else if let last = points.indices.last {
+                let point = geometry.point(at: last)
                 context.fill(
-                    Path(ellipseIn: CGRect(x: cx - 3.5, y: cy - 3.5, width: 7, height: 7)),
+                    Path(ellipseIn: CGRect(x: point.x - 3.5, y: point.y - 3.5, width: 7, height: 7)),
                     with: .color(Palette.ochre)
                 )
             }
         }
         .frame(height: 92)
+        .contentShape(Rectangle())
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+        // `minimumDistance` większe od zera oddaje pionowe przeciągnięcie
+        // ScrollView-owi. Przy zerze wykres łapałby każdy dotyk i lista
+        // przestawałaby się przewijać nad kartą.
+        .gesture(
+            DragGesture(minimumDistance: 6)
+                .onChanged { drag in
+                    let geometry = ChartGeometry(values: points.map(\.value), size: size)
+                    selection = geometry.index(atX: drag.location.x)
+                }
+        )
+        .sensoryFeedback(.selection, trigger: selection)
         .padding(.horizontal, 4)
         .padding(.vertical, 8)
         .background(Palette.panel, in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
-#Preview {
+#Preview("Trendy") {
     TrendsView()
+}
+
+/// Karta z danymi — `TrendsView()` bez sesji pokazuje tylko spinner, a tu
+/// chodzi o obejrzenie przeciągania po wykresie.
+#Preview("Karta metryki") {
+    let hours: [Double] = [
+        7.2, 6.8, 8.1, 7.5, 5.9, 7.8, 8.3, 7.1, 6.5, 7.9,
+        8.0, 7.4, 6.2, 7.7, 8.4, 7.0, 7.3, 6.9, 8.2, 7.6,
+    ]
+    let points = hours.enumerated().map { index, value in
+        SeriesPoint(date: String(format: "2026-07-%02d", index + 18), value: value)
+    }
+
+    return ScrollView {
+        VStack(spacing: 14) {
+            MetricCardView(
+                metric: Metric(
+                    id: "sleep_hours", title: "Sen", unit: "h",
+                    points: points, positiveHigher: true
+                )
+            )
+            MetricCardView(
+                metric: Metric(
+                    id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm",
+                    points: points.map { SeriesPoint(date: $0.date, value: $0.value * 6.4) },
+                    positiveHigher: false
+                )
+            )
+        }
+        .padding(20)
+    }
+    .background(Palette.card)
 }
