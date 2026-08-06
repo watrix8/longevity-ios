@@ -124,7 +124,9 @@ final class DashboardViewModel {
 
     // MARK: - Wyliczenia
 
-    private static func build(from rows: [ScoreSnapshot], current: ScoreSnapshot) -> DashboardData {
+    /// Internal, nie private — to jedyna nietrywialna logika w tym pliku
+    /// i chcemy ją mieć pod testami bez dotykania sieci.
+    static func build(from rows: [ScoreSnapshot], current: ScoreSnapshot) -> DashboardData {
         // rows przychodzą malejąco po dacie; do wykresu chcemy rosnąco.
         let ascending = rows.reversed().map { $0 }
         let totals = ascending.map { Double($0.scoreTotal) }

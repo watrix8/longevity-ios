@@ -148,16 +148,7 @@ final class TrendsViewModel {
         activity: [ActivityRow],
         meals: [MealRow]
     ) -> [Metric] {
-        // Kalorie: środek widełek kcal zsumowany per dzień — ta sama
-        // arytmetyka co `kcalMidSum` w webie.
-        var kcalByDay: [String: Double] = [:]
-        for meal in meals {
-            let mid = ((meal.kcalMin ?? 0) + (meal.kcalMax ?? 0)) / 2
-            kcalByDay[meal.loggedDate, default: 0] += mid
-        }
-        let kcalPoints = kcalByDay
-            .sorted { $0.key < $1.key }
-            .map { SeriesPoint(date: $0.key, value: ($0.value).rounded()) }
+        let kcalPoints = dailyKcal(meals.map { ($0.loggedDate, $0.kcalMin, $0.kcalMax) })
 
         return [
             Metric(id: "score", title: "Longevity Score", unit: "/100", positiveHigher: true,
@@ -177,6 +168,19 @@ final class TrendsViewModel {
             Metric(id: "kcal", title: "Kalorie (est.)", unit: "kcal", positiveHigher: true,
                    points: kcalPoints),
         ]
+    }
+
+    /// Kalorie: środek widełek kcal zsumowany per dzień — ta sama arytmetyka
+    /// co `kcalMidSum` w `app/trends/page.tsx`. Wydzielone i internal, żeby
+    /// dało się przetestować bez wystawiania typów wierszy z Supabase.
+    static func dailyKcal(_ meals: [(date: String, min: Double?, max: Double?)]) -> [SeriesPoint] {
+        var byDay: [String: Double] = [:]
+        for meal in meals {
+            byDay[meal.date, default: 0] += ((meal.min ?? 0) + (meal.max ?? 0)) / 2
+        }
+        return byDay
+            .sorted { $0.key < $1.key }
+            .map { SeriesPoint(date: $0.key, value: $0.value.rounded()) }
     }
 
     private static func isoDate(daysAgo: Int) -> String {
