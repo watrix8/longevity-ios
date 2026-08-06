@@ -2,6 +2,9 @@ import SwiftUI
 
 struct SettingsView: View {
     @State private var model = SettingsViewModel()
+    /// Współdzielona instancja — synchronizację odpala też powrót apki na wierzch,
+    /// a ekran ma pokazywać ten sam stan, nie własną kopię.
+    @State private var health = HealthSyncModel.shared
     @State private var showPasswordResetConfirm = false
     @State private var showSignOutConfirm = false
 
@@ -20,6 +23,7 @@ struct SettingsView: View {
                     loadFailure(message)
                 default:
                     healthCard
+                    appleHealthCard
                     integrationsCard
                     notificationsCard
                     securityCard
@@ -31,6 +35,7 @@ struct SettingsView: View {
         }
         .background(Palette.card)
         .task { await model.load() }
+        .task { await health.refreshConnection() }
         // Zmiany lecą same; sygnatury pilnują, żeby wczytanie nie zapisywało zwrotnie.
         .onChange(of: model.profileSignature) { model.profileChanged() }
         .onChange(of: model.prefsSignature) { model.prefsChanged() }
@@ -125,6 +130,59 @@ struct SettingsView: View {
             row("Główny cel") { menu($model.primaryGoal, SettingsOptions.goals) }
             divider
             row("Sylwetka") { menu($model.bodyType, SettingsOptions.bodyTypes) }
+        }
+    }
+
+    // MARK: - Apple Health
+
+    private var appleHealthCard: some View {
+        section(
+            kicker: "apple health",
+            footer: """
+                Sen, VO2max, tętno spoczynkowe, HRV, ruch, skład ciała i waga. \
+                Wpis zrobiony ręcznie ma pierwszeństwo — zegarek go nie nadpisze. \
+                VO2max Watch przelicza tylko przy marszu, biegu i wędrówce na zewnątrz.
+                """
+        ) {
+            row("Połączenie") {
+                if health.isConnected {
+                    Text("Połączono")
+                        .font(AtlasFont.body(14))
+                        .foregroundStyle(Palette.pine)
+                } else {
+                    Button("Połącz") { Task { await health.connect() } }
+                        .font(AtlasFont.body(14, .semibold))
+                        .tint(Palette.ochreInk)
+                        .disabled(health.isSyncing)
+                }
+            }
+            divider
+            row("Ostatnia synchronizacja") {
+                if health.isSyncing {
+                    ProgressView().tint(Palette.muted)
+                } else {
+                    Text(health.lastSyncedLabel)
+                        .font(AtlasFont.body(14))
+                        .foregroundStyle(Palette.muted)
+                }
+            }
+
+            if health.isConnected {
+                divider
+                actionRow("Synchronizuj teraz", color: Palette.ochreInk) {
+                    Task { await health.syncNow() }
+                }
+                .disabled(health.isSyncing)
+            }
+
+            if let status = health.statusMessage {
+                divider
+                Text(status)
+                    .font(AtlasFont.body(12))
+                    .foregroundStyle(health.statusIsError ? .red : Palette.pine)
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 12)
+            }
         }
     }
 

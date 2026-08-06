@@ -64,6 +64,20 @@ enum LongevityAPI {
         let meals: [Meal]
     }
 
+    /// Liczniki z `/health/sync`. `activitySynced` i `weightSynced` bywają
+    /// mniejsze od `saved` — serwer pomija dni, w których jest wpis ręczny.
+    struct HealthSyncResult: Decodable, Sendable {
+        let saved: Int
+        let activitySynced: Int
+        let weightSynced: Int
+
+        enum CodingKeys: String, CodingKey {
+            case saved
+            case activitySynced = "activity_synced"
+            case weightSynced = "weight_synced"
+        }
+    }
+
     // MARK: - Wywołania
 
     static func ask(question: String) async throws -> String {
@@ -117,6 +131,13 @@ enum LongevityAPI {
         )
     }
 
+    /// Dane z HealthKit. Idą przez serwer, a nie wprost do Supabase, bo poza
+    /// zapisem `health_metrics` trzeba jeszcze rozstrzygnąć priorytet źródeł
+    /// przy przepisywaniu aktywności i wagi (ręczny wpis wygrywa z zegarkiem).
+    static func syncHealth(days: [DailyHealthMetrics]) async throws -> HealthSyncResult {
+        try await send("/api/v1/health/sync", method: "POST", body: HealthSyncPayload(days: days))
+    }
+
     /// `GET /score/today` przelicza i zapisuje snapshot po drodze, więc to jest
     /// odświeżenie Longevity Score — nie tylko odczyt. Wołane po każdym zapisie.
     static func refreshScore() async {
@@ -126,6 +147,10 @@ enum LongevityAPI {
     // MARK: - Transport
 
     private struct Empty: Codable, Sendable {}
+
+    private struct HealthSyncPayload: Encodable {
+        let days: [DailyHealthMetrics]
+    }
 
     private struct ServerError: Decodable { let error: String? }
 

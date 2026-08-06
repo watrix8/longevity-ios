@@ -324,6 +324,7 @@ final class SettingsViewModel {
 
     func signOut() async {
         await flushPendingSaves()
+        HealthSyncModel.shared.reset()
         try? await AppSupabase.client.auth.signOut()
     }
 
