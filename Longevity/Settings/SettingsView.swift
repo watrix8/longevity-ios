@@ -1,0 +1,362 @@
+import SwiftUI
+
+struct SettingsView: View {
+    @State private var model = SettingsViewModel()
+    @State private var showPasswordResetConfirm = false
+    @State private var showSignOutConfirm = false
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                header
+
+                switch (model.isLoading, model.loadError) {
+                case (true, _):
+                    ProgressView()
+                        .tint(Palette.pine)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 100)
+                case (_, .some(let message)):
+                    loadFailure(message)
+                default:
+                    healthCard
+                    integrationsCard
+                    notificationsCard
+                    securityCard
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 22)
+            .padding(.bottom, 24)
+        }
+        .background(Palette.card)
+        .task { await model.load() }
+        // Zmiany lecą same; sygnatury pilnują, żeby wczytanie nie zapisywało zwrotnie.
+        .onChange(of: model.profileSignature) { model.profileChanged() }
+        .onChange(of: model.prefsSignature) { model.prefsChanged() }
+        .onDisappear { Task { await model.flushPendingSaves() } }
+    }
+
+    // MARK: - Nagłówek
+
+    private var header: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Opcje")
+                    .font(AtlasFont.display(28, .heavy))
+                    .foregroundStyle(Palette.ink)
+                Text("Zmiany zapisują się same.")
+                    .font(AtlasFont.body(13))
+                    .foregroundStyle(Palette.muted)
+            }
+            Spacer()
+            saveIndicator
+                .padding(.top, 6)
+        }
+        .padding(.bottom, 18)
+    }
+
+    /// Dyskretny status zamiast przycisków zapisu — widoczny tylko wtedy,
+    /// gdy coś się dzieje albo poszło nie tak.
+    @ViewBuilder
+    private var saveIndicator: some View {
+        switch model.saveState {
+        case .idle:
+            EmptyView()
+        case .saving:
+            ProgressView().tint(Palette.muted)
+        case .saved:
+            chip("Zapisano", systemImage: "checkmark", color: Palette.pine)
+                .transition(.opacity)
+        case .failed:
+            chip("Nie zapisano", systemImage: "exclamationmark.triangle.fill", color: .red)
+        }
+    }
+
+    private func chip(_ text: String, systemImage: String, color: Color) -> some View {
+        HStack(spacing: 5) {
+            Image(systemName: systemImage).font(.system(size: 9, weight: .bold))
+            Text(text).font(AtlasFont.mono(10.5))
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(Palette.panel, in: Capsule())
+        .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
+    }
+
+    // MARK: - Zdrowie i dane
+
+    private var healthCard: some View {
+        section(kicker: "zdrowie i dane") {
+            row("Imię i nazwisko") {
+                TextField("—", text: $model.fullName)
+                    .font(AtlasFont.body(14))
+                    .foregroundStyle(Palette.ink)
+                    .multilineTextAlignment(.trailing)
+                    .tint(Palette.ochre)
+                    .submitLabel(.done)
+            }
+            divider
+            row("Data urodzenia") {
+                DatePicker(
+                    "",
+                    selection: Binding(
+                        get: { model.birthDate },
+                        set: { model.setBirthDate($0) }
+                    ),
+                    in: ...Date(),
+                    displayedComponents: .date
+                )
+                .labelsHidden()
+                .tint(Palette.ochre)
+            }
+            divider
+            row("Płeć") { menu($model.sex, SettingsOptions.sexes) }
+            divider
+            row("Wzrost") {
+                numberField($model.heightCm, suffix: "cm")
+            }
+            divider
+            row("Waga") {
+                numberField($model.weightKg, suffix: "kg")
+            }
+            divider
+            row("Główny cel") { menu($model.primaryGoal, SettingsOptions.goals) }
+            divider
+            row("Sylwetka") { menu($model.bodyType, SettingsOptions.bodyTypes) }
+        }
+    }
+
+    // MARK: - Integracje
+
+    private var integrationsCard: some View {
+        section(
+            kicker: "integracje",
+            footer: "Konto łączysz w wersji web — generuje jednorazowy link do bota."
+        ) {
+            row("Telegram") {
+                Text(model.telegramLinked ? "Połączony" : "Niepołączony")
+                    .font(AtlasFont.body(14))
+                    .foregroundStyle(model.telegramLinked ? Palette.pine : Palette.muted)
+            }
+        }
+    }
+
+    // MARK: - Powiadomienia
+
+    private var notificationsCard: some View {
+        section(
+            kicker: "powiadomienia",
+            footer: "Powiadomienia wysyła bot Telegram, nie aplikacja."
+        ) {
+            row("Przypomnienia") {
+                Toggle("", isOn: $model.nudgesEnabled)
+                    .labelsHidden()
+                    .tint(Palette.ochre)
+            }
+            if model.nudgesEnabled {
+                divider
+                row("Godzina") {
+                    DatePicker(
+                        "",
+                        selection: $model.nudgeTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .labelsHidden()
+                    .tint(Palette.ochre)
+                }
+            }
+            divider
+            row("Podsumowanie tygodnia") {
+                Toggle("", isOn: $model.weeklyRecapEnabled)
+                    .labelsHidden()
+                    .tint(Palette.ochre)
+            }
+            if model.weeklyRecapEnabled {
+                divider
+                row("Dzień") {
+                    Picker("", selection: $model.weeklyRecapDow) {
+                        ForEach(SettingsOptions.weekdays.indices, id: \.self) { i in
+                            Text(SettingsOptions.weekdays[i]).tag(i)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .labelsHidden()
+                    .tint(Palette.ochre)
+                }
+            }
+        }
+    }
+
+    // MARK: - Bezpieczeństwo
+
+    private var securityCard: some View {
+        section(
+            kicker: "bezpieczeństwo",
+            footer: "Nowe hasło ustawisz przez link, który wyślemy na Twój adres."
+        ) {
+            row("Email") {
+                Text(model.email)
+                    .font(AtlasFont.body(14))
+                    .foregroundStyle(Palette.muted)
+            }
+            divider
+            // Hasła nie ustawia się w formularzu ustawień — standardowy wzorzec
+            // to link wysłany na maila, obsłużony przez stronę `/update-password`.
+            actionRow("Zmień hasło", color: Palette.ochreInk) {
+                showPasswordResetConfirm = true
+            }
+            .disabled(model.isSendingReset || model.email.isEmpty)
+            .confirmationDialog(
+                "Wysłać link do zmiany hasła na \(model.email)?",
+                isPresented: $showPasswordResetConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Wyślij link") { Task { await model.sendPasswordReset() } }
+                Button("Anuluj", role: .cancel) {}
+            }
+
+            if let status = model.passwordStatus {
+                divider
+                Text(status)
+                    .font(AtlasFont.body(12))
+                    .foregroundStyle(model.passwordIsError ? .red : Palette.pine)
+                    .padding(.horizontal, 15)
+                    .padding(.vertical, 12)
+            }
+
+            divider
+            actionRow("Wyloguj", color: .red) { showSignOutConfirm = true }
+                .confirmationDialog(
+                    "Wylogować z aplikacji?",
+                    isPresented: $showSignOutConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Wyloguj", role: .destructive) {
+                        Task { await model.signOut() }
+                    }
+                    Button("Anuluj", role: .cancel) {}
+                }
+        }
+    }
+
+    private func loadFailure(_ message: String) -> some View {
+        VStack(spacing: 10) {
+            Text("Nie udało się wczytać ustawień")
+                .font(AtlasFont.display(18))
+                .foregroundStyle(Palette.ink)
+            Text(message)
+                .font(AtlasFont.body(13))
+                .foregroundStyle(Palette.muted)
+                .multilineTextAlignment(.center)
+            Button("Spróbuj ponownie") { Task { await model.load() } }
+                .font(AtlasFont.body(13, .semibold))
+                .tint(Palette.pine)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 70)
+    }
+
+    // MARK: - Klocki
+
+    private func section<C: View>(
+        kicker: String,
+        footer: String? = nil,
+        @ViewBuilder _ content: () -> C
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Kicker(text: kicker)
+                .padding(.bottom, 10)
+
+            VStack(alignment: .leading, spacing: 0) { content() }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Palette.card, in: RoundedRectangle(cornerRadius: 18))
+                .overlay(RoundedRectangle(cornerRadius: 18).stroke(Palette.line, lineWidth: 1))
+
+            if let footer {
+                Text(footer)
+                    .font(AtlasFont.body(11.5))
+                    .foregroundStyle(Palette.muted)
+                    .lineSpacing(2)
+                    .padding(.top, 8)
+                    .padding(.horizontal, 4)
+            }
+        }
+        .padding(.bottom, 22)
+    }
+
+    private func row<C: View>(_ label: String, @ViewBuilder _ content: () -> C) -> some View {
+        HStack(spacing: 12) {
+            // Etykieta ustępuje wartości: przy długich opcjach ("Lepsza forma
+            // sportowa") to ona ma się skrócić, a nie zawijać wybrana wartość.
+            // Szerokość wymusza `fixedSize` na samym pickerze — `layoutPriority`
+            // tutaj zabrałoby całą szerokość także polom tekstowym.
+            Text(label)
+                .font(AtlasFont.body(14))
+                .foregroundStyle(Palette.ink)
+                .lineLimit(1)
+                .truncationMode(.tail)
+            Spacer(minLength: 8)
+            content()
+        }
+        .padding(.horizontal, 15)
+        .padding(.vertical, 11)
+    }
+
+    private func actionRow(_ label: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                Text(label)
+                    .font(AtlasFont.body(14))
+                    .foregroundStyle(color)
+                Spacer()
+            }
+            .contentShape(Rectangle())
+            .padding(.horizontal, 15)
+            .padding(.vertical, 13)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(Palette.line)
+            .frame(height: 1)
+            .padding(.leading, 15)
+    }
+
+    private func numberField(_ value: Binding<String>, suffix: String) -> some View {
+        HStack(spacing: 4) {
+            TextField("—", text: value)
+                .font(AtlasFont.body(14))
+                .foregroundStyle(Palette.ink)
+                .multilineTextAlignment(.trailing)
+                .keyboardType(.decimalPad)
+                .tint(Palette.ochre)
+                .fixedSize(horizontal: true, vertical: false)
+                .frame(minWidth: 40, alignment: .trailing)
+            Text(suffix)
+                .font(AtlasFont.body(13))
+                .foregroundStyle(Palette.muted)
+        }
+    }
+
+    private func menu(_ selection: Binding<String>, _ options: [(String, String)]) -> some View {
+        Picker("", selection: selection) {
+            Text("—").tag("")
+            ForEach(options, id: \.0) { value, label in
+                Text(label).tag(value)
+            }
+        }
+        .pickerStyle(.menu)
+        .labelsHidden()
+        .tint(Palette.ochre)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+    }
+}
+
+#Preview {
+    SettingsView()
+}

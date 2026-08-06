@@ -2,6 +2,7 @@
 *.xcworkspace
 xcuserdata/
 DerivedData/
+build/
 .build/
 .swiftpm/
 Pods/
