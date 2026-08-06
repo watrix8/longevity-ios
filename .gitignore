@@ -9,3 +9,4 @@ Pods/
 *.dSYM.zip
 *.dSYM
 .DS_Store
+Secrets.swift
