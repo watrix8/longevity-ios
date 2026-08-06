@@ -75,11 +75,10 @@ extension DashboardData {
             todayWord: "dobrze",
             points: points,
             breakdown: [
-                ("Sen", 84), ("Aktywność", 72), ("Odżywianie", 60),
-                ("Stres", 75), ("Nastrój", 80),
+                ("Sen", 84), ("Ciało", 72), ("Regeneracja", 75),
             ],
             coverageDays: 14,
-            note: "Odżywianie policzone z check-inu, nie ze zdjęć posiłków. Dodaj zdjęcie, żeby było dokładniej."
+            note: "Score policzony z 65% wag. Brakuje: VO₂max, Metabolizm."
         )
     }
 }
@@ -146,10 +145,7 @@ final class DashboardViewModel {
         let last7 = totals.suffix(7)
         let avg7 = last7.isEmpty ? 0 : last7.reduce(0, +) / Double(last7.count)
 
-        let source = current.components.nutritionSource
-        let note: String? = source == "checkin_fallback"
-            ? "Odżywianie policzone z check-inu, nie ze zdjęć posiłków. Dodaj zdjęcie, żeby było dokładniej."
-            : nil
+        let note = Self.missingNote(current.components)
 
         return DashboardData(
             dateLabel: polishDate(current.scoreDate),
@@ -165,6 +161,19 @@ final class DashboardViewModel {
             coverageDays: rows.count,
             note: note
         )
+    }
+
+    /// Score v3 pomija komponenty bez danych i przenormowuje wagi, więc liczba
+    /// bywa policzona z części obrazu. Notka mówi z jakiej — bez tego 82/100
+    /// z samego snu wygląda identycznie jak 82/100 z kompletu pomiarów.
+    static func missingNote(_ components: ScoreComponents) -> String? {
+        let missing = components.missing
+        guard !missing.isEmpty else { return nil }
+
+        guard let coverage = components.coveragePercent else {
+            return "Brakuje danych: \(missing.joined(separator: ", "))."
+        }
+        return "Score policzony z \(coverage)% wag. Brakuje: \(missing.joined(separator: ", "))."
     }
 
     /// Progi zgodne z `scoreLabel()` z lib/scoring.ts w repo webowym.

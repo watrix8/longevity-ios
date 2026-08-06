@@ -247,14 +247,14 @@ final class ChatViewModel {
 
     // MARK: - Check-in
 
-    func saveCheckin(sleep: Int, stress: Int, mood: Int) async {
+    func saveCheckin(stress: Int, mood: Int) async {
         guard !isBusy else { return }
         isBusy = true
         defer { isBusy = false }
 
         do {
-            try await LongevityAPI.saveCheckin(sleep: sleep, stress: stress, mood: mood)
-            append(.confirmation("✅ Check-in zapisany — sen \(sleep)/5 • stres \(stress)/5 • nastrój \(mood)/5"))
+            try await LongevityAPI.saveCheckin(stress: stress, mood: mood)
+            append(.confirmation("✅ Check-in zapisany — stres \(stress)/5 • nastrój \(mood)/5"))
             await LongevityAPI.refreshScore()
         } catch {
             append(.failure(error.localizedDescription))

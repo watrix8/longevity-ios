@@ -230,23 +230,22 @@ struct MarkersSheet: View {
     }
 }
 
-/// Trzy pytania, które bot zadaje w `/checkin` — sen, stres, nastrój.
+/// Dwa pytania: stres i nastrój. O sen apka nie pyta — mierzy go Watch,
+/// a serwer wyprowadza z godzin ocenę 1–5 na potrzeby silnika NBA.
 struct CheckinSheet: View {
-    let onSave: (Int, Int, Int) -> Void
+    let onSave: (Int, Int) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @State private var sleep = 3
     @State private var stress = 3
     @State private var mood = 3
 
     var body: some View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 22) {
-                scale("Jak spałeś?", subtitle: "1 = fatalnie, 5 = świetnie", value: $sleep)
                 scale("Poziom stresu", subtitle: "1 = spokój, 5 = bardzo wysoki", value: $stress)
                 scale("Nastrój", subtitle: "1 = kiepski, 5 = świetny", value: $mood)
 
-                Text("Aktywność liczy się osobno — z Apple Watcha albo z przycisku w czacie.")
+                Text("Sen i aktywność liczą się osobno — z Apple Watcha albo z przycisku w czacie.")
                     .font(AtlasFont.mono(10.5))
                     .foregroundStyle(Palette.muted)
                     .lineSpacing(3)
@@ -254,7 +253,7 @@ struct CheckinSheet: View {
                 Spacer()
 
                 Button {
-                    onSave(sleep, stress, mood)
+                    onSave(stress, mood)
                     dismiss()
                 } label: {
                     Text("Zapisz check-in")
@@ -370,5 +369,9 @@ struct CameraPicker: UIViewControllerRepresentable {
 }
 
 #Preview("Check-in") {
-    CheckinSheet { _, _, _ in }
+    CheckinSheet { _, _ in }
+}
+
+#Preview("Pomiary") {
+    MarkersSheet { _ in }
 }

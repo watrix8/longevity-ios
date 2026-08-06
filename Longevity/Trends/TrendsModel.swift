@@ -13,7 +13,7 @@ struct Metric: Identifiable, Sendable {
     let unit: String
     /// Rosnąco po dacie.
     let points: [SeriesPoint]
-    /// Czy wyższa wartość jest lepsza (waga i stres mają odwrotnie).
+    /// Czy wyższa wartość jest lepsza (waga, WHR i tętno spoczynkowe odwrotnie).
     let positiveHigher: Bool
 
     var last: Double? { points.last?.value }
@@ -60,20 +60,6 @@ private struct WeightRow: Decodable {
     }
 }
 
-private struct CheckinRow: Decodable {
-    let checkinDate: String
-    let sleepQuality: Double
-    let nutritionQuality: Double
-    let stressLevel: Double
-    let mood: Double
-    enum CodingKeys: String, CodingKey {
-        case checkinDate = "checkin_date"
-        case sleepQuality = "sleep_quality"
-        case nutritionQuality = "nutrition_quality"
-        case stressLevel = "stress_level"
-        case mood
-    }
-}
 
 private struct ActivityRow: Decodable {
     let loggedDate: String
@@ -153,10 +139,6 @@ final class TrendsViewModel {
                 .select("measured_at, weight_kg")
                 .gte("measured_at", value: from)
                 .order("measured_at").execute().value
-            async let checkins: [CheckinRow] = db.from("daily_checkins")
-                .select("checkin_date, sleep_quality, nutrition_quality, stress_level, mood")
-                .gte("checkin_date", value: from)
-                .order("checkin_date").execute().value
             async let activity: [ActivityRow] = db.from("activity_logs")
                 .select("logged_date, activity_minutes")
                 .gte("logged_date", value: from)
@@ -176,7 +158,7 @@ final class TrendsViewModel {
 
             state = .loaded(
                 try await Self.build(
-                    scores: scores, weights: weights, checkins: checkins,
+                    scores: scores, weights: weights,
                     activity: activity, meals: meals, health: health
                 )
             )
@@ -187,7 +169,7 @@ final class TrendsViewModel {
 
     /// Kolejność kafelków idzie za wagami z formuły v3: najpierw score, potem
     /// sen (30%), wydolność (25%), skład ciała (20%), regeneracja (15%),
-    /// a na końcu to, co zostało z check-inu.
+    /// a na końcu ruch i posiłki — v3 ich nie punktuje, ale opisują dzień.
     ///
     /// Metryki bez ani jednego punktu są odsiewane — kafelek metryki, której
     /// nigdy nie zmierzono, nie niesie żadnej informacji. Pojawi się sam, gdy
@@ -195,7 +177,6 @@ final class TrendsViewModel {
     private static func build(
         scores: [ScoreRow],
         weights: [WeightRow],
-        checkins: [CheckinRow],
         activity: [ActivityRow],
         meals: [MealRow],
         health: [HealthRow]
@@ -240,15 +221,6 @@ final class TrendsViewModel {
             Metric(id: "activity", title: "Ruch", unit: "min", positiveHigher: true,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
 
-            // Check-in — subiektywne, stąd osobne etykiety obok pomiarów z zegarka
-            Metric(id: "sleep", title: "Sen (ocena)", unit: "/5", positiveHigher: true,
-                   points: checkins.map { SeriesPoint(date: $0.checkinDate, value: $0.sleepQuality) }),
-            Metric(id: "nutrition", title: "Odżywianie", unit: "/5", positiveHigher: true,
-                   points: checkins.map { SeriesPoint(date: $0.checkinDate, value: $0.nutritionQuality) }),
-            Metric(id: "stress", title: "Stres", unit: "/5", positiveHigher: false,
-                   points: checkins.map { SeriesPoint(date: $0.checkinDate, value: $0.stressLevel) }),
-            Metric(id: "mood", title: "Nastrój", unit: "/5", positiveHigher: true,
-                   points: checkins.map { SeriesPoint(date: $0.checkinDate, value: $0.mood) }),
             Metric(id: "kcal", title: "Kalorie (est.)", unit: "kcal", positiveHigher: true,
                    points: kcalPoints),
         ].filter { !$0.points.isEmpty }

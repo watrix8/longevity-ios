@@ -96,15 +96,29 @@ struct DashboardModelTests {
         #expect(data.confidence == 50)
     }
 
-    @Test("Notka pojawia się tylko przy odżywianiu z check-inu")
-    func fallbackNote() throws {
-        let withFallback = try makeSnapshot("2026-08-06", 38, components: #"{"nutrition_source":"checkin_fallback"}"#)
-        let fromPhotos = try makeSnapshot("2026-08-06", 38, components: #"{"nutrition_source":"meal_photos"}"#)
+    @Test("Notka pojawia się przy niepełnym pokryciu komponentów")
+    func coverageNote() throws {
+        let partial = try makeSnapshot("2026-08-06", 82, components: """
+        {"sleep":82,"regeneration":70,"coverage":0.45}
+        """)
+        let complete = try makeSnapshot("2026-08-06", 78, components: """
+        {"sleep":82,"vo2max":95,"body":70,"regeneration":88,"metabolic":60,"coverage":1}
+        """)
 
-        #expect(DashboardViewModel.build(from: [withFallback], current: withFallback).note != nil)
-        #expect(DashboardViewModel.build(from: [fromPhotos], current: fromPhotos).note == nil)
-        #expect(DashboardViewModel.build(from: [try makeSnapshot("2026-08-06", 38)],
-                                         current: try makeSnapshot("2026-08-06", 38)).note == nil)
+        #expect(DashboardViewModel.build(from: [partial], current: partial).note != nil)
+        #expect(DashboardViewModel.build(from: [complete], current: complete).note == nil)
+    }
+
+    /// Breakdown na dashboardzie ma tyle pasków, ile komponentów dało się
+    /// policzyć — reszta znika, zamiast leżeć na zerze.
+    @Test("Breakdown pokazuje tylko policzone komponenty")
+    func breakdownSkipsMissing() throws {
+        let partial = try makeSnapshot("2026-08-06", 82, components: """
+        {"sleep":82,"regeneration":70,"coverage":0.45}
+        """)
+        let data = DashboardViewModel.build(from: [partial], current: partial)
+
+        #expect(data.breakdown.map(\.label) == ["Sen", "Regeneracja"])
     }
 
     @Test("Progi opisu stanu", arguments: [

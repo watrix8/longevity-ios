@@ -52,8 +52,8 @@ struct ChatView: View {
             }
         }
         .sheet(isPresented: $showCheckin) {
-            CheckinSheet { sleep, stress, mood in
-                Task { await model.saveCheckin(sleep: sleep, stress: stress, mood: mood) }
+            CheckinSheet { stress, mood in
+                Task { await model.saveCheckin(stress: stress, mood: mood) }
             }
         }
         .sheet(isPresented: $showMarkers) {
@@ -146,12 +146,13 @@ struct ChatView: View {
             VStack(alignment: .leading, spacing: 9) {
                 welcomeRow("🍽️", "Wrzuć zdjęcie posiłku — policzę kalorie i makro")
                 welcomeRow("🏃", "Dopisz aktywność jednym tapnięciem")
-                welcomeRow("✅", "Zrób check-in: sen, stres, nastrój")
+                welcomeRow("✅", "Zrób check-in: stres i nastrój")
+                welcomeRow("📏", "Dopisz pomiary, których nie ma w Apple Health")
                 welcomeRow("🧠", "Zapytaj o cokolwiek — znam Twoje dane")
             }
             .padding(.top, 2)
 
-            Text("Odpowiadam na podstawie Twojego score'u, check-inów, wagi i badań.")
+            Text("Odpowiadam na podstawie Twojego score'u, pomiarów z zegarka, wagi i badań.")
                 .font(AtlasFont.mono(11))
                 .foregroundStyle(Palette.muted)
                 .lineSpacing(3)

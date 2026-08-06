@@ -15,46 +15,57 @@ struct ScoreSnapshot: Decodable, Sendable {
     }
 }
 
-/// Składniki score v2. Wszystko opcjonalne z fallbackiem na 0 — starsze
-/// snapshoty (v1) nie mają pól dopisanych w v2, a `components` ma w schemacie
-/// default '{}'.
+/// Składniki score v3 — pięć komponentów liczonych z pomiarów.
+///
+/// Każdy jest OPCJONALNY i to jest istota modelu: komponent bez danych nie
+/// wchodzi do score'u, a wagi pozostałych są przenormowane. Zero i brak to
+/// dwie różne rzeczy, więc nie sprowadzamy ich do wspólnego fallbacku.
 struct ScoreComponents: Decodable, Sendable {
-    let sleep: Double
-    let activity: Double
-    let nutrition: Double
-    let stress: Double
-    let mood: Double
-    let activityWeekMinutes: Double?
-    let nutritionSource: String?
+    let sleep: Double?
+    let vo2max: Double?
+    let body: Double?
+    let regeneration: Double?
+    let metabolic: Double?
+
+    /// Suma wag komponentów, które miały dane (0–1).
+    let coverage: Double?
     let scoreModel: String?
 
     enum CodingKeys: String, CodingKey {
-        case sleep, activity, nutrition, stress, mood
-        case activityWeekMinutes = "activity_week_minutes"
-        case nutritionSource = "nutrition_source"
+        case sleep, vo2max, body, regeneration, metabolic, coverage
         case scoreModel = "score_model"
     }
 
-    init(from decoder: any Decoder) throws {
-        let c = try decoder.container(keyedBy: CodingKeys.self)
-        sleep = try c.decodeIfPresent(Double.self, forKey: .sleep) ?? 0
-        activity = try c.decodeIfPresent(Double.self, forKey: .activity) ?? 0
-        nutrition = try c.decodeIfPresent(Double.self, forKey: .nutrition) ?? 0
-        stress = try c.decodeIfPresent(Double.self, forKey: .stress) ?? 0
-        mood = try c.decodeIfPresent(Double.self, forKey: .mood) ?? 0
-        activityWeekMinutes = try c.decodeIfPresent(Double.self, forKey: .activityWeekMinutes)
-        nutritionSource = try c.decodeIfPresent(String.self, forKey: .nutritionSource)
-        scoreModel = try c.decodeIfPresent(String.self, forKey: .scoreModel)
-    }
-
-    /// Kolejność jak w makiecie: etykieta + wartość 0–100.
+    /// Kolejność wg wag z formuły v3. Komponenty bez danych są pomijane —
+    /// pasek na zerze czytałby się jak „zawaliłeś", a nie „nie zmierzono".
     var breakdown: [(label: String, value: Double)] {
         [
             ("Sen", sleep),
-            ("Aktywność", activity),
-            ("Odżywianie", nutrition),
-            ("Stres", stress),
-            ("Nastrój", mood),
-        ]
+            ("VO₂max", vo2max),
+            ("Ciało", body),
+            ("Regeneracja", regeneration),
+            ("Metabolizm", metabolic),
+        ].compactMap { label, value in
+            value.map { (label: label, value: $0) }
+        }
+    }
+
+    /// Etykiety komponentów, których nie dało się policzyć — dashboard mówi
+    /// wprost, czego brakuje, zamiast udawać komplet.
+    var missing: [String] {
+        [
+            ("Sen", sleep),
+            ("VO₂max", vo2max),
+            ("Ciało", body),
+            ("Regeneracja", regeneration),
+            ("Metabolizm", metabolic),
+        ].compactMap { label, value in
+            value == nil ? label : nil
+        }
+    }
+
+    /// Ile procent wag score faktycznie objął. `nil` dla starych snapshotów.
+    var coveragePercent: Int? {
+        coverage.map { Int(($0 * 100).rounded()) }
     }
 }

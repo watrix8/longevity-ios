@@ -119,12 +119,13 @@ enum LongevityAPI {
         return try await send("/api/v1/meals/\(id)", method: "PATCH", body: body)
     }
 
-    static func saveCheckin(sleep: Int, stress: Int, mood: Int) async throws {
+    /// Bez `sleep_quality` — apka o sen nie pyta. Serwer wyprowadza ocenę
+    /// z godzin zmierzonych przez Watcha, bo kolumna jest NOT NULL i karmi NBA.
+    static func saveCheckin(stress: Int, mood: Int) async throws {
         let _: Empty = try await send(
             "/api/v1/checkins/today",
             method: "PUT",
             body: [
-                "sleep_quality": sleep,
                 "stress_level": stress,
                 "mood": mood,
             ]
