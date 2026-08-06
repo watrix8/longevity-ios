@@ -84,7 +84,7 @@ final class ChatViewModel {
             return rows.reversed().map { row in
                 ChatMessage(
                     kind: row.role == "user" ? .user(row.content) : .assistant(row.content),
-                    at: Self.parseTimestamp(row.createdAt)
+                    at: ChatDates.parseTimestamp(row.createdAt)
                 )
             }
         } catch {
@@ -96,7 +96,10 @@ final class ChatViewModel {
         meals.map { meal in
             ChatMessage(
                 kind: .meal(MealCard(from: meal)),
-                at: meal.createdAt.map(Self.parseTimestamp) ?? Date()
+                // Domknięcie, nie referencja: parseTimestamp ma domyślny
+                // `fallback`, a Swift nie stosuje domyślnych argumentów przy
+                // przekazywaniu funkcji jako wartości.
+                at: meal.createdAt.map { ChatDates.parseTimestamp($0) } ?? Date()
             )
         }
     }
@@ -206,7 +209,7 @@ final class ChatViewModel {
             let userId = try await AppSupabase.client.auth.session.user.id.uuidString
             let payload = ActivityPayload(
                 user_id: userId,
-                logged_date: Self.todayISO(),
+                logged_date: ChatDates.todayISO(),
                 activity_minutes: minutes,
                 source: "ios"
             )
@@ -243,24 +246,5 @@ final class ChatViewModel {
 
     private func append(_ kind: ChatMessage.Kind) {
         messages.append(ChatMessage(kind: kind))
-    }
-
-    private static func todayISO() -> String {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX")
-        f.timeZone = TimeZone(identifier: "Europe/Warsaw")
-        f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: Date())
-    }
-
-    /// Postgres zwraca znaczniki raz z ułamkami sekund, raz bez.
-    private static func parseTimestamp(_ raw: String) -> Date {
-        let withFraction = ISO8601DateFormatter()
-        withFraction.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        if let date = withFraction.date(from: raw) { return date }
-
-        let plain = ISO8601DateFormatter()
-        plain.formatOptions = [.withInternetDateTime]
-        return plain.date(from: raw) ?? Date()
     }
 }
