@@ -35,10 +35,20 @@ final class ChatViewModel {
     /// `telegram_pending_inputs`, tylko po stronie klienta.
     private var pendingMeal: (id: String, imageBase64: String?)?
 
-    var isAnsweringMealQuestion: Bool { pendingMeal != nil }
+    /// Ustawiane przez „Opisz słowami" — bez tego opis posiłku poleciałby do
+    /// asystenta jako zwykłe pytanie.
+    private var awaitingMealDescription = false
+
+    var isComposingMeal: Bool { pendingMeal != nil || awaitingMealDescription }
 
     var placeholder: String {
-        pendingMeal != nil ? "Odpowiedz na pytanie o posiłek…" : "Zapytaj o cokolwiek…"
+        if pendingMeal != nil { return "Odpowiedz na pytanie o posiłek…" }
+        if awaitingMealDescription { return "Co jesz? Podaj też wielkość porcji…" }
+        return "Zapytaj o cokolwiek…"
+    }
+
+    func startMealDescription() {
+        awaitingMealDescription = true
     }
 
     init(messages: [ChatMessage] = [], isLoadingHistory: Bool = true) {
@@ -102,6 +112,9 @@ final class ChatViewModel {
 
         if let pending = pendingMeal {
             await clarifyMeal(pending, answer: text)
+        } else if awaitingMealDescription {
+            awaitingMealDescription = false
+            await submitMeal(description: text, imageBase64: nil)
         } else {
             await ask(text)
         }
@@ -121,29 +134,31 @@ final class ChatViewModel {
 
     // MARK: - Posiłki
 
-    func logMeal(photo: Data?, description: String?) async {
+    func logMeal(photo: Data) async {
         guard !isBusy else { return }
-        isBusy = true
-        defer { isBusy = false }
 
-        let base64 = photo.flatMap { MealPhoto.base64(from: $0) }
-        if photo != nil, base64 == nil {
+        guard let base64 = MealPhoto.base64(from: photo) else {
             append(.failure("Nie udało się przygotować zdjęcia. Spróbuj innego."))
             return
         }
 
-        if let description, !description.isEmpty {
-            append(.user(description))
-        } else if base64 != nil {
-            append(.confirmation("📷 Zdjęcie posiłku wysłane do analizy…"))
-        }
+        awaitingMealDescription = false
+        append(.confirmation("📷 Zdjęcie posiłku wysłane do analizy…"))
+        await submitMeal(description: nil, imageBase64: base64)
+    }
+
+    /// Dymek użytkownika dokłada wołający — przy zdjęciu jest nim potwierdzenie,
+    /// przy opisie tekst już wpisany w `send()`.
+    private func submitMeal(description: String?, imageBase64: String?) async {
+        isBusy = true
+        defer { isBusy = false }
 
         do {
             let result = try await LongevityAPI.logMeal(
                 description: description,
-                imageBase64: base64
+                imageBase64: imageBase64
             )
-            handleMealResult(result, imageBase64: base64)
+            handleMealResult(result, imageBase64: imageBase64)
             await LongevityAPI.refreshScore()
         } catch {
             append(.failure(error.localizedDescription))

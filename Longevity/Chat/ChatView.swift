@@ -30,7 +30,10 @@ struct ChatView: View {
         .confirmationDialog("Dodaj posiłek", isPresented: $showMealOptions, titleVisibility: .visible) {
             Button("Zrób zdjęcie") { showCamera = true }
             Button("Wybierz z galerii") { showPhotoPicker = true }
-            Button("Opisz słowami") { composerFocused = true }
+            Button("Opisz słowami") {
+                model.startMealDescription()
+                composerFocused = true
+            }
             Button("Anuluj", role: .cancel) {}
         } message: {
             Text("Im więcej szczegółów, tym dokładniejsza analiza.")
@@ -38,7 +41,7 @@ struct ChatView: View {
         .photosPicker(isPresented: $showPhotoPicker, selection: $photoItem, matching: .images)
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker { data in
-                Task { await model.logMeal(photo: data, description: nil) }
+                Task { await model.logMeal(photo: data) }
             }
             .ignoresSafeArea()
         }
@@ -58,7 +61,7 @@ struct ChatView: View {
                 let data = try? await item.loadTransferable(type: Data.self)
                 photoItem = nil
                 guard let data else { return }
-                await model.logMeal(photo: data, description: nil)
+                await model.logMeal(photo: data)
             }
         }
     }
@@ -265,7 +268,7 @@ struct ChatView: View {
                 .background(Palette.card, in: RoundedRectangle(cornerRadius: 20))
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(model.isAnsweringMealQuestion ? Palette.ochre : Palette.line, lineWidth: 1)
+                        .stroke(model.isComposingMeal ? Palette.ochre : Palette.line, lineWidth: 1)
                 )
 
             Button {
