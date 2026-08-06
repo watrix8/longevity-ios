@@ -1,0 +1,76 @@
+name: Longevity
+options:
+  bundleIdPrefix: pl.tippin
+  deploymentTarget:
+    iOS: "26.0"
+    watchOS: "26.0"
+  xcodeVersion: "26.0"
+
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    from: "2.0.0"
+
+targets:
+  Longevity:
+    type: application
+    platform: iOS
+    sources:
+      - Longevity
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: pl.tippin.longevity
+        INFOPLIST_FILE: Longevity/Info.plist
+        SWIFT_VERSION: "6.0"
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+    dependencies:
+      - package: Supabase
+    entitlements:
+      path: Longevity/Longevity.entitlements
+      properties:
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access:
+          - health-records
+
+  LongevityWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - LongevityWatch
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: pl.tippin.longevity.watch
+        SWIFT_VERSION: "6.0"
+        SUPPORTED_PLATFORMS: "watchos watchsimulator"
+    dependencies:
+      - target: LongevityWatchExtension
+
+  LongevityWatchExtension:
+    type: watchkit2-extension
+    platform: watchOS
+    sources:
+      - LongevityWatchExtension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: pl.tippin.longevity.watch.extension
+        SWIFT_VERSION: "6.0"
+        SUPPORTED_PLATFORMS: "watchos watchsimulator"
+
+schemes:
+  Longevity:
+    build:
+      targets:
+        Longevity: all
+    run:
+      config: Debug
+    archive:
+      config: Release
+  LongevityWatch:
+    build:
+      targets:
+        LongevityWatch: all
+        LongevityWatchExtension: all
+    run:
+      config: Debug
+    archive:
+      config: Release
