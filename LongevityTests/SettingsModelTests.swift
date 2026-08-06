@@ -46,8 +46,6 @@ struct SettingsModelTests {
         seen.insert(model.profileSignature)
         model.heightCm = "182"
         seen.insert(model.profileSignature)
-        model.weightKg = "82.2"
-        seen.insert(model.profileSignature)
         model.primaryGoal = "performance"
         seen.insert(model.profileSignature)
         model.bodyType = "athletic"
@@ -56,7 +54,7 @@ struct SettingsModelTests {
         seen.insert(model.profileSignature)
 
         // Każda zmiana musiała dać nową sygnaturę.
-        #expect(seen.count == 8)
+        #expect(seen.count == 7)
     }
 
     @Test("Sygnatura preferencji reaguje na każde pole")

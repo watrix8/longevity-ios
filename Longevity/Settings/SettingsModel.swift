@@ -36,7 +36,6 @@ private struct ProfileRow: Decodable {
     let birthDate: String?
     let sex: String?
     let heightCm: Double?
-    let weightKg: Double?
     let primaryGoal: String?
     let bodyType: String?
 
@@ -46,7 +45,6 @@ private struct ProfileRow: Decodable {
         case birthDate = "birth_date"
         case sex
         case heightCm = "height_cm"
-        case weightKg = "weight_kg"
         case primaryGoal = "primary_goal"
         case bodyType = "body_type"
     }
@@ -71,7 +69,6 @@ private struct ProfilePayload: Encodable {
     let birth_date: String?
     let sex: String?
     let height_cm: Double?
-    let weight_kg: Double?
     let primary_goal: String?
     let body_type: String?
 }
@@ -110,7 +107,6 @@ final class SettingsViewModel {
     private(set) var birthDateIsSet = false
     var sex = ""
     var heightCm = ""
-    var weightKg = ""
     var primaryGoal = ""
     var bodyType = ""
 
@@ -133,7 +129,7 @@ final class SettingsViewModel {
     var profileSignature: String {
         [
             fullName, String(birthDateIsSet), String(birthDate.timeIntervalSince1970),
-            sex, heightCm, weightKg, primaryGoal, bodyType,
+            sex, heightCm, primaryGoal, bodyType,
         ].joined(separator: "|")
     }
 
@@ -163,7 +159,7 @@ final class SettingsViewModel {
 
             let profile: ProfileRow = try await AppSupabase.client
                 .from("profiles")
-                .select("full_name, telegram_chat_id, birth_date, sex, height_cm, weight_kg, primary_goal, body_type")
+                .select("full_name, telegram_chat_id, birth_date, sex, height_cm, primary_goal, body_type")
                 .eq("id", value: userId)
                 .single()
                 .execute()
@@ -173,7 +169,6 @@ final class SettingsViewModel {
             telegramLinked = profile.telegramChatId != nil
             sex = profile.sex ?? ""
             heightCm = profile.heightCm.map { Self.trimZero($0) } ?? ""
-            weightKg = profile.weightKg.map { Self.trimZero($0) } ?? ""
             primaryGoal = profile.primaryGoal ?? ""
             bodyType = profile.bodyType ?? ""
             if let iso = profile.birthDate, let parsed = Self.dateParser.date(from: iso) {
@@ -247,7 +242,6 @@ final class SettingsViewModel {
                 birth_date: birthDateIsSet ? Self.dateParser.string(from: birthDate) : nil,
                 sex: sex.isEmpty ? nil : sex,
                 height_cm: Double(heightCm.replacingOccurrences(of: ",", with: ".")),
-                weight_kg: Double(weightKg.replacingOccurrences(of: ",", with: ".")),
                 primary_goal: primaryGoal.isEmpty ? nil : primaryGoal,
                 body_type: bodyType.isEmpty ? nil : bodyType
             )

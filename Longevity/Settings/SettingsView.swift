@@ -123,10 +123,6 @@ struct SettingsView: View {
                 numberField($model.heightCm, suffix: "cm")
             }
             divider
-            row("Waga") {
-                numberField($model.weightKg, suffix: "kg")
-            }
-            divider
             row("Główny cel") { menu($model.primaryGoal, SettingsOptions.goals) }
             divider
             row("Sylwetka") { menu($model.bodyType, SettingsOptions.bodyTypes) }
@@ -139,9 +135,9 @@ struct SettingsView: View {
         section(
             kicker: "apple health",
             footer: """
-                Sen, VO2max, tętno spoczynkowe, HRV, ruch, skład ciała i waga. \
+                Sen, VO₂max, tętno spoczynkowe, HRV, ruch, skład ciała i waga. \
                 Wpis zrobiony ręcznie ma pierwszeństwo — zegarek go nie nadpisze. \
-                VO2max Watch przelicza tylko przy marszu, biegu i wędrówce na zewnątrz.
+                Wagę i pozostałe pomiary dopisujesz w czacie, a oglądasz na Trendach.
                 """
         ) {
             row("Połączenie") {
