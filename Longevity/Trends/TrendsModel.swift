@@ -6,64 +6,28 @@ struct SeriesPoint: Sendable {
     let value: Double
 }
 
-/// Zakres widoczny na Trendach.
+/// Szerokość okna widocznego na Trendach.
 ///
-/// Powyżej kwartału punkty są uśredniane, bo trzy lata to ponad tysiąc dni na
-/// wykresie szerokim na jakieś 300 punktów — bez agregacji linia zamienia się
-/// w szum, a przeciąganie palcem przestaje trafiać w cokolwiek konkretnego.
-enum TrendRange: String, CaseIterable, Identifiable, Sendable {
-    case month, quarter, year, all
+/// Maksimum to kwartał i to jest decyzja, nie ograniczenie techniczne: przy
+/// dłuższym oknie punkty robią się gęstsze niż piksele, więc trzeba by je
+/// uśredniać — a wtedy wykres przestaje pokazywać konkretne dni. Zamiast tego
+/// okno jest wąskie i PRZESUWALNE w przeszłość.
+enum TrendWindow: String, CaseIterable, Identifiable, Sendable {
+    case month, quarter
 
     var id: String { rawValue }
+
+    var days: Int {
+        switch self {
+        case .month: 30
+        case .quarter: 90
+        }
+    }
 
     var label: String {
         switch self {
         case .month: "30 dni"
-        case .quarter: "90 dni"
-        case .year: "Rok"
-        case .all: "Wszystko"
-        }
-    }
-
-    /// `nil` = bez ograniczenia daty.
-    var days: Int? {
-        switch self {
-        case .month: 30
-        case .quarter: 90
-        case .year: 365
-        case .all: nil
-        }
-    }
-
-    /// Największy kubełek, jaki ten zakres dopuszcza.
-    var maxBucketDays: Int {
-        switch self {
-        case .month, .quarter: 1
-        case .year: 7
-        case .all: 30
-        }
-    }
-
-    /// Kubełek dobrany do LICZBY REALNYCH PUNKTÓW, nie do szerokości okna.
-    ///
-    /// Bez tego szerszy zakres dawał gorszy wykres: przy miesiącu danych
-    /// „Wszystko" zwijało 31 dni do dwóch punktów miesięcznych i wyglądało
-    /// na zepsute ładowanie. Agregacja ma włączać się dopiero wtedy, gdy jest
-    /// co agregować.
-    func bucketDays(forPointCount count: Int) -> Int {
-        guard count > Self.densePointLimit else { return 1 }
-        let needed = Int(ceil(Double(count) / Double(Self.densePointLimit)))
-        return Swift.min(Swift.max(needed, 1), maxBucketDays)
-    }
-
-    /// Powyżej tylu punktów wykres przestaje być czytelny na szerokości telefonu.
-    static let densePointLimit = 120
-
-    func bucketNote(forPointCount count: Int) -> String? {
-        switch bucketDays(forPointCount: count) {
-        case 1: nil
-        case 2...13: "średnie tygodniowe"
-        default: "średnie miesięczne"
+        case .quarter: "3 miesiące"
         }
     }
 }
@@ -127,8 +91,6 @@ struct Metric: Identifiable, Sendable {
     /// Czy wyższa wartość jest lepsza (waga, WHR i tętno spoczynkowe odwrotnie).
     let positiveHigher: Bool
     let role: MetricRole
-    /// Ile dni składa się na jeden punkt. 1 = punkt to doba.
-    let bucketDays: Int
 
     var last: Double? { points.last?.value }
     var previous: Double? { points.dropLast().last?.value }
@@ -136,16 +98,6 @@ struct Metric: Identifiable, Sendable {
     /// Średnia CAŁEGO szeregu, nie trzydziestu dni — przy dłuższym zakresie
     /// obejmuje wszystko, co widać na wykresie.
     var avgAll: Double? { Self.average(points.map(\.value)) }
-
-    /// „7 dni" tylko przy punktach dobowych; przy kubełkach mowa o tygodniach
-    /// albo miesiącach i etykieta musi to oddać.
-    var recentLabel: String {
-        switch bucketDays {
-        case 1: "Śr. 7 dni"
-        case 7: "Śr. 7 tyg."
-        default: "Śr. 7 mies."
-        }
-    }
 
     /// Czy szereg przekracza granicę roku. Wtedy „08-06" przestaje wystarczać,
     /// bo nie wiadomo, o który rok chodzi.
@@ -157,10 +109,6 @@ struct Metric: Identifiable, Sendable {
 
     /// Opis punktu pod przeciągniętym palcem.
     ///
-    /// Kubełek zmienia sens etykiety: przy dobowym to konkretny dzień, przy
-    /// tygodniowym początek tygodnia, przy miesięcznym sam miesiąc. Pokazanie
-    /// „6 sierpnia" dla średniej z całego sierpnia byłoby myleniem tropu.
-    ///
     /// Rok dochodzi, gdy punkt nie jest z bieżącego roku — tak samo, jak pisze
     /// się daty po polsku.
     func pointLabel(_ iso: String, now: Date = Date(), calendar: Calendar = .current) -> String {
@@ -169,15 +117,11 @@ struct Metric: Identifiable, Sendable {
         let polish = Locale(identifier: "pl_PL")
         let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
 
-        if bucketDays > 13 {
-            return date.formatted(.dateTime.locale(polish).month(.wide).year())
-        }
-
         var text = date.formatted(.dateTime.locale(polish).day().month(.wide))
         if !sameYear {
             text += " " + date.formatted(.dateTime.locale(polish).year())
         }
-        return bucketDays > 1 ? "tydz. od \(text)" : text
+        return text
     }
 
     /// Etykieta osi. Przy szeregu przekraczającym rok miesiąc z rokiem, bo
@@ -206,30 +150,6 @@ struct Metric: Identifiable, Sendable {
         return (values.reduce(0, +) / Double(values.count) * 10).rounded() / 10
     }
 
-    /// Uśrednia punkty w kubełki po `days` dni, licząc od NAJNOWSZEGO —
-    /// dzięki temu ostatni kubełek jest zawsze pełnym, świeżym okresem,
-    /// a nie ogryzkiem zależnym od tego, kiedy zaczyna się historia.
-    ///
-    /// Datą kubełka jest jego najwcześniejszy dzień, więc oś czasu zostaje
-    /// rosnąca i przeciąganie po wykresie dalej pokazuje sensowny okres.
-    func bucketed(by days: Int) -> Metric {
-        guard days > 1, points.count > 1 else { return self }
-
-        let reversed = Array(points.reversed())
-        let buckets = stride(from: 0, to: reversed.count, by: days).map { start -> SeriesPoint in
-            let slice = reversed[start..<Swift.min(start + days, reversed.count)]
-            let mean = slice.reduce(0) { $0 + $1.value } / Double(slice.count)
-            return SeriesPoint(
-                date: slice.last!.date,
-                value: (mean * 10).rounded() / 10
-            )
-        }
-
-        return Metric(
-            id: id, title: title, unit: unit, positiveHigher: positiveHigher,
-            role: role, bucketDays: days, points: buckets.reversed()
-        )
-    }
 }
 
 // MARK: - Wiersze z Supabase
@@ -306,9 +226,11 @@ final class TrendsViewModel {
 
     private(set) var state: State
 
-    /// Zakres wybrany przez użytkownika. Zmiana przeładowuje dane, bo dłuższe
-    /// okna sięgają dalej niż to, co już mamy wczytane.
-    var range: TrendRange = .month
+    /// Szerokość okna. Zmiana przeładowuje dane.
+    var window: TrendWindow = .month
+
+    /// Ile okien wstecz od dziś. 0 = bieżące, 1 = poprzednie, itd.
+    private(set) var page = 0
 
     /// Podgląd wstrzykuje gotowy stan i nie ma czego dociągać — bez tej flagi
     /// każdy `#Preview` uderzałby w sieć i kończył na ekranie błędu.
@@ -319,12 +241,30 @@ final class TrendsViewModel {
         autoLoads = { if case .loading = state { true } else { false } }()
     }
 
-    /// Notka o agregacji bierze się z najgęstszego szeregu na ekranie — to on
-    /// decyduje, czy w ogóle doszło do uśredniania.
-    var bucketNote: String? {
-        guard case .loaded(let groups) = state else { return nil }
-        let widest = groups.flatMap(\.metrics).map(\.points.count).max() ?? 0
-        return range.bucketNote(forPointCount: widest * range.maxBucketDays)
+    /// Granice widocznego okna, obie włącznie.
+    ///
+    /// `now` jest parametrem, a nie `Date()` w środku: bez tego dwa odczyty
+    /// z rzędu dostają czasy różniące się o mikrosekundy, a wtedy odległość
+    /// między oknami przestaje być całkowitą liczbą dni.
+    func visibleRange(now: Date = Date()) -> (from: Date, to: Date) {
+        let calendar = Calendar.current
+        let end = calendar.date(byAdding: .day, value: -page * window.days, to: now) ?? now
+        let start = calendar.date(byAdding: .day, value: -(window.days - 1), to: end) ?? end
+        return (start, end)
+    }
+
+    var periodLabel: String {
+        let (from, to) = visibleRange()
+        let polish = Locale(identifier: "pl_PL")
+        return from.formatted(.dateTime.locale(polish).day().month(.abbreviated))
+            + " – "
+            + to.formatted(.dateTime.locale(polish).day().month(.abbreviated).year())
+    }
+
+    var canGoForward: Bool { page > 0 }
+
+    func shift(by pages: Int) {
+        page = max(0, page + pages)
     }
 
     /// Wołane przy każdym wejściu na zakładkę.
@@ -339,23 +279,25 @@ final class TrendsViewModel {
 
     func load() async {
         do {
-            // Przy "wszystko" i tak trzeba jakiejś granicy dla zapytania —
-            // limit backfillu jest naturalną, bo starszych danych nie ma.
-            let from = Self.isoDate(daysAgo: range.days ?? 1500)
-            let selectedRange = range
+            let (fromDate, toDate) = visibleRange()
+            let from = Self.isoDate(fromDate)
+            let to = Self.isoDate(toDate)
             let db = AppSupabase.client
 
             async let scores: [ScoreRow] = db.from("score_snapshots")
                 .select("score_date, score_total, components")
                 .gte("score_date", value: from)
+                .lte("score_date", value: to)
                 .order("score_date").execute().value
             async let weights: [WeightRow] = db.from("weight_log")
                 .select("measured_at, weight_kg")
                 .gte("measured_at", value: from)
+                .lte("measured_at", value: to)
                 .order("measured_at").execute().value
             async let activity: [ActivityRow] = db.from("activity_logs")
                 .select("logged_date, activity_minutes")
                 .gte("logged_date", value: from)
+                .lte("logged_date", value: to)
                 .order("logged_date").execute().value
             async let health: [HealthRow] = db.from("health_metrics")
                 .select("""
@@ -364,13 +306,13 @@ final class TrendsViewModel {
                     steps, body_fat_pct, waist_cm, hip_cm
                     """)
                 .gte("metric_date", value: from)
+                .lte("metric_date", value: to)
                 .order("metric_date").execute().value
 
             state = .loaded(
                 try await Self.build(
                     scores: scores, weights: weights,
-                    activity: activity, health: health,
-                    range: selectedRange
+                    activity: activity, health: health
                 )
             )
         } catch {
@@ -389,8 +331,7 @@ final class TrendsViewModel {
         scores: [ScoreRow],
         weights: [WeightRow],
         activity: [ActivityRow],
-        health: [HealthRow],
-        range: TrendRange = .month
+        health: [HealthRow]
     ) -> [MetricGroup] {
         let consistencyPoints = scores.compactMap { row -> SeriesPoint? in
             part(row.components, component: "sleep", key: "consistency")
@@ -443,9 +384,6 @@ final class TrendsViewModel {
             Metric(id: "activity", title: "Ruch (wpisany)", unit: "min", positiveHigher: true, role: .informational,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
         ]
-        // Kubełek per metryka, bo szeregi mają różną gęstość: sen bywa co dzień,
-        // a waga raz na tydzień. Jeden wspólny rozmiar rozjechałby te drugie.
-        .map { $0.bucketed(by: range.bucketDays(forPointCount: $0.points.count)) }
         .filter { !$0.points.isEmpty })
     }
 
@@ -515,13 +453,13 @@ final class TrendsViewModel {
         return (waist / hip * 100).rounded() / 100
     }
 
-    private static func isoDate(daysAgo: Int) -> String {
-        let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
+    private static func isoDate(_ date: Date) -> String {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US_POSIX")
         f.dateFormat = "yyyy-MM-dd"
         return f.string(from: date)
     }
+
 }
 
 extension Metric {
@@ -533,7 +471,6 @@ extension Metric {
         unit: String,
         positiveHigher: Bool,
         role: MetricRole,
-        bucketDays: Int = 1,
         points: [SeriesPoint]
     ) {
         self.id = id
@@ -541,7 +478,6 @@ extension Metric {
         self.unit = unit
         self.positiveHigher = positiveHigher
         self.role = role
-        self.bucketDays = bucketDays
         self.points = points.sorted { $0.date < $1.date }
     }
 }

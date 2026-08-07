@@ -218,101 +218,97 @@ struct RefreshTests {
     }
 }
 
-@Suite("Zakres i agregacja Trendów")
+@Suite("Okno czasu na Trendach")
 @MainActor
-struct TrendRangeTests {
-    private static func metric(_ values: [Double]) -> Metric {
+struct TrendWindowTests {
+    @Test("Szerokość okna nie przekracza kwartału")
+    func windowWidths() {
+        #expect(TrendWindow.month.days == 30)
+        #expect(TrendWindow.quarter.days == 90)
+        #expect(TrendWindow.allCases.allSatisfy { $0.days <= 90 })
+    }
+
+    private static let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+    @Test("Bieżące okno kończy się dziś")
+    func currentWindowEndsToday() {
+        let model = TrendsViewModel(state: .loaded([]))
+        let (from, to) = model.visibleRange(now: Self.now)
+
+        #expect(to == Self.now)
+        #expect(Calendar.current.dateComponents([.day], from: from, to: to).day == 29)
+    }
+
+    /// Sedno zmiany: okno jest wąskie, ale przesuwalne — cofnięcie o jedną
+    /// stronę ma pokazać poprzedni, rozłączny okres.
+    @Test("Cofnięcie przesuwa okno o pełną szerokość")
+    func shiftMovesFullWindow() {
+        let model = TrendsViewModel(state: .loaded([]))
+        let before = model.visibleRange(now: Self.now).to
+
+        model.shift(by: 1)
+        let after = model.visibleRange(now: Self.now).to
+
+        let days = Calendar.current.dateComponents([.day], from: after, to: before).day
+        #expect(days == TrendWindow.month.days)
+    }
+
+    /// Przyszłości nie ma po co oglądać, więc krok w przód zatrzymuje się na dziś.
+    @Test("Nie da się przesunąć poza teraźniejszość")
+    func cannotGoBeyondNow() {
+        let model = TrendsViewModel(state: .loaded([]))
+
+        #expect(!model.canGoForward)
+        model.shift(by: -5)
+        #expect(!model.canGoForward)
+
+        model.shift(by: 2)
+        #expect(model.canGoForward)
+    }
+
+    @Test("Etykieta okresu podaje rok, żeby historia nie była dwuznaczna")
+    func periodLabelHasYear() {
+        let model = TrendsViewModel(state: .loaded([]))
+        model.shift(by: 20)
+
+        #expect(model.periodLabel.contains("–"))
+        #expect(model.periodLabel.rangeOfCharacter(from: .decimalDigits) != nil)
+    }
+}
+
+@Suite("Etykiety dat na wykresie")
+@MainActor
+struct AxisLabelTests {
+    private static func metric(_ dates: [String]) -> Metric {
         Metric(
             id: "t", title: "T", unit: "", positiveHigher: true, role: .informational,
-            points: values.enumerated().map {
-                SeriesPoint(date: String(format: "2026-08-%02d", $0.offset + 1), value: $0.element)
-            }
+            points: dates.map { SeriesPoint(date: $0, value: 1) }
         )
     }
 
-    @Test("Dzienny zakres nie rusza punktów")
-    func dailyUntouched() {
-        let metric = Self.metric([1, 2, 3, 4])
-        #expect(metric.bucketed(by: 1).points.count == 4)
-        #expect(TrendRange.month.maxBucketDays == 1)
-        #expect(TrendRange.quarter.maxBucketDays == 1)
+    /// Przy cofaniu się o lata „08-06" nie mówi, o który rok chodzi.
+    @Test("Szereg przekraczający rok pokazuje rok na osi")
+    func multiYearAxisShowsYear() {
+        let across = Self.metric(["2025-12-30", "2026-01-02"])
+
+        #expect(across.spansYears)
+        #expect(across.axisLabel("2025-12-30") == "2025-12")
     }
 
-    @Test("Kubełki uśredniają wartości i skracają szereg")
-    func averagesIntoBuckets() {
-        // Cztery tygodnie po siedem dni: 1…7, 8…14, itd.
-        let metric = Self.metric((1...28).map(Double.init))
-        let weekly = metric.bucketed(by: 7)
+    @Test("Szereg w jednym roku zostaje przy dniu i miesiącu")
+    func singleYearAxisStaysShort() {
+        let within = Self.metric(["2026-07-01", "2026-08-01"])
 
-        #expect(weekly.points.count == 4)
-        #expect(weekly.points.map(\.value) == [4, 11, 18, 25])
+        #expect(!within.spansYears)
+        #expect(within.axisLabel("2026-07-01") == "07-01")
     }
 
-    /// Liczenie od najnowszego: ostatni kubełek ma być pełnym, świeżym
-    /// tygodniem, a nie ogryzkiem zależnym od tego, kiedy zaczyna się historia.
-    @Test("Niepełny kubełek ląduje na początku, nie na końcu")
-    func partialBucketGoesFirst() {
-        let metric = Self.metric((1...10).map(Double.init))
-        let weekly = metric.bucketed(by: 7)
+    @Test("Odczyt punktu dokłada rok tylko dla dat spoza bieżącego roku")
+    func pointLabelYearOnlyWhenNeeded() {
+        let metric = Self.metric(["2026-08-06"])
+        let now = try! Date("2026-08-08T12:00:00Z", strategy: .iso8601)
 
-        #expect(weekly.points.count == 2)
-        // Ostatnie siedem dni (4…10) daje 7; pierwsze trzy (1…3) dają 2.
-        #expect(weekly.points.map(\.value) == [2, 7])
-    }
-
-    @Test("Oś czasu zostaje rosnąca")
-    func keepsChronology() {
-        let weekly = Self.metric((1...28).map(Double.init)).bucketed(by: 7)
-        let dates = weekly.points.map(\.date)
-
-        #expect(dates == dates.sorted())
-    }
-
-    @Test("Zakres wybiera głębokość zapytania")
-    func rangeMapping() {
-        #expect(TrendRange.month.days == 30)
-        #expect(TrendRange.year.days == 365)
-        #expect(TrendRange.all.days == nil)
-        #expect(TrendRange.year.maxBucketDays == 7)
-        #expect(TrendRange.all.maxBucketDays == 30)
-    }
-
-    /// Regresja, którą było widać na ekranie: przy miesiącu danych „Wszystko"
-    /// zwijało 31 dni do dwóch punktów miesięcznych, więc szerszy zakres dawał
-    /// GORSZY wykres niż węższy. Agregacja ma się włączać dopiero wtedy, gdy
-    /// jest co agregować.
-    @Test("Mało danych zostaje dobowe niezależnie od zakresu")
-    func sparseDataStaysDaily() {
-        for range in TrendRange.allCases {
-            #expect(range.bucketDays(forPointCount: 31) == 1, "\(range.label) zwija 31 dni")
-            #expect(range.bucketNote(forPointCount: 31) == nil)
-        }
-    }
-
-    @Test("Gęsty szereg jest uśredniany, ale nie poniżej limitu zakresu")
-    func denseDataAggregates() {
-        // Rok danych: 365 punktów na limicie 120 → kubełek 4-dniowy, w granicy 7.
-        #expect(TrendRange.year.bucketDays(forPointCount: 365) == 4)
-        // Trzy lata: 1095/120 = 10, ale „rok" nie pozwala wyjść poza tydzień.
-        #expect(TrendRange.year.bucketDays(forPointCount: 1095) == 7)
-        // „Wszystko" dopuszcza miesiąc.
-        #expect(TrendRange.all.bucketDays(forPointCount: 1095) == 10)
-        #expect(TrendRange.all.bucketDays(forPointCount: 5000) == 30)
-    }
-
-    @Test("Wynik agregacji nigdy nie schodzi poniżej limitu czytelności")
-    func neverTooDense() {
-        for count in [200, 365, 1095, 5000] {
-            let bucket = TrendRange.all.bucketDays(forPointCount: count)
-            let resulting = Int(ceil(Double(count) / Double(bucket)))
-            // Sufit 30 dni sprawia, że bardzo długa historia może przekroczyć
-            // limit — ale nie o rząd wielkości.
-            #expect(resulting <= TrendRange.densePointLimit * 2)
-        }
-    }
-
-    @Test("Pojedynczy punkt przeżywa agregację")
-    func singlePoint() {
-        #expect(Self.metric([5]).bucketed(by: 30).points.count == 1)
+        #expect(metric.pointLabel("2026-08-06", now: now) == "6 sierpnia")
+        #expect(metric.pointLabel("2024-08-06", now: now).contains("2024"))
     }
 }

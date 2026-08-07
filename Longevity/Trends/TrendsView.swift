@@ -59,28 +59,53 @@ struct TrendsView: View {
         group.weight == nil ? Palette.tick : Palette.pine
     }
 
-    /// Zmiana zakresu przeładowuje dane, bo dłuższe okna sięgają dalej niż to,
-    /// co jest już wczytane.
+    /// Szerokość okna plus przesuwanie go w przeszłość. Okno jest wąskie
+    /// celowo — przy szerszym punkty robią się gęstsze niż piksele.
     private var rangePicker: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Picker("Zakres", selection: $model.range) {
-                ForEach(TrendRange.allCases) { Text($0.label).tag($0) }
+        VStack(spacing: 8) {
+            Picker("Okno", selection: $model.window) {
+                ForEach(TrendWindow.allCases) { Text($0.label).tag($0) }
             }
             .pickerStyle(.segmented)
-            .onChange(of: model.range) { Task { await model.load() } }
+            .onChange(of: model.window) { Task { await model.load() } }
 
-            if let note = model.bucketNote {
-                Text(note)
-                    .font(AtlasFont.mono(9.5))
-                    .foregroundStyle(Palette.tick)
+            HStack {
+                stepButton("chevron.left", enabled: true) { model.shift(by: 1) }
+                Spacer()
+                Text(model.periodLabel)
+                    .font(AtlasFont.mono(11))
+                    .foregroundStyle(Palette.ink)
+                    .contentTransition(.numericText())
+                Spacer()
+                stepButton("chevron.right", enabled: model.canGoForward) { model.shift(by: -1) }
             }
         }
+    }
+
+    private func stepButton(
+        _ symbol: String,
+        enabled: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button {
+            action()
+            Task { await model.load() }
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(enabled ? Palette.pine : Palette.tick)
+                .frame(width: 34, height: 28)
+                .background(Palette.panel, in: RoundedRectangle(cornerRadius: 9))
+                .overlay(RoundedRectangle(cornerRadius: 9).stroke(Palette.line, lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .disabled(!enabled)
     }
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             ScreenTitle(text: "Trendy")
-            Text("W tym samym podziale co rozbicie na dashboardzie.\nPrzeciągnij po wykresie, żeby odczytać punkt.")
+            Text("W tym samym podziale co rozbicie na dashboardzie.\nStrzałkami cofasz się w czasie, przeciągnięciem odczytujesz dzień.")
                 .font(AtlasFont.body(13))
                 .foregroundStyle(Palette.muted)
         }
@@ -162,8 +187,8 @@ struct MetricCardView: View {
             }
 
             HStack(spacing: 16) {
-                Text("\(metric.recentLabel): \(metric.avg7.map(Self.format) ?? "—")\(unitSuffix)")
-                Text("Śr. zakresu: \(metric.avgAll.map(Self.format) ?? "—")\(unitSuffix)")
+                Text("Śr. 7 dni: \(metric.avg7.map(Self.format) ?? "—")\(unitSuffix)")
+                Text("Śr. okna: \(metric.avgAll.map(Self.format) ?? "—")\(unitSuffix)")
             }
             .font(AtlasFont.body(12))
             .foregroundStyle(Palette.muted)
