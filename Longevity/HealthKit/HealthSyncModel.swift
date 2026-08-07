@@ -54,6 +54,18 @@ final class HealthSyncModel {
     private(set) var state: State = .idle
     private(set) var isConnected = false
     private(set) var lastSyncedAt: Date?
+    private(set) var sources: SourceSummary?
+
+    /// Co pisze do Zdrowia. Interesuje nas głównie moment, w którym pojawia się
+    /// drugie urządzenie — wtedy suma kroków może się zdublować, a średnia
+    /// tętna zmieszać dwie różne metody pomiaru.
+    struct SourceSummary: Sendable, Equatable {
+        let names: [String]
+        /// Metryki opisane przez więcej niż jedno źródło.
+        let conflicting: [String]
+
+        var hasConflict: Bool { !conflicting.isEmpty }
+    }
 
     private static let lastSyncKey = "health.lastSyncedAt"
 
@@ -87,6 +99,44 @@ final class HealthSyncModel {
 
     func refreshConnection() async {
         isConnected = await HealthKitManager.shared.hasRequestedAccess()
+        await loadSources()
+    }
+
+    private struct SourceRow: Decodable {
+        let metricSources: [String: [String]]?
+        enum CodingKeys: String, CodingKey { case metricSources = "metric_sources" }
+    }
+
+    private func loadSources() async {
+        let rows: [SourceRow]? = try? await AppSupabase.client
+            .from("health_metrics")
+            .select("metric_sources")
+            .order("metric_date", ascending: false)
+            .limit(7)
+            .execute()
+            .value
+
+        sources = Self.summarize((rows ?? []).compactMap(\.metricSources))
+    }
+
+    /// Internal, nie private — to jedyne miejsce, gdzie z surowych map robi się
+    /// wniosek „dwa urządzenia piszą to samo", i chcemy je mieć pod testami.
+    static func summarize(_ rows: [[String: [String]]]) -> SourceSummary? {
+        var all: Set<String> = []
+        var perMetric: [String: Set<String>] = [:]
+
+        for row in rows {
+            for (metric, names) in row {
+                all.formUnion(names)
+                perMetric[metric, default: []].formUnion(names)
+            }
+        }
+        guard !all.isEmpty else { return nil }
+
+        return SourceSummary(
+            names: all.sorted(),
+            conflicting: perMetric.filter { $0.value.count > 1 }.keys.sorted()
+        )
     }
 
     /// Pokazuje systemowe okno zgody. Wołane tylko z przycisku — automat nigdy

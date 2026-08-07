@@ -66,15 +66,19 @@ final class HealthKitManager {
 
         for metric in Self.quantityMetrics {
             let values = (try? await dailyStatistics(metric, range: range, calendar: calendar)) ?? [:]
-            for (day, value) in values {
+            for (day, reading) in values {
                 guard var entry = metrics[day] else { continue }
-                metric.apply(&entry, value)
+                metric.apply(&entry, reading.value)
+                Self.record(sources: reading.sources, as: metric.key, in: &entry)
                 metrics[day] = entry
             }
         }
 
-        for (day, hours) in (try? await standHours(range: range, calendar: calendar)) ?? [:] {
-            metrics[day]?.standHours = hours
+        for (day, reading) in (try? await standHours(range: range, calendar: calendar)) ?? [:] {
+            guard var entry = metrics[day] else { continue }
+            entry.standHours = reading.value
+            Self.record(sources: reading.sources, as: "stand_hours", in: &entry)
+            metrics[day] = entry
         }
 
         await applySleep(to: &metrics, days: dayList, calendar: calendar)
@@ -106,21 +110,31 @@ final class HealthKitManager {
 
     private struct QuantityMetric {
         let identifier: HKQuantityTypeIdentifier
+        /// Nazwa kolumny w `health_metrics` — pod nią zapisujemy źródło.
+        let key: String
         let unit: HKUnit
         let aggregation: Aggregation
         let apply: (inout DailyHealthMetrics, Double) -> Void
 
         init(
             _ identifier: HKQuantityTypeIdentifier,
+            _ key: String,
             _ unit: HKUnit,
             _ aggregation: Aggregation,
             apply: @escaping (inout DailyHealthMetrics, Double) -> Void
         ) {
             self.identifier = identifier
+            self.key = key
             self.unit = unit
             self.aggregation = aggregation
             self.apply = apply
         }
+    }
+
+    /// Wartość doby razem z nazwami źródeł, które ją złożyły.
+    private struct DailyValue: Sendable {
+        let value: Double
+        let sources: [String]
     }
 
     /// Uderzenia serca i oddechy HealthKit trzyma w tej samej jednostce: count/min.
@@ -128,35 +142,35 @@ final class HealthKitManager {
 
     private static let quantityMetrics: [QuantityMetric] = [
         // Wydolność i serce
-        .init(.vo2Max, HKUnit(from: "ml/kg*min"), .mostRecent) { $0.vo2max = $1 },
-        .init(.restingHeartRate, perMinute, .average) { $0.restingHeartRate = $1 },
-        .init(.heartRateVariabilitySDNN, .secondUnit(with: .milli), .average) { $0.hrvSdnnMs = $1 },
-        .init(.walkingHeartRateAverage, perMinute, .average) { $0.walkingHeartRate = $1 },
+        .init(.vo2Max, "vo2max", HKUnit(from: "ml/kg*min"), .mostRecent) { $0.vo2max = $1 },
+        .init(.restingHeartRate, "resting_heart_rate", perMinute, .average) { $0.restingHeartRate = $1 },
+        .init(.heartRateVariabilitySDNN, "hrv_sdnn_ms", .secondUnit(with: .milli), .average) { $0.hrvSdnnMs = $1 },
+        .init(.walkingHeartRateAverage, "walking_heart_rate", perMinute, .average) { $0.walkingHeartRate = $1 },
 
         // Ruch
-        .init(.stepCount, .count(), .sum) { $0.steps = Int($1.rounded()) },
-        .init(.appleExerciseTime, .minute(), .sum) { $0.exerciseMinutes = Int($1.rounded()) },
-        .init(.activeEnergyBurned, .kilocalorie(), .sum) { $0.activeEnergyKcal = $1 },
+        .init(.stepCount, "steps", .count(), .sum) { $0.steps = Int($1.rounded()) },
+        .init(.appleExerciseTime, "exercise_minutes", .minute(), .sum) { $0.exerciseMinutes = Int($1.rounded()) },
+        .init(.activeEnergyBurned, "active_energy_kcal", .kilocalorie(), .sum) { $0.activeEnergyKcal = $1 },
 
         // Skład ciała
-        .init(.bodyMass, .gramUnit(with: .kilo), .mostRecent) { $0.weightKg = $1 },
+        .init(.bodyMass, "weight_kg", .gramUnit(with: .kilo), .mostRecent) { $0.weightKg = $1 },
         // `.percent()` zwraca 0…1, a kolumna trzyma punkty procentowe.
-        .init(.bodyFatPercentage, .percent(), .mostRecent) { $0.bodyFatPct = $1 * 100 },
-        .init(.leanBodyMass, .gramUnit(with: .kilo), .mostRecent) { $0.leanBodyMassKg = $1 },
+        .init(.bodyFatPercentage, "body_fat_pct", .percent(), .mostRecent) { $0.bodyFatPct = $1 * 100 },
+        .init(.leanBodyMass, "lean_body_mass_kg", .gramUnit(with: .kilo), .mostRecent) { $0.leanBodyMassKg = $1 },
         // Obwód bioder nie ma odpowiednika w HealthKit — idzie tylko z czatu.
-        .init(.waistCircumference, .meterUnit(with: .centi), .mostRecent) { $0.waistCm = $1 },
+        .init(.waistCircumference, "waist_cm", .meterUnit(with: .centi), .mostRecent) { $0.waistCm = $1 },
 
         // Regeneracja
-        .init(.respiratoryRate, perMinute, .average) { $0.respiratoryRate = $1 },
-        .init(.oxygenSaturation, .percent(), .average) { $0.spo2Pct = $1 * 100 },
-        .init(.appleSleepingWristTemperature, .degreeCelsius(), .mostRecent) { $0.wristTemperatureC = $1 },
+        .init(.respiratoryRate, "respiratory_rate", perMinute, .average) { $0.respiratoryRate = $1 },
+        .init(.oxygenSaturation, "spo2_pct", .percent(), .average) { $0.spo2Pct = $1 * 100 },
+        .init(.appleSleepingWristTemperature, "wrist_temperature_c", .degreeCelsius(), .mostRecent) { $0.wristTemperatureC = $1 },
     ]
 
     private func dailyStatistics(
         _ metric: QuantityMetric,
         range: DateInterval,
         calendar: Calendar
-    ) async throws -> [String: Double] {
+    ) async throws -> [String: DailyValue] {
         let store = self.store
         let unit = metric.unit
         let aggregation = metric.aggregation
@@ -168,7 +182,10 @@ final class HealthKitManager {
                     withStart: range.start,
                     end: range.end
                 ),
-                options: aggregation.options,
+                // `.separateBySource` nie zmienia liczb — sumy i średnie dalej
+                // obejmują wszystkie źródła. Udostępnia za to `statistics.sources`,
+                // bez którego nie da się poznać, ile urządzeń złożyło się na dobę.
+                options: aggregation.options.union(.separateBySource),
                 anchorDate: range.start,
                 intervalComponents: DateComponents(day: 1)
             )
@@ -183,7 +200,7 @@ final class HealthKitManager {
                     return
                 }
 
-                var values: [String: Double] = [:]
+                var values: [String: DailyValue] = [:]
                 collection.enumerateStatistics(from: range.start, to: range.end) { statistics, _ in
                     let quantity: HKQuantity? = switch aggregation {
                     case .sum: statistics.sumQuantity()
@@ -192,7 +209,10 @@ final class HealthKitManager {
                     }
                     guard let quantity else { return }
                     let day = HealthDates.day(statistics.startDate, calendar: calendar)
-                    values[day] = quantity.doubleValue(for: unit)
+                    values[day] = DailyValue(
+                        value: quantity.doubleValue(for: unit),
+                        sources: (statistics.sources ?? []).map(\.name)
+                    )
                 }
                 continuation.resume(returning: values)
             }
@@ -203,14 +223,31 @@ final class HealthKitManager {
 
     // MARK: - Godziny stania
 
-    private func standHours(range: DateInterval, calendar: Calendar) async throws -> [String: Int] {
+    private struct StandReading: Sendable {
+        var value: Int
+        var sources: [String]
+    }
+
+    private func standHours(range: DateInterval, calendar: Calendar) async throws -> [String: StandReading] {
         let samples = try await categorySamples(.appleStandHour, range: range)
         let stood = HKCategoryValueAppleStandHour.stood.rawValue
 
-        return samples.reduce(into: [String: Int]()) { result, sample in
+        return samples.reduce(into: [String: StandReading]()) { result, sample in
             guard sample.value == stood else { return }
-            result[HealthDates.day(sample.start, calendar: calendar), default: 0] += 1
+            let day = HealthDates.day(sample.start, calendar: calendar)
+            var entry = result[day] ?? StandReading(value: 0, sources: [])
+            entry.value += 1
+            if !entry.sources.contains(sample.source) { entry.sources.append(sample.source) }
+            result[day] = entry
         }
+    }
+
+    /// Puste listy pomijamy — brak wpisu znaczy „nie wiadomo", a pusta tablica
+    /// wyglądałaby jak „zmierzone przez nikogo".
+    private static func record(sources: [String], as key: String, in entry: inout DailyHealthMetrics) {
+        let names = Array(Set(sources)).sorted()
+        guard !names.isEmpty else { return }
+        entry.metricSources = (entry.metricSources ?? [:]).merging([key: names]) { _, new in new }
     }
 
     // MARK: - Sen
@@ -243,6 +280,17 @@ final class HealthKitManager {
         let segments = samples.compactMap(Self.sleepSegment)
         guard !segments.isEmpty else { return }
 
+        // Źródła nocy zbieramy z próbek wpadających w jej okno, nie z całego
+        // zakresu pobrania — inaczej jedna noc z Garmina zaraziłaby wszystkie
+        // pozostałe doby jego nazwą.
+        let sourcesByDay = samples.reduce(into: [String: Set<String>]()) { result, sample in
+            let day = HealthDates.day(
+                calendar.date(byAdding: .hour, value: 6, to: sample.start) ?? sample.start,
+                calendar: calendar
+            )
+            result[day, default: []].insert(sample.source)
+        }
+
         for day in days {
             let key = HealthDates.day(day, calendar: calendar)
             guard metrics[key] != nil else { continue }
@@ -267,6 +315,12 @@ final class HealthKitManager {
 
             // Odcinki jadą surowe (po scaleniu duplikatów) — SRI liczy serwer,
             // bo wskaźnik obejmuje osiem dób i ma być wspólny dla wszystkich źródeł.
+            Self.record(
+                sources: Array(sourcesByDay[key] ?? []),
+                as: "sleep",
+                in: &metrics[key]!
+            )
+
             metrics[key]?.sleepSegments = inWindow.map {
                 SleepSegmentPayload(
                     stage: $0.stage.payloadName,
@@ -299,6 +353,7 @@ final class HealthKitManager {
         let value: Int
         let start: Date
         let end: Date
+        let source: String
     }
 
     private func categorySamples(
@@ -325,7 +380,8 @@ final class HealthKitManager {
                     return CategorySample(
                         value: category.value,
                         start: category.startDate,
-                        end: category.endDate
+                        end: category.endDate,
+                        source: category.sourceRevision.source.name
                     )
                 }
                 continuation.resume(returning: mapped)

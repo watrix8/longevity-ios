@@ -167,6 +167,27 @@ struct SettingsView: View {
                 .disabled(health.isSyncing)
             }
 
+            if let sources = health.sources {
+                divider
+                row("Źródła danych") {
+                    Text(sources.names.joined(separator: ", "))
+                        .font(AtlasFont.body(13))
+                        .foregroundStyle(sources.hasConflict ? Palette.ochreInk : Palette.muted)
+                        .multilineTextAlignment(.trailing)
+                }
+                if sources.hasConflict {
+                    divider
+                    // Dwa urządzenia opisujące tę samą metrykę to nie ciekawostka:
+                    // kroki i kalorie mogą się zsumować, a tętno uśrednić między
+                    // różnymi metodami pomiaru.
+                    Text("Więcej niż jedno źródło dla: \(sources.conflicting.joined(separator: ", ")). Wartości mogą się dublować.")
+                        .font(AtlasFont.body(12))
+                        .foregroundStyle(Palette.ochreInk)
+                        .padding(.horizontal, 15)
+                        .padding(.vertical, 12)
+                }
+            }
+
             if let status = health.statusMessage {
                 divider
                 Text(status)

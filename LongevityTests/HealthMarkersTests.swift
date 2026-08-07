@@ -159,3 +159,68 @@ struct ChartGeometryTests {
         #expect(ChartGeometry(values: [], size: Self.size).point(at: 0) == .zero)
     }
 }
+
+@Suite("Źródła danych z HealthKit")
+@MainActor
+struct MetricSourceTests {
+    @Test("Jedno źródło nie jest konfliktem")
+    func singleSource() throws {
+        let summary = try #require(
+            HealthSyncModel.summarize([
+                ["steps": ["Garmin Connect"], "sleep": ["Garmin Connect"]],
+                ["steps": ["Garmin Connect"]],
+            ])
+        )
+
+        #expect(summary.names == ["Garmin Connect"])
+        #expect(!summary.hasConflict)
+    }
+
+    /// Sedno tej funkcji: dzień, w którym do jednej metryki piszą dwa
+    /// urządzenia. Kroki i kalorie mogą się wtedy zsumować, a tętno uśrednić
+    /// między różnymi metodami pomiaru.
+    @Test("Dwa urządzenia przy jednej metryce to konflikt")
+    func detectsConflict() throws {
+        let summary = try #require(
+            HealthSyncModel.summarize([
+                ["steps": ["Garmin Connect", "Apple Watch"], "sleep": ["Apple Watch"]],
+            ])
+        )
+
+        #expect(summary.names == ["Apple Watch", "Garmin Connect"])
+        #expect(summary.conflicting == ["steps"])
+        #expect(summary.hasConflict)
+    }
+
+    /// Dwa źródła w bazie, ale każde przy innej metryce — to normalny stan
+    /// przejściowy, a nie dublowanie wartości.
+    @Test("Różne źródła przy różnych metrykach to nie konflikt")
+    func differentMetricsDifferentSources() throws {
+        let summary = try #require(
+            HealthSyncModel.summarize([
+                ["steps": ["Apple Watch"], "sleep": ["Garmin Connect"]],
+            ])
+        )
+
+        #expect(summary.names.count == 2)
+        #expect(!summary.hasConflict)
+    }
+
+    @Test("Konflikt widać także wtedy, gdy źródła rozkładają się na różne dni")
+    func conflictAcrossDays() throws {
+        let summary = try #require(
+            HealthSyncModel.summarize([
+                ["steps": ["Apple Watch"]],
+                ["steps": ["Garmin Connect"]],
+            ])
+        )
+
+        #expect(summary.conflicting == ["steps"])
+    }
+
+    @Test("Brak danych o źródłach daje nil, nie pustą listę")
+    func emptyInput() {
+        #expect(HealthSyncModel.summarize([]) == nil)
+        #expect(HealthSyncModel.summarize([[:]]) == nil)
+    }
+}

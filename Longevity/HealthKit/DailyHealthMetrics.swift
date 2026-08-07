@@ -29,6 +29,14 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
     /// źródła, także dla Garmina, który nie przechodzi przez to urządzenie.
     var sleepSegments: [SleepSegmentPayload]?
 
+    /// Skąd wzięła się każda metryka: `["steps": ["Apple Watch"]]`. Klucz "sleep"
+    /// obejmuje cały blok snu, bo wszystkie jego pola pochodzą z jednego zapytania.
+    ///
+    /// Zapisujemy to, żeby dało się wykryć moment, w którym dwa urządzenia piszą
+    /// tę samą metrykę — wtedy suma kroków się dubluje, a średnia tętna miesza
+    /// dwie różne metody pomiaru.
+    var metricSources: [String: [String]]?
+
     // Ruch
     var steps: Int?
     var exerciseMinutes: Int?
@@ -70,6 +78,7 @@ struct DailyHealthMetrics: Codable, Sendable, Equatable {
         case sleepCoreMinutes = "sleep_core_minutes"
         case sleepAwakeMinutes = "sleep_awake_minutes"
         case sleepSegments = "sleep_segments"
+        case metricSources = "metric_sources"
         case steps
         case exerciseMinutes = "exercise_minutes"
         case activeEnergyKcal = "active_energy_kcal"

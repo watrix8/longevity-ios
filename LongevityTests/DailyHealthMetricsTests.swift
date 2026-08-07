@@ -71,7 +71,9 @@ struct DailyHealthMetricsTests {
     func settersCoverEveryColumn() {
         let covered = Set(Self.setters.map(\.0))
         let all = Set(DailyHealthMetrics.CodingKeys.allCases.map(\.rawValue))
-            .subtracting(["metric_date"])
+            // `metric_sources` celowo poza `isEmpty`: same nazwy urządzeń bez
+            // ani jednego pomiaru nie opisują dnia i nie ma po co ich wysyłać.
+            .subtracting(["metric_date", "metric_sources"])
 
         #expect(covered == all, "nieobjęte testem: \(all.subtracting(covered).sorted())")
     }
