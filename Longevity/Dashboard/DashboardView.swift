@@ -56,10 +56,7 @@ struct DashboardView: View {
         }
         .background(Palette.card)
         .refreshable { await model.load() }
-        .task {
-            // Model wstrzyknięty z gotowym stanem (previews) nie ma czego dociągać.
-            if case .loading = model.state { await model.load() }
-        }
+        .onAppear { Task { await model.refresh() } }
     }
 
     // MARK: - Sekcje

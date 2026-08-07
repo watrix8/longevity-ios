@@ -49,9 +49,7 @@ struct TrendsView: View {
         }
         .background(Palette.card)
         .refreshable { await model.load() }
-        .task {
-            if case .loading = model.state { await model.load() }
-        }
+        .onAppear { Task { await model.refresh() } }
     }
 
     /// Sekcje wchodzące do wyniku wyróżnione kolorem — „Poza wynikiem"

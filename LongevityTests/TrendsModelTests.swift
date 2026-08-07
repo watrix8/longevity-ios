@@ -239,3 +239,26 @@ struct MetricGroupTests {
         #expect(TrendsViewModel.grouped([]).isEmpty)
     }
 }
+
+@Suite("Odświeżanie ekranów")
+@MainActor
+struct RefreshTests {
+    /// Model z wstrzykniętym stanem to podgląd albo test — `refresh()` nie może
+    /// go podmienić na ekran błędu przy pierwszej próbie sięgnięcia do sieci.
+    @Test("Wstrzyknięty stan przeżywa odświeżenie")
+    func injectedStateSurvivesRefresh() async {
+        let trends = TrendsViewModel(state: .loaded([]))
+        await trends.refresh()
+
+        if case .loaded = trends.state {} else {
+            Issue.record("Trendy zmieniły stan mimo wstrzykniętych danych")
+        }
+
+        let dashboard = DashboardViewModel(state: .loaded(.sample))
+        await dashboard.refresh()
+
+        if case .loaded = dashboard.state {} else {
+            Issue.record("Dashboard zmienił stan mimo wstrzykniętych danych")
+        }
+    }
+}

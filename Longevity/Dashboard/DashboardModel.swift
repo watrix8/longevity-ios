@@ -116,8 +116,23 @@ final class DashboardViewModel {
 
     private(set) var state: State
 
+    /// Podgląd wstrzykuje gotowy stan i nie ma czego dociągać — bez tej flagi
+    /// każdy `#Preview` uderzałby w sieć i kończył na ekranie błędu.
+    private let autoLoads: Bool
+
     init(state: State = .loading) {
         self.state = state
+        autoLoads = { if case .loading = state { true } else { false } }()
+    }
+
+    /// Wołane przy każdym wejściu na zakładkę.
+    ///
+    /// Ekran wczytywał się dotąd raz na uruchomienie, więc wpis zrobiony
+    /// w czacie nie pojawiał się tu aż do pull-to-refresh. `load()` nie cofa
+    /// stanu do `.loading`, więc dane zostają na ekranie, dopóki nie przyjdą nowe.
+    func refresh() async {
+        guard autoLoads else { return }
+        await load()
     }
 
     func load() async {
