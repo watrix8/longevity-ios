@@ -92,45 +92,46 @@ struct ChatView: View {
         }
     }
 
+    /// Feed trzyma się dołu natywnie, bez `ScrollViewReader` i ręcznego
+    /// `scrollTo`.
+    ///
+    /// Sterowanie przewijaniem z ręki miało dwie wady naraz. Historia dociera
+    /// po pojawieniu się widoku, więc `scrollTo` na zmianę liczby wiadomości
+    /// leciało w tej samej klatce, w której stos dopiero układał wiersze —
+    /// nie było do czego przewinąć i czat otwierał się na najstarszej
+    /// wiadomości. A trafienie offsetem poza zmaterializowany zakres
+    /// `LazyVStack` zostawiało pusty ekran do czasu, aż gest wymusił
+    /// ponowne wyliczenie.
+    ///
+    /// `VStack` zamiast leniwego: rozmowa jest ograniczona do 40 wiadomości
+    /// z historii plus bieżąca sesja, więc nie ma czego odraczać, a znika
+    /// cała klasa błędów z materializacją.
     private var feed: some View {
-        ScrollViewReader { proxy in
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 12) {
-                    if model.isLoadingHistory {
-                        ProgressView().tint(Palette.pine)
-                            .frame(maxWidth: .infinity)
-                            .padding(.top, 80)
-                    } else if model.messages.isEmpty {
-                        welcome
-                    }
-
-                    ForEach(model.messages) { message in
-                        bubble(for: message).id(message.id)
-                    }
-
-                    // Kotwica przewijania — samo `messages.last` nie wystarcza,
-                    // bo dymek rośnie po dodaniu i koniec ucieka poza ekran.
-                    Color.clear.frame(height: 1).id(scrollAnchor)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                if model.isLoadingHistory {
+                    ProgressView().tint(Palette.pine)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 80)
+                } else if model.messages.isEmpty {
+                    welcome
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 16)
-            }
-            .scrollDismissesKeyboard(.interactively)
-            .onChange(of: model.messages.count) { _, _ in
-                withAnimation(.easeOut(duration: 0.25)) {
-                    proxy.scrollTo(scrollAnchor, anchor: .bottom)
+
+                ForEach(model.messages) { message in
+                    bubble(for: message).id(message.id)
                 }
             }
-            // Rosnący dymek nie zmienia liczby wiadomości, a i tak spycha
-            // koniec odpowiedzi poza ekran. Bez animacji, bo przy kilkudziesięciu
-            // kawałkach na sekundę nakładałyby się na siebie.
-            .onChange(of: model.streamTick) { _, _ in
-                proxy.scrollTo(scrollAnchor, anchor: .bottom)
-            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
         }
+        // Otwarcie na najnowszej wiadomości.
+        .defaultScrollAnchor(.bottom, for: .initialOffset)
+        // Rosnący dymek w trakcie strumienia trzyma koniec odpowiedzi na
+        // ekranie — to samo robiła wcześniej ręczna kotwica, tylko bez
+        // wyścigu z układaniem widoku.
+        .defaultScrollAnchor(.bottom, for: .sizeChanges)
+        .scrollDismissesKeyboard(.interactively)
     }
-
-    private var scrollAnchor: String { "bottom" }
 
     private var welcome: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -194,6 +195,7 @@ struct ChatView: View {
         case .assistant(let markdown):
             HStack {
                 AssistantMarkdownView(markdown: markdown)
+                    .equatable()
                     .textSelection(.enabled)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)

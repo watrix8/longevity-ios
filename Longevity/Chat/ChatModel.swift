@@ -96,11 +96,6 @@ final class ChatViewModel {
         }
     }
 
-    /// Rośnie z każdym kawałkiem odpowiedzi. Liczba wiadomości w trakcie
-    /// strumienia się nie zmienia, więc widok nie miałby po czym poznać,
-    /// że dymek urósł i trzeba dociągnąć przewijanie.
-    private(set) var streamTick = 0
-
     private func ask(_ question: String) async {
         await consume(LongevityAPI.askStream(question: question), whenEmpty: "Asystent nie odpowiedział. Spróbuj ponownie.")
     }
@@ -160,8 +155,6 @@ final class ChatViewModel {
                     append(.assistant(reply))
                     bubble = messages.count - 1
                 }
-
-                streamTick += 1
             }
 
             if reply.isEmpty { append(.failure(emptyMessage)) }

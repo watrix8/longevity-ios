@@ -66,6 +66,14 @@ struct AssistantMarkdownTests {
         #expect(AssistantMarkdown.blocks("✅ **Wniosek**") == [.heading("✅ Wniosek")])
     }
 
+    @Test("Myślnik zamknięty w pogrubieniu nie zostaje sierotą w nagłówku")
+    func headingWithStrayListMarker() {
+        #expect(AssistantMarkdown.blocks("**- Niedziela: regeneracja**") == [.heading("Niedziela: regeneracja")])
+        #expect(AssistantMarkdown.blocks("**• Sobota**") == [.heading("Sobota")])
+        // Sam myślnik w pogrubieniu nie jest nagłówkiem po odjęciu markera.
+        #expect(AssistantMarkdown.blocks("**- **") == [.paragraph("**- **")])
+    }
+
     @Test("Zdanie z wyróżnieniem nie awansuje na nagłówek")
     func emphasisIsNotAHeading() {
         #expect(

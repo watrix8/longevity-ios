@@ -78,8 +78,18 @@ enum AssistantMarkdown {
         // Dwa pogrubienia w wierszu to zdanie z wyróżnieniami, nie nagłówek.
         guard !inner.isEmpty, !inner.contains("**") else { return nil }
 
+        // Model bywa niekonsekwentny i pisze `**- Niedziela**`, mieszając
+        // punkt listy z nagłówkiem. Myślnik zamknięty w pogrubieniu zostałby
+        // na ekranie jako sierota, bo nie przechodzi ścieżką listy.
+        var title = Substring(inner)
+        for marker in ["- ", "* ", "• "] where title.hasPrefix(marker) {
+            title = title.dropFirst(marker.count)
+            break
+        }
+        guard !title.isEmpty else { return nil }
+
         let prefix = ornament.trimmingCharacters(in: .whitespaces)
-        return prefix.isEmpty ? String(inner) : "\(prefix) \(inner)"
+        return prefix.isEmpty ? String(title) : "\(prefix) \(title)"
     }
 
     private static func bulletText(_ line: String) -> String? {
@@ -136,7 +146,11 @@ enum AssistantMarkdown {
 
 /// Odpowiedź asystenta złożona z bloków — każdy z własnym odstępem
 /// i, przy listach, wcięciem wiszącym.
-struct AssistantMarkdownView: View {
+///
+/// `Equatable` nie jest ozdobą: feed rysuje się zachłannie, więc bez tego
+/// każdy kawałek strumienia przeliczałby Markdown wszystkich dymków
+/// w rozmowie, a nie tylko tego, który właśnie rośnie.
+struct AssistantMarkdownView: View, Equatable {
     let markdown: String
 
     private var blocks: [AssistantBlock] { AssistantMarkdown.blocks(markdown) }
