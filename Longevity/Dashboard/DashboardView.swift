@@ -5,6 +5,11 @@ struct DashboardView: View {
     /// długość razem z pokryciem danych.
     @State private var expanded: Set<String> = []
 
+    /// Dzień wskazany palcem na wykresie. `nil` = wykres pokazuje dziś.
+    @State private var selectedDay: Int?
+
+    @State private var showsExplainer = false
+
     @State private var model: DashboardViewModel
 
     init(model: DashboardViewModel = DashboardViewModel()) {
@@ -47,8 +52,6 @@ struct DashboardView: View {
                 case .loaded(let data):
                     content(data)
                 }
-
-                footer
             }
             .padding(.horizontal, 20)
             .padding(.top, 22)
@@ -57,13 +60,19 @@ struct DashboardView: View {
         .background(Palette.card)
         .refreshable { await model.load() }
         .onAppear { Task { await model.refresh() } }
+        .sheet(isPresented: $showsExplainer) {
+            ScoreExplainerSheet()
+                .presentationDetents([.medium, .large])
+        }
     }
 
     // MARK: - Sekcje
 
+    /// Kolejność odpowiada pytaniom, które ekran ma zamykać: ile mam dziś →
+    /// czy to dużo jak na mnie → jak szło ostatnio → co to napędza.
     @ViewBuilder
     private func content(_ data: DashboardData) -> some View {
-        topbar(confidence: data.confidence, days: data.coverageDays)
+        topbar(data)
 
         Text(data.dateLabel)
             .font(AtlasFont.mono(12))
@@ -72,22 +81,18 @@ struct DashboardView: View {
 
         hero(data)
 
-        HStack(alignment: .top, spacing: 12) {
-            baseCard(data)
-            todayCard(data)
-        }
-        .padding(.top, 20)
-
-        strip(data)
+        chartSection(data)
 
         if let note = data.note {
             noteCard(note)
         }
 
         breakdown(data)
+
+        explainerButton
     }
 
-    private func topbar(confidence: Int, days: Int) -> some View {
+    private func topbar(_ data: DashboardData) -> some View {
         HStack {
             HStack(spacing: 0) {
                 Text("LONGEVITY")
@@ -103,13 +108,15 @@ struct DashboardView: View {
                 ZStack {
                     Circle().stroke(Palette.line, lineWidth: 3)
                     Circle()
-                        .trim(from: 0, to: CGFloat(confidence) / 100)
+                        .trim(from: 0, to: CGFloat(data.confidence) / 100)
                         .stroke(Palette.pine, lineWidth: 3)
                         .rotationEffect(.degrees(-90))
                 }
                 .frame(width: 9, height: 9)
 
-                Text("pewność \(confidence)%")
+                // Dni zamiast procenta: „pewność 7%" brzmi jak ocena
+                // użytkownika, a to tylko licznik zebranych check-inów.
+                Text("\(data.coverageDays) z 30 dni")
                     .font(AtlasFont.mono(11))
                     .foregroundStyle(Palette.muted)
             }
@@ -117,10 +124,14 @@ struct DashboardView: View {
             .padding(.vertical, 5)
             .background(Palette.panel, in: Capsule())
             .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
-            .accessibilityLabel("Pewność \(confidence) procent, \(days) dni z danymi z ostatnich 30")
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(data.coverageDays) dni z danymi z ostatnich 30")
         }
     }
 
+    /// Jedna wielka liczba — dzisiejszy wynik. Norma nie dostaje własnej cyfry,
+    /// tylko wchodzi tu jako relacja, żeby ekran nie miał dwóch konkurujących
+    /// liczb do porównania.
     private func hero(_ data: DashboardData) -> some View {
         VStack(spacing: 0) {
             Text("\(data.headline)")
@@ -132,8 +143,13 @@ struct DashboardView: View {
                 .lineLimit(1)
                 .contentTransition(.numericText())
 
-            Kicker(text: "wynik długowieczności", size: 11)
+            // „Wynik dnia", nie „wynik długowieczności" — ta liczba jest
+            // z dzisiaj i etykieta ma to mówić sama, bez osobnej karty „Dziś".
+            Kicker(text: "wynik dnia", size: 11)
                 .padding(.top, 8)
+
+            normPill(data)
+                .padding(.top, 12)
 
             Text(data.stateText)
                 .font(AtlasFont.body(15.5, .medium))
@@ -147,112 +163,143 @@ struct DashboardView: View {
         .padding(.top, 6)
     }
 
-    private func baseCard(_ data: DashboardData) -> some View {
-        card {
-            Kicker(text: "Podstawa", color: Palette.pine)
-            // Liczba dni realnie objętych średnią, nie deklarowane 30 —
-            // przy jednym snapshocie "średnia z 30 dni" byłaby kłamstwem.
-            Text("średnia z \(data.coverageDays) \(PL.daysGenitive(data.coverageDays))")
-                .font(AtlasFont.body(11))
-                .foregroundStyle(Palette.muted)
-                .padding(.top, 3)
-
-            Text("\(data.baseline)")
-                .font(AtlasFont.display(46))
-                .monospacedDigit()
-                .foregroundStyle(Palette.pine)
-                .padding(.top, 10)
-
-            if data.coverageDays > 1 {
-                trendPill(data.baselineDelta)
-                Sparkline(values: data.baselineSeries)
-                    .padding(.top, 10)
+    /// Pigułka jest neutralna kolorystycznie w obie strony — kierunek niesie
+    /// strzałka. Czerwień przy spadku kłóciłaby się z tym, co mówi appka:
+    /// pojedynczy dzień nie jest powodem do paniki.
+    @ViewBuilder
+    private func normPill(_ data: DashboardData) -> some View {
+        if let norm = data.norm, let delta = data.normDelta {
+            let label = switch delta {
+            case 1...: "↗ \(delta) ponad normę (\(norm))"
+            case ..<0: "↘ \(abs(delta)) poniżej normy (\(norm))"
+            default: "→ równo z normą (\(norm))"
             }
 
-            Text("Zmienia się powoli — nie reaguje na jeden dzień.")
-                .font(AtlasFont.body(11.5))
-                .foregroundStyle(Palette.muted)
-                .lineSpacing(2)
-                .padding(.top, 10)
+            Text(label)
+                .font(AtlasFont.mono(11, .bold))
+                .foregroundStyle(Palette.pine)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(Palette.pineSoft, in: Capsule())
+                .contentTransition(.numericText())
+        } else {
+            Text("pierwszy dzień — norma pojawi się jutro")
+                .font(AtlasFont.mono(11))
+                .foregroundStyle(Palette.tick)
         }
     }
 
-    private func todayCard(_ data: DashboardData) -> some View {
-        card {
-            Kicker(text: "Dziś", color: Palette.ochreInk)
-            Text("z dzisiejszych pomiarów")
-                .font(AtlasFont.body(11))
-                .foregroundStyle(Palette.muted)
-                .padding(.top, 3)
-
-            Text("\(data.today)")
-                .font(AtlasFont.display(46))
-                .monospacedDigit()
-                .foregroundStyle(Palette.ochre)
-                .padding(.top, 10)
-
-            Text(data.todayWord)
-                .font(AtlasFont.body(11.5))
-                .foregroundStyle(Palette.muted)
-                .padding(.top, 10)
-
-            Text("Liczy się od nowa każdego dnia. To ona rusza wynikiem.")
-                .font(AtlasFont.body(11))
-                .foregroundStyle(Palette.muted)
-                .lineSpacing(2)
-                .padding(.top, 12)
+    @ViewBuilder
+    private func chartSection(_ data: DashboardData) -> some View {
+        if data.isWarmingUp {
+            warmupCard(data)
+        } else {
+            stripCard(data)
         }
     }
 
-    private func trendPill(_ delta: Int) -> some View {
-        let arrow = delta > 0 ? "↗" : (delta < 0 ? "↘" : "→")
-        let sign = delta > 0 ? "+" : ""
-        return Text("\(arrow) \(sign)\(delta) / 7 dni")
-            .font(AtlasFont.mono(10.5, .bold))
-            .foregroundStyle(Palette.pine)
-            .padding(.horizontal, 7)
-            .padding(.vertical, 3)
-            .background(Palette.pineSoft, in: Capsule())
-            .padding(.top, 9)
-    }
-
-    private func strip(_ data: DashboardData) -> some View {
+    private func stripCard(_ data: DashboardData) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Kicker(text: PL.lastDays(data.points.count))
-                .padding(.bottom, 4)
+            HStack {
+                Kicker(text: PL.lastDays(data.points.count))
+                Spacer()
+                // Data pojawia się dopiero pod palcem — bez niej nie wiadomo,
+                // którą kropkę czyta wielka liczba nad wykresem.
+                if let index = selectedDay, data.points.indices.contains(index) {
+                    Text(TrendStrip.longDay(data.points[index].date))
+                        .font(AtlasFont.mono(10.5))
+                        .foregroundStyle(Palette.ochreInk)
+                }
+            }
+
+            TrendStrip(points: data.points, selection: $selectedDay)
+
+            HStack(spacing: 16) {
+                legend(color: Palette.ochre, isLine: false, text: "wynik dnia")
+                legend(
+                    color: Palette.pine,
+                    isLine: true,
+                    text: "norma z \(data.normDays) \(PL.daysGenitive(data.normDays))"
+                )
+            }
+            .padding(.top, 2)
+
+            Text("Przeciągnij po wykresie, żeby odczytać dzień.")
+                .font(AtlasFont.mono(9.5))
+                .foregroundStyle(Palette.tick)
+                .padding(.top, 8)
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 15)
+        .padding(.bottom, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.card, in: RoundedRectangle(cornerRadius: 18))
+        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Palette.line, lineWidth: 1))
+        .padding(.top, 22)
+    }
+
+    /// Zanim uzbiera się tydzień, wykres kłamie — więc zamiast niego jeden
+    /// uczciwy licznik. Wcześniej to samo mówiły trzy różne elementy naraz
+    /// („średnia z 2 dni", „0 / 7 dni", „ostatnie 2 dni").
+    private func warmupCard(_ data: DashboardData) -> some View {
+        let target = DashboardData.warmupDays
+
+        return VStack(alignment: .leading, spacing: 0) {
+            Kicker(text: "zbieram dane")
+
+            Text("Dzień \(data.coverageDays) z \(target)")
+                .font(AtlasFont.display(26))
+                .monospacedDigit()
+                .foregroundStyle(Palette.ink)
+                .padding(.top, 6)
+
+            bar(
+                value: Double(data.coverageDays) / Double(target) * 100,
+                color: Palette.pine,
+                height: 7
+            )
+            .padding(.top, 12)
+
+            Text("Wykres i norma włączą się po \(target) dniach z check-inem. Wcześniej dwa punkty rysowałyby się jak trend, którym nie są.")
+                .font(AtlasFont.body(12))
+                .foregroundStyle(Palette.muted)
+                .lineSpacing(3)
+                .padding(.top, 12)
 
             if data.points.count > 1 {
-                TrendStrip(points: data.points)
+                Kicker(text: "zebrane wyniki", size: 9)
+                    .padding(.top, 16)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    legend(color: Palette.pine, isLine: true, text: "Podstawa — pełznie powoli")
-                    legend(color: Palette.ochre, isLine: false, text: "Wynik dnia — skacze codziennie")
+                HStack(spacing: 6) {
+                    ForEach(Array(data.points.enumerated()), id: \.offset) { index, point in
+                        let isToday = index == data.points.count - 1
+                        Text("\(Int(point.total))")
+                            .font(AtlasFont.mono(11, .bold))
+                            .monospacedDigit()
+                            .foregroundStyle(isToday ? Palette.ochreInk : Palette.muted)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(isToday ? Palette.ochreSoft : Palette.panel, in: Capsule())
+                    }
                 }
-                .padding(.top, 8)
-            } else {
-                Text("Za mało danych na wykres — potrzebne min. 2 dni z check-inem.")
-                    .font(AtlasFont.body(12))
-                    .foregroundStyle(Palette.muted)
-                    .lineSpacing(3)
-                    .padding(.top, 6)
+                .padding(.top, 7)
             }
         }
         .padding(.horizontal, 14)
         .padding(.top, 15)
-        .padding(.bottom, 12)
+        .padding(.bottom, 16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Palette.card, in: RoundedRectangle(cornerRadius: 18))
         .overlay(RoundedRectangle(cornerRadius: 18).stroke(Palette.line, lineWidth: 1))
-        .padding(.top, 20)
+        .padding(.top, 22)
     }
 
     private func legend(color: Color, isLine: Bool, text: String) -> some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 6) {
             if isLine {
-                RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 16, height: 3)
+                RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 14, height: 3)
             } else {
-                Circle().fill(color).frame(width: 9, height: 9)
-                    .frame(width: 16)
+                Circle().fill(color).frame(width: 8, height: 8)
             }
             Text(text)
                 .font(AtlasFont.body(11))
@@ -294,7 +341,7 @@ struct DashboardView: View {
                     .padding(.top, 2)
             }
         }
-        .padding(.top, 20)
+        .padding(.top, 22)
     }
 
     @ViewBuilder
@@ -397,32 +444,18 @@ struct DashboardView: View {
         .frame(height: height)
     }
 
-    private var footer: some View {
-        VStack(spacing: 14) {
-            Text("Wynik v3 — średnia ważona pomiarów. Komponenty bez danych są pomijane,\na wagi pozostałych przenormowane.")
-                .font(AtlasFont.mono(10.5))
-                .foregroundStyle(Palette.muted)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
-
-            Button("Wyloguj") {
-                Task { try? await AppSupabase.client.auth.signOut() }
+    private var explainerButton: some View {
+        Button { showsExplainer = true } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "questionmark.circle")
+                Text("Jak liczymy wynik?")
             }
-            .font(AtlasFont.body(13))
-            .tint(Palette.muted)
+            .font(AtlasFont.body(13, .medium))
+            .foregroundStyle(Palette.pine)
         }
+        .buttonStyle(.plain)
         .frame(maxWidth: .infinity)
-        .padding(.top, 22)
-    }
-
-    private func card<C: View>(@ViewBuilder _ content: () -> C) -> some View {
-        VStack(alignment: .leading, spacing: 0) { content() }
-            .padding(.horizontal, 15)
-            .padding(.top, 15)
-            .padding(.bottom, 16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Palette.card, in: RoundedRectangle(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Palette.line, lineWidth: 1))
+        .padding(.top, 26)
     }
 
     private func placeholder<C: View>(@ViewBuilder _ content: () -> C) -> some View {
@@ -432,10 +465,75 @@ struct DashboardView: View {
     }
 }
 
+/// Copy, które wcześniej stało na stałe pod dużą cyfrą i zajmowało dwie karty.
+/// Czyta się je raz, więc mieszka w arkuszu, a nie w najlepszym miejscu ekranu.
+struct ScoreExplainerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    entry(
+                        "Wynik dnia",
+                        Palette.ochreInk,
+                        "Liczy się od nowa każdego dnia, z dzisiejszych pomiarów. To on rusza wynikiem — i dlatego potrafi skakać z dnia na dzień."
+                    )
+                    entry(
+                        "Norma",
+                        Palette.pine,
+                        "Średnia z maksymalnie 7 dni poprzedzających dzisiejszy. Zmienia się powoli i nie reaguje na jeden dzień. Dzisiejszy wynik do niej nie wchodzi, więc porównanie „dziś vs norma” jest uczciwe."
+                    )
+                    entry(
+                        "Zebrane dni",
+                        Palette.muted,
+                        "Licznik u góry mówi, ile z ostatnich 30 dni ma check-in. Im mniej dni, tym mocniej wynik zależy od pojedynczego pomiaru."
+                    )
+                    entry(
+                        "Skąd bierze się liczba",
+                        Palette.muted,
+                        "Wynik v3 — średnia ważona pomiarów. Komponenty bez danych są pomijane, a wagi pozostałych przenormowane."
+                    )
+                }
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .background(Palette.card)
+            .navigationTitle("Jak liczymy wynik")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Gotowe") { dismiss() }
+                        .font(AtlasFont.body(15, .semibold))
+                        .tint(Palette.pine)
+                }
+            }
+        }
+    }
+
+    private func entry(_ title: String, _ color: Color, _ body: String) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Kicker(text: title, color: color, size: 10.5)
+            Text(body)
+                .font(AtlasFont.body(14))
+                .foregroundStyle(Palette.ink)
+                .lineSpacing(4)
+        }
+    }
+}
+
 #Preview("Z danymi") {
     DashboardView(model: DashboardViewModel(state: .loaded(.sample)))
 }
 
+#Preview("Rozgrzewka") {
+    DashboardView(model: DashboardViewModel(state: .loaded(.warmingUp)))
+}
+
 #Preview("Pusty") {
     DashboardView(model: DashboardViewModel(state: .empty))
+}
+
+#Preview("Wyjaśnienie") {
+    ScoreExplainerSheet()
 }

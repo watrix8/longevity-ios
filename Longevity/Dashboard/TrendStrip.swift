@@ -1,100 +1,212 @@
 import SwiftUI
 
-/// Pasek ostatnich 14 dni: spokojna linia średniej kroczącej (pine)
-/// i skaczące punkty dziennych wyników (ochre) — układ z makiety.
+/// Geometria paska — jedno źródło prawdy dla rysowania i dla trafiania palcem,
+/// dokładnie jak `ChartGeometry` w Trendach. Osobny typ, bo reguła skali jest
+/// tu inna: tam dół przykleja się do zera (parytet z webem), tu okno jeździ
+/// za danymi.
+struct StripGeometry: Equatable {
+    /// Najmniejsza rozpiętość osi Y. Bez niej autoskalowanie rozciąga różnicę
+    /// 90→91 na całą wysokość i mała zmiana wygląda jak skok formy.
+    static let minSpan: Double = 20
+
+    static let padX: CGFloat = 12
+    static let padTop: CGFloat = 24
+    static let padBottom: CGFloat = 22
+
+    let count: Int
+
+    private let size: CGSize
+    private let lo: Double
+    private let span: Double
+    private let step: CGFloat
+
+    init(values: [Double], size: CGSize) {
+        self.size = size
+        count = values.count
+
+        let rawLo = values.min() ?? 0
+        let rawHi = values.max() ?? 100
+        let mid = (rawLo + rawHi) / 2
+        let needed = max(Self.minSpan, (rawHi - rawLo) * 1.35)
+
+        // Okno wyśrodkowane na danych i docięte do 0...100 — przy wyniku 96
+        // nie ma po co rysować pustego pasa nad skalą.
+        var low = mid - needed / 2
+        var high = mid + needed / 2
+        if high > 100 {
+            low -= high - 100
+            high = 100
+        }
+        if low < 0 {
+            high = min(100, high - low)
+            low = 0
+        }
+
+        lo = low
+        span = max(1, high - low)
+        step = count > 1 ? (size.width - Self.padX * 2) / CGFloat(count - 1) : 0
+    }
+
+    func x(_ index: Int) -> CGFloat { Self.padX + CGFloat(index) * step }
+
+    func y(_ value: Double) -> CGFloat {
+        let inner = size.height - Self.padTop - Self.padBottom
+        return Self.padTop + (1 - CGFloat((value - lo) / span)) * inner
+    }
+
+    /// Punkt NAJBLIŻSZY, a nie ten po lewej — pod palcem ma się zaznaczyć to,
+    /// co widać pod palcem.
+    func index(atX x: CGFloat) -> Int {
+        guard count > 1, step > 0 else { return 0 }
+        return min(max(Int(((x - Self.padX) / step).rounded()), 0), count - 1)
+    }
+}
+
+/// Główny wykres dashboardu: spokojna linia normy (pine) i skaczące punkty
+/// dziennych wyników (ochre). Przeciągnięcie po nim wybiera dzień.
 struct TrendStrip: View {
     let points: [DayPoint]
+    @Binding var selection: Int?
 
-    private let padX: CGFloat = 10
-    private let topPad: CGFloat = 16
-    private let botPad: CGFloat = 26
+    @State private var size: CGSize = .zero
+
+    /// Do skali wchodzą i wyniki, i normy — inaczej linia potrafi wyjechać
+    /// poza kadr w dniu z mocnym odchyleniem.
+    private var values: [Double] {
+        points.map(\.total) + points.compactMap(\.norm)
+    }
+
+    private var shownIndex: Int? {
+        if let selection, points.indices.contains(selection) { return selection }
+        return points.indices.last
+    }
 
     var body: some View {
-        Canvas { context, size in
+        Canvas { context, canvasSize in
             guard points.count > 1 else { return }
+            let g = StripGeometry(values: values, size: canvasSize)
 
-            let values = points.flatMap { [$0.total, $0.baseline] }
-            let rawLo = values.min() ?? 0
-            let rawHi = values.max() ?? 100
-            // Margines, żeby skrajne punkty nie kleiły się do krawędzi.
-            let pad = max(6, (rawHi - rawLo) * 0.15)
-            let lo = max(0, rawLo - pad)
-            let hi = min(100, rawHi + pad)
-            let span = max(1, hi - lo)
-
-            let innerW = size.width - padX * 2
-            let innerH = size.height - topPad - botPad
-            let step = innerW / CGFloat(points.count - 1)
-
-            func x(_ i: Int) -> CGFloat { padX + CGFloat(i) * step }
-            func y(_ v: Double) -> CGFloat {
-                topPad + (1 - CGFloat((v - lo) / span)) * innerH
-            }
-
-            // linia bazowa
-            var baseline = Path()
-            for (i, p) in points.enumerated() {
-                let pt = CGPoint(x: x(i), y: y(p.baseline))
-                if i == 0 { baseline.move(to: pt) } else { baseline.addLine(to: pt) }
-            }
-            context.stroke(
-                baseline,
-                with: .color(Palette.pine),
-                style: StrokeStyle(lineWidth: 2.6, lineCap: .round, lineJoin: .round)
-            )
-
-            let selected = points.count - 1
-
-            // łodyżki + punkty
-            for (i, p) in points.enumerated() {
-                let cx = x(i)
-                var stem = Path()
-                stem.move(to: CGPoint(x: cx, y: y(p.baseline)))
-                stem.addLine(to: CGPoint(x: cx, y: y(p.total)))
-                context.stroke(stem, with: .color(Palette.stem), lineWidth: 1.4)
-
-                let cy = y(p.total)
-                let isSelected = i == selected
-                let r: CGFloat = isSelected ? 6 : 3.4
-
-                if isSelected {
-                    context.fill(
-                        Path(ellipseIn: CGRect(x: cx - 10, y: cy - 10, width: 20, height: 20)),
-                        with: .color(Palette.ochre.opacity(0.14))
-                    )
+            drawSelectionRule(context, g, canvasSize)
+            drawNormLine(context, g)
+            drawStems(context, g)
+            drawDots(context, g)
+            drawNormLabel(context, g, width: canvasSize.width)
+            drawAxis(context, size: canvasSize)
+        }
+        .frame(height: 150)
+        .contentShape(Rectangle())
+        .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+        // `minimumDistance` większe od zera oddaje pionowe przeciągnięcie
+        // ScrollView-owi — przy zerze wykres łapałby każdy dotyk i ekran
+        // przestawałby się przewijać nad kartą.
+        .gesture(
+            DragGesture(minimumDistance: 6)
+                .onChanged { drag in
+                    selection = StripGeometry(values: values, size: size)
+                        .index(atX: drag.location.x)
                 }
-
-                let dot = Path(ellipseIn: CGRect(x: cx - r, y: cy - r, width: r * 2, height: r * 2))
-                context.fill(dot, with: .color(Palette.ochre))
-
-                if isSelected {
-                    context.stroke(dot, with: .color(Palette.card), lineWidth: 1.6)
-                    context.draw(
-                        Text("\(Int(p.total))")
-                            .font(AtlasFont.mono(11, .bold))
-                            .foregroundStyle(Palette.ochreInk),
-                        at: CGPoint(x: cx, y: cy - 15),
-                        anchor: .center
-                    )
+                // Podniesienie palca kasuje wybór: wykres wraca do dziś,
+                // zamiast zostawać w trybie, z którego trzeba wychodzić.
+                .onEnded { _ in
+                    withAnimation(.easeOut(duration: 0.15)) { selection = nil }
                 }
+        )
+        .sensoryFeedback(trigger: selection) { _, new in
+            new == nil ? nil : .selection
+        }
+        .accessibilityLabel("Wykres ostatnich \(points.count) dni")
+    }
+
+    // MARK: - Warstwy
+
+    private func drawSelectionRule(_ context: GraphicsContext, _ g: StripGeometry, _ size: CGSize) {
+        guard let selection, points.indices.contains(selection) else { return }
+        var rule = Path()
+        rule.move(to: CGPoint(x: g.x(selection), y: StripGeometry.padTop - 6))
+        rule.addLine(to: CGPoint(x: g.x(selection), y: size.height - StripGeometry.padBottom + 4))
+        context.stroke(rule, with: .color(Palette.tick), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+    }
+
+    /// Linia normy zaczyna się dopiero tam, gdzie norma istnieje — w pierwszym
+    /// dniu szeregu nie ma jej z czego policzyć.
+    private func drawNormLine(_ context: GraphicsContext, _ g: StripGeometry) {
+        var line = Path()
+        var started = false
+        for (i, p) in points.enumerated() {
+            guard let norm = p.norm else { continue }
+            let pt = CGPoint(x: g.x(i), y: g.y(norm))
+            if started { line.addLine(to: pt) } else { line.move(to: pt); started = true }
+        }
+        context.stroke(
+            line,
+            with: .color(Palette.pine),
+            style: StrokeStyle(lineWidth: 2.6, lineCap: .round, lineJoin: .round)
+        )
+    }
+
+    private func drawStems(_ context: GraphicsContext, _ g: StripGeometry) {
+        for (i, p) in points.enumerated() {
+            guard let norm = p.norm else { continue }
+            var stem = Path()
+            stem.move(to: CGPoint(x: g.x(i), y: g.y(norm)))
+            stem.addLine(to: CGPoint(x: g.x(i), y: g.y(p.total)))
+            context.stroke(stem, with: .color(Palette.stem), lineWidth: 1.4)
+        }
+    }
+
+    private func drawDots(_ context: GraphicsContext, _ g: StripGeometry) {
+        for (i, p) in points.enumerated() {
+            let center = CGPoint(x: g.x(i), y: g.y(p.total))
+            let isShown = i == shownIndex
+            let r: CGFloat = isShown ? 6 : 3.4
+
+            if isShown {
+                context.fill(
+                    Path(ellipseIn: CGRect(x: center.x - 10, y: center.y - 10, width: 20, height: 20)),
+                    with: .color(Palette.ochre.opacity(0.14))
+                )
             }
 
-            // podpisy: początek zakresu + trzy ostatnie dni
-            let baseY = size.height - 6
-            context.draw(
-                tick("\(points.count) dni temu"),
-                at: CGPoint(x: 2, y: baseY),
-                anchor: .bottomLeading
-            )
-            for i in max(0, points.count - 3)..<points.count {
+            let dot = Path(ellipseIn: CGRect(x: center.x - r, y: center.y - r, width: r * 2, height: r * 2))
+            context.fill(dot, with: .color(Palette.ochre))
+
+            if isShown {
+                // Obwódka w kolorze tła odcina kropkę od łodyżki pod nią.
+                context.stroke(dot, with: .color(Palette.card), lineWidth: 1.6)
                 context.draw(
-                    tick(Self.weekday(points[i].date)),
-                    at: CGPoint(x: x(i), y: baseY),
-                    anchor: .bottom
+                    Text("\(Int(p.total))")
+                        .font(AtlasFont.mono(11, .bold))
+                        .foregroundStyle(Palette.ochreInk),
+                    at: CGPoint(x: center.x, y: center.y - 15),
+                    anchor: .center
                 )
             }
         }
-        .frame(height: 104)
+    }
+
+    /// Wartość normy podpisana na końcu linii — to ona zastąpiła osobną kartę
+    /// „Podstawa”. Podpis ląduje po przeciwnej stronie linii niż ostatnia
+    /// kropka, żeby się z nią nie zlepiał.
+    private func drawNormLabel(_ context: GraphicsContext, _ g: StripGeometry, width: CGFloat) {
+        guard let last = points.last, let norm = last.norm else { return }
+        let below = last.total >= norm
+        context.draw(
+            Text("norma \(Int(norm.rounded()))")
+                .font(AtlasFont.mono(9.5, .bold))
+                .foregroundStyle(Palette.pine),
+            at: CGPoint(x: width - 2, y: g.y(norm) + (below ? 8 : -8)),
+            anchor: below ? .topTrailing : .bottomTrailing
+        )
+    }
+
+    /// Podpisy tylko w rogach. Poprzednia wersja rysowała etykietę zakresu
+    /// w x=2 i tick dnia w x=10 — przy krótkim szeregu nachodziły na siebie.
+    private func drawAxis(_ context: GraphicsContext, size: CGSize) {
+        let baseY = size.height - 4
+        if let first = points.first {
+            context.draw(tick(Self.shortDay(first.date)), at: CGPoint(x: 2, y: baseY), anchor: .bottomLeading)
+        }
+        context.draw(tick("dziś"), at: CGPoint(x: size.width - 2, y: baseY), anchor: .bottomTrailing)
     }
 
     private func tick(_ s: String) -> Text {
@@ -103,45 +215,20 @@ struct TrendStrip: View {
             .foregroundStyle(Palette.tick)
     }
 
-    private static func weekday(_ iso: String) -> String {
-        let parser = DateFormatter()
-        parser.locale = Locale(identifier: "en_US_POSIX")
-        parser.dateFormat = "yyyy-MM-dd"
-        guard let date = parser.date(from: iso) else { return "" }
-
-        let out = DateFormatter()
-        out.locale = Locale(identifier: "pl_PL")
-        out.dateFormat = "EE"
-        return out.string(from: date).capitalized
+    /// "2026-07-25" → "25 lip". `FormatStyle` zamiast `DateFormatter`, bo ten
+    /// drugi nie jest `Sendable`. Południe chroni przed przeskokiem o strefę.
+    static func shortDay(_ iso: String) -> String {
+        guard let date = try? Date("\(iso)T12:00:00Z", strategy: .iso8601) else { return iso }
+        return date.formatted(
+            .dateTime.locale(Locale(identifier: "pl_PL")).day().month(.abbreviated)
+        )
     }
-}
 
-/// Mała linia trendu w karcie podstawy.
-struct Sparkline: View {
-    let values: [Double]
-
-    var body: some View {
-        Canvas { context, size in
-            guard values.count > 1 else { return }
-            let lo = values.min() ?? 0
-            let hi = values.max() ?? 1
-            let span = max(1, hi - lo)
-            let step = size.width / CGFloat(values.count - 1)
-
-            var path = Path()
-            for (i, v) in values.enumerated() {
-                let pt = CGPoint(
-                    x: CGFloat(i) * step,
-                    y: (1 - CGFloat((v - lo) / span)) * (size.height - 4) + 2
-                )
-                if i == 0 { path.move(to: pt) } else { path.addLine(to: pt) }
-            }
-            context.stroke(
-                path,
-                with: .color(Palette.pine),
-                style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
-            )
-        }
-        .frame(height: 34)
+    /// "2026-08-06" → "6 sierpnia" — nagłówek karty w trakcie przeciągania.
+    static func longDay(_ iso: String) -> String {
+        guard let date = try? Date("\(iso)T12:00:00Z", strategy: .iso8601) else { return iso }
+        return date.formatted(
+            .dateTime.locale(Locale(identifier: "pl_PL")).day().month(.wide)
+        )
     }
 }

@@ -27,36 +27,79 @@ struct DashboardModelTests {
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
         #expect(data.headline == 38)
-        #expect(data.today == 38)
     }
 
-    /// Regresja z symulatora: przy jednym snapshocie karta pokazywała
-    /// „średnia z 30 dni", choć uśredniała jeden dzień.
-    @Test("Pojedynczy snapshot daje pokrycie 1 i zerowy trend")
+    /// Przy jednym dniu nie ma z czym porównywać — norma musi być pusta,
+    /// a nie równa dzisiejszemu wynikowi. Sklejona udawałaby, że istnieje.
+    @Test("Pojedynczy snapshot nie ma normy")
     func singleSnapshot() throws {
         let rows = [try makeSnapshot("2026-08-06", 38)]
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
         #expect(data.coverageDays == 1)
-        #expect(data.baseline == 38)
-        #expect(data.baselineDelta == 0)
+        #expect(data.norm == nil)
+        #expect(data.normDelta == nil)
+        #expect(data.normDays == 0)
         #expect(data.points.count == 1)
+        #expect(data.points.first?.norm == nil)
     }
 
-    @Test("Średnia krocząca liczy się z okna 7 dni")
-    func rollingBaseline() throws {
+    @Test("Norma liczy się z okna 7 dni poprzedzających")
+    func rollingNorm() throws {
         // 10 dni po 10, 20, ... 100 — malejąco, jak z Supabase.
         let rows = try (1...10).reversed().map {
             try makeSnapshot(String(format: "2026-08-%02d", $0), $0 * 10)
         }
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
-        // Pierwszy punkt: okno ma tylko jego samego.
-        #expect(data.points.first?.baseline == 10)
-        // Ósmy punkt (wartość 80): średnia z 20...80.
-        #expect(data.points[7].baseline == 50)
-        // Ostatni: średnia z 40...100.
-        #expect(data.points.last?.baseline == 70)
+        // Pierwszy punkt nie ma dnia przed sobą.
+        #expect(data.points.first?.norm == nil)
+        // Ósmy punkt (wartość 80): średnia z siedmiu poprzednich, 10...70.
+        #expect(data.points[7].norm == 40)
+        // Ostatni (100): średnia z 30...90.
+        #expect(data.points.last?.norm == 60)
+    }
+
+    /// Sedno zmiany: gdyby dzisiejszy wynik wchodził do własnej normy,
+    /// odchylenie byłoby tłumione o 1/7 i „dziś vs norma" porównywałoby
+    /// liczbę częściowo z samą sobą.
+    @Test("Dzisiejszy wynik nie wchodzi do własnej normy")
+    func normExcludesToday() throws {
+        // Siedem dni po 50 i dzisiaj 100. Norma to czyste 50, delta 50.
+        let older = try (1...7).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 50) }
+        let today = try makeSnapshot("2026-08-08", 100)
+        let rows = (older + [today]).reversed().map { $0 }
+        let data = DashboardViewModel.build(from: rows, current: rows[0])
+
+        #expect(data.norm == 50)
+        #expect(data.normDelta == 50)
+        #expect(data.normDays == 7)
+    }
+
+    @Test("Okno normy zatrzymuje się na siedmiu dniach")
+    func normWindowCaps() throws {
+        // 20 dni: dziesięć po 100 (starsze) i dziesięć po 0 — norma ostatniego
+        // dnia widzi wyłącznie zera, bo setki wypadły z okna.
+        let older = try (1...10).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 100) }
+        let newer = try (11...20).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 0) }
+        let rows = (older + newer).reversed().map { $0 }
+        let data = DashboardViewModel.build(from: rows, current: rows[0])
+
+        #expect(data.norm == 0)
+        #expect(data.normDays == 7)
+    }
+
+    @Test("Rozgrzewka trwa do siódmego dnia z danymi")
+    func warmupThreshold() throws {
+        func data(days: Int) throws -> DashboardData {
+            let rows = try (1...days).reversed().map {
+                try makeSnapshot(String(format: "2026-08-%02d", $0), 60)
+            }
+            return DashboardViewModel.build(from: rows, current: rows[0])
+        }
+
+        #expect(try data(days: 6).isWarmingUp)
+        #expect(try !data(days: 7).isWarmingUp)
     }
 
     @Test("Pasek przycina się do 14 dni")
@@ -71,18 +114,6 @@ struct DashboardModelTests {
         // Zostaje ogon, nie początek.
         #expect(data.points.first?.date == "2026-08-07")
         #expect(data.points.last?.date == "2026-08-20")
-    }
-
-    @Test("Delta trendu to różnica średnich 7 i 30 dni")
-    func trendDelta() throws {
-        // 7 dni po 40 (starsze) + 7 dni po 60 (nowsze) → avg7 = 60, avg30 = 50.
-        let older = try (1...7).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 40) }
-        let newer = try (8...14).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 60) }
-        let rows = (older + newer).reversed().map { $0 }
-        let data = DashboardViewModel.build(from: rows, current: rows[0])
-
-        #expect(data.baseline == 50)
-        #expect(data.baselineDelta == 10)
     }
 
     @Test("Pewność to pokrycie danymi w 30 dniach")
@@ -130,16 +161,6 @@ struct DashboardModelTests {
         let data = DashboardViewModel.build(from: [snapshot], current: snapshot)
 
         #expect(data.stateText.hasPrefix(expectedPrefix))
-    }
-
-    @Test("Progi etykiety słownej", arguments: [
-        (80, "świetnie"), (60, "dobrze"), (40, "przeciętnie"), (39, "nisko"),
-    ])
-    func scoreLabelThresholds(total: Int, expected: String) throws {
-        let snapshot = try makeSnapshot("2026-08-06", total)
-        let data = DashboardViewModel.build(from: [snapshot], current: snapshot)
-
-        #expect(data.todayWord == expected)
     }
 
     @Test("Data formatuje się po polsku")

@@ -15,8 +15,11 @@ enum PL {
 struct DayPoint: Sendable {
     let date: String
     let total: Double
-    /// Krocząca średnia 7-dniowa — "wolna" linia, odpowiednik Fundamentu z makiety.
-    let baseline: Double
+    /// Norma dnia — średnia z maks. 7 dni POPRZEDZAJĄCYCH ten dzień.
+    ///
+    /// `nil` w pierwszym dniu szeregu: nie ma jeszcze z czym porównywać,
+    /// a linia sklejona z wynikiem dnia udawałaby normę, której nie ma.
+    let norm: Double?
 }
 
 /// Wszystko, co ekran renderuje, policzone raz przy wczytaniu.
@@ -25,12 +28,13 @@ struct DashboardData: Sendable {
     let headline: Int
     let stateText: String
 
-    let baseline: Int
-    let baselineDelta: Int
-    let baselineSeries: [Double]
-
-    let today: Int
-    let todayWord: String
+    /// Norma dzisiejszego dnia — dokładnie ta sama liczba, którą rysuje
+    /// zielona linia na wykresie. Jedna definicja, jedno źródło.
+    let norm: Int?
+    /// Ile dni faktycznie weszło do normy (maks. 7).
+    let normDays: Int
+    /// Dziś minus norma. `nil` razem z `norm`.
+    let normDelta: Int?
 
     let points: [DayPoint]
     let breakdown: [ScoreComponentRow]
@@ -39,17 +43,39 @@ struct DashboardData: Sendable {
     let coverageDays: Int
     let note: String?
 
+    /// Dni, po których wykres zaczyna cokolwiek znaczyć.
+    static let warmupDays = 7
+
+    /// Poniżej progu wykres wprowadza w błąd: dwa punkty odległe o 1 pkt
+    /// rysują się jak stromy podjazd, cokolwiek zrobić ze skalą.
+    var isWarmingUp: Bool { coverageDays < Self.warmupDays }
+
     var confidence: Int { Int((Double(coverageDays) / 30.0 * 100).rounded()) }
 }
 
 extension DashboardData {
     /// Dane poglądowe dla SwiftUI Previews — kształt jak z prawdziwych snapshotów.
     static var sample: DashboardData {
-        let totals: [Double] = [61, 58, 66, 70, 63, 72, 68, 74, 59, 71, 77, 65, 80, 73]
-        let baselines = totals.indices.map { i -> Double in
-            let w = totals[max(0, i - 6)...i]
-            return w.reduce(0, +) / Double(w.count)
-        }
+        preview(
+            totals: [61, 58, 66, 70, 63, 72, 68, 74, 59, 71, 77, 65, 80, 73],
+            stateText: "Solidnie. Trzymaj tempo — nic nie musisz zmieniać.",
+            note: "Score policzony z 65% wag. Brakuje: VO₂max, Metabolizm."
+        )
+    }
+
+    /// Świeże konto: za mało dni, żeby wykres cokolwiek znaczył.
+    static var warmingUp: DashboardData {
+        preview(
+            totals: [90, 91, 89],
+            stateText: "Świetna forma. Dziś możesz spokojnie docisnąć trening.",
+            note: "Score policzony z 65% wag. Brakuje: VO₂max, Metabolizm."
+        )
+    }
+
+    /// Liczy to samo co `build`, tylko z gołych wartości — dzięki temu podgląd
+    /// nie może rozjechać się z produkcyjną definicją normy.
+    private static func preview(totals: [Double], stateText: String, note: String?) -> DashboardData {
+        let norms = DashboardViewModel.norms(for: totals)
         let dayFormatter = DateFormatter()
         dayFormatter.locale = Locale(identifier: "en_US_POSIX")
         dayFormatter.dateFormat = "yyyy-MM-dd"
@@ -57,23 +83,26 @@ extension DashboardData {
         let points = totals.indices.map { i in
             DayPoint(
                 date: dayFormatter.string(
-                    from: Calendar.current.date(byAdding: .day, value: i - 13, to: Date()) ?? Date()
+                    from: Calendar.current.date(
+                        byAdding: .day, value: i - totals.count + 1, to: Date()
+                    ) ?? Date()
                 ),
                 total: totals[i],
-                baseline: baselines[i]
+                norm: norms[i]
             )
         }
 
+        let headline = Int(totals.last ?? 0)
+        let todayNorm = norms.last.flatMap { $0 }
+
         return DashboardData(
             dateLabel: "czwartek · 6 sierpnia",
-            headline: 73,
-            stateText: "Solidnie. Trzymaj tempo — nic nie musisz zmieniać.",
-            baseline: 68,
-            baselineDelta: 3,
-            baselineSeries: baselines,
-            today: 73,
-            todayWord: "dobrze",
-            points: points,
+            headline: headline,
+            stateText: stateText,
+            norm: todayNorm.map { Int($0.rounded()) },
+            normDays: min(max(0, totals.count - 1), DashboardViewModel.normWindow),
+            normDelta: todayNorm.map { Int((Double(headline) - $0).rounded()) },
+            points: Array(points.suffix(14)),
             breakdown: [
                 ScoreComponentRow(
                     id: "sleep", label: "Sen", weight: 0.30, value: 84,
@@ -98,8 +127,8 @@ extension DashboardData {
                     ]
                 ),
             ],
-            coverageDays: 14,
-            note: "Score policzony z 65% wag. Brakuje: VO₂max, Metabolizm."
+            coverageDays: totals.count,
+            note: note
         )
     }
 }
@@ -159,6 +188,25 @@ final class DashboardViewModel {
 
     // MARK: - Wyliczenia
 
+    /// Ile dni wstecz uśrednia norma.
+    nonisolated static let normWindow = 7
+
+    /// Norma dnia liczona WYŁĄCZNIE z dni wcześniejszych.
+    ///
+    /// Gdyby do okna wchodził dzisiejszy wynik, porównanie „dziś vs norma"
+    /// byłoby po części porównaniem liczby z samą sobą i tłumiło odchylenie
+    /// o 1/7. Pierwszy dzień szeregu nie ma normy — stąd opcjonalność.
+    ///
+    /// `nonisolated`, bo to czysta matematyka — podgląd składa z niej dane
+    /// bez wchodzenia na main actora.
+    nonisolated static func norms(for totals: [Double]) -> [Double?] {
+        totals.indices.map { i in
+            let window = totals[max(0, i - normWindow)..<i]
+            guard !window.isEmpty else { return nil }
+            return window.reduce(0, +) / Double(window.count)
+        }
+    }
+
     /// Internal, nie private — to jedyna nietrywialna logika w tym pliku
     /// i chcemy ją mieć pod testami bez dotykania sieci.
     static func build(from rows: [ScoreSnapshot], current: ScoreSnapshot) -> DashboardData {
@@ -166,36 +214,25 @@ final class DashboardViewModel {
         let ascending = rows.reversed().map { $0 }
         let totals = ascending.map { Double($0.scoreTotal) }
 
-        let baselines = totals.indices.map { i -> Double in
-            let lower = max(0, i - 6)
-            let window = totals[lower...i]
-            return window.reduce(0, +) / Double(window.count)
+        let points = zip(ascending, norms(for: totals)).map { snap, norm in
+            DayPoint(date: snap.scoreDate, total: Double(snap.scoreTotal), norm: norm)
         }
 
-        let points = zip(ascending, baselines).map { snap, base in
-            DayPoint(date: snap.scoreDate, total: Double(snap.scoreTotal), baseline: base)
-        }
-        let last14 = Array(points.suffix(14))
-
-        let avg30 = totals.isEmpty ? 0 : totals.reduce(0, +) / Double(totals.count)
-        let last7 = totals.suffix(7)
-        let avg7 = last7.isEmpty ? 0 : last7.reduce(0, +) / Double(last7.count)
-
-        let note = Self.missingNote(current.components)
+        // Norma dzisiejsza = norma ostatniego punktu szeregu. Ta sama liczba
+        // ląduje pod dużą cyfrą i na końcu zielonej linii wykresu.
+        let todayNorm = points.last?.norm
 
         return DashboardData(
             dateLabel: polishDate(current.scoreDate),
             headline: current.scoreTotal,
             stateText: stateText(for: current.scoreTotal),
-            baseline: Int(avg30.rounded()),
-            baselineDelta: Int((avg7 - avg30).rounded()),
-            baselineSeries: last14.map(\.baseline),
-            today: current.scoreTotal,
-            todayWord: scoreLabel(current.scoreTotal),
-            points: last14,
+            norm: todayNorm.map { Int($0.rounded()) },
+            normDays: min(max(0, totals.count - 1), normWindow),
+            normDelta: todayNorm.map { Int((Double(current.scoreTotal) - $0).rounded()) },
+            points: Array(points.suffix(14)),
             breakdown: current.components.breakdown,
             coverageDays: rows.count,
-            note: note
+            note: Self.missingNote(current.components)
         )
     }
 
@@ -213,15 +250,6 @@ final class DashboardViewModel {
     }
 
     /// Progi zgodne z `scoreLabel()` z lib/scoring.ts w repo webowym.
-    private static func scoreLabel(_ total: Int) -> String {
-        switch total {
-        case 80...: "świetnie"
-        case 60..<80: "dobrze"
-        case 40..<60: "przeciętnie"
-        default: "nisko"
-        }
-    }
-
     private static func stateText(for total: Int) -> String {
         switch total {
         case 80...: "Świetna forma. Dziś możesz spokojnie docisnąć trening."
