@@ -465,8 +465,6 @@ struct DashboardView: View {
 /// Copy, które wcześniej stało na stałe pod dużą cyfrą i zajmowało dwie karty.
 /// Czyta się je raz, więc mieszka w arkuszu, a nie w najlepszym miejscu ekranu.
 struct ScoreExplainerSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -496,15 +494,11 @@ struct ScoreExplainerSheet: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(Palette.card)
+            // Bez przycisku zamykania — arkusz zbija się gestem albo
+            // dotknięciem tła, a „Gotowe" sugerowałoby, że jest tu coś
+            // do zatwierdzenia.
             .navigationTitle("Jak liczymy wynik")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Gotowe") { dismiss() }
-                        .font(AtlasFont.body(15, .semibold))
-                        .tint(Palette.pine)
-                }
-            }
         }
     }
 
