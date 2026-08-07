@@ -269,6 +269,9 @@ final class TrendsViewModel {
                    points: series(health) {
                        deepSleepShare(deep: $0.sleepDeepMinutes, asleep: $0.sleepAsleepMinutes)
                    }),
+            Metric(id: "sleep_regularity", title: "Regularność pory snu (SRI)", unit: "", positiveHigher: true,
+                   role: .feeds(component: "Sen", weight: 0.30),
+                   points: series(health) { $0.sleepRegularityIndex }),
             Metric(id: "sleep_consistency", title: "Równa długość snu", unit: "/100", positiveHigher: true,
                    role: .feeds(component: "Sen", weight: 0.30), points: consistencyPoints),
 
@@ -281,6 +284,8 @@ final class TrendsViewModel {
                    points: weights.map { SeriesPoint(date: $0.measuredAt, value: $0.weightKg) }),
             Metric(id: "whr", title: "WHR (talia/biodra)", unit: "", positiveHigher: false, role: .feeds(component: "Ciało", weight: 0.20),
                    points: series(health) { waistToHipRatio(waist: $0.waistCm, hip: $0.hipCm) }),
+            Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false,
+                   role: .feeds(component: "Ciało", weight: 0.20), points: series(health) { $0.bodyFatPct }),
 
             // Regeneracja — 15%
             Metric(id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm", positiveHigher: false, role: .feeds(component: "Regeneracja", weight: 0.15),
@@ -289,10 +294,6 @@ final class TrendsViewModel {
                    points: series(health) { $0.hrvSdnnMs }),
 
             // Poza wynikiem — v3 tego nie punktuje, ale opisuje dzień.
-            Metric(id: "sleep_regularity", title: "Regularność snu (SRI)", unit: "", positiveHigher: true, role: .informational,
-                   points: series(health) { $0.sleepRegularityIndex }),
-            Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false, role: .informational,
-                   points: series(health) { $0.bodyFatPct }),
             // Z HealthKit `appleExerciseTime`. Ta sama kolumna przyjmie kiedyś
             // minuty intensywności z Garmina — to ten sam pomiar pod inną nazwą
             // handlową, więc nie zakładamy dla niego osobnego miejsca.

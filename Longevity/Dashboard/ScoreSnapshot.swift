@@ -111,11 +111,14 @@ struct ScoreComponents: Decodable, Sendable {
     private static let partLabels: [String: String] = [
         "duration": "Długość snu",
         "deep": "Sen głęboki",
-        // Świadomie nie „regularność": ten składnik to rozrzut DŁUGOŚCI snu.
-        // Regularność pory snu (SRI) jest osobną metryką i nie wchodzi do score'u.
+        // Dwa różne wymiary rytmu i oba wchodzą do wyniku: `consistency` to
+        // rozrzut DŁUGOŚCI snu, `regularity` to stałość PORY zasypiania.
+        // Można spać co noc osiem godzin, kładąc się o losowych porach.
         "consistency": "Równa długość snu",
+        "regularity": "Regularność pory snu",
         "bmi": "BMI",
         "whr": "Talia/biodra",
+        "body_fat": "Tkanka tłuszczowa",
         "resting_heart_rate": "Tętno spoczynkowe",
         "hrv_trend": "Trend HRV",
         "glucose_fasting": "Glukoza na czczo",

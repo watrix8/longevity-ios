@@ -212,3 +212,38 @@ struct ScorePartsTests {
         #expect(sleep.parts.first?.label == "nowa_metryka")
     }
 }
+
+@Suite("Nowe składowe w rozbiciu")
+struct NewPartLabelTests {
+    /// Oba składniki opisują rytm snu, ale co innego: jeden długość, drugi porę.
+    /// Etykiety muszą to rozróżniać, bo w rozwiniętym wierszu stoją obok siebie.
+    @Test("Regularność pory i równa długość mają osobne nazwy")
+    func sleepPartsAreDistinct() throws {
+        let snapshot = try makeSnapshot("2026-08-07", 80, components: """
+        {"sleep":80,"parts":{"sleep":[
+          {"key":"duration","weight":0.5,"value":100},
+          {"key":"deep","weight":0.2,"value":80},
+          {"key":"regularity","weight":0.2,"value":65},
+          {"key":"consistency","weight":0.1,"value":0}]}}
+        """)
+        let sleep = try #require(snapshot.components.breakdown.first)
+
+        #expect(sleep.parts.map(\.label)
+            == ["Długość snu", "Sen głęboki", "Regularność pory snu", "Równa długość snu"])
+        #expect(sleep.parts.map(\.weight) == [0.5, 0.2, 0.2, 0.1])
+    }
+
+    @Test("Skład ciała ma trzy składowe z tkanką tłuszczową")
+    func bodyHasThreeParts() throws {
+        let snapshot = try makeSnapshot("2026-08-07", 80, components: """
+        {"body":86,"parts":{"body":[
+          {"key":"whr","weight":0.5,"value":null},
+          {"key":"body_fat","weight":0.3,"value":90},
+          {"key":"bmi","weight":0.2,"value":86}]}}
+        """)
+        let body = try #require(snapshot.components.breakdown.first)
+
+        #expect(body.parts.map(\.label) == ["Talia/biodra", "Tkanka tłuszczowa", "BMI"])
+        #expect(body.parts.first?.value == nil)
+    }
+}
