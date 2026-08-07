@@ -21,23 +21,33 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: pl.tippin.longevity
         GENERATE_INFOPLIST_FILE: YES
+        # Wersje muszą tu być jawnie: przy GENERATE_INFOPLIST_FILE Xcode bierze
+        # CFBundleShortVersionString i CFBundleVersion właśnie z tych dwóch pól,
+        # a puste wartości App Store Connect odrzuca przy wgrywaniu paczki.
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
         # Bez tego iOS uruchamia app w trybie zgodności i letterboxuje ją (czarne pasy).
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Longevity uses your health data to calculate your personalized longevity score and track wellness metrics over time."
         INFOPLIST_KEY_NSCameraUsageDescription: "Longevity uses the camera so you can photograph a meal and get its calories and macros estimated."
+        # Apka gada z serwerem wyłącznie po HTTPS, więc podlega zwolnieniu z
+        # deklaracji eksportowej. Bez tego klucza App Store Connect pyta o to
+        # przy każdym buildzie z osobna.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        # Tylko iPhone — układ ekranów jest zbudowany na stałych odstępach i
+        # jednej kolumnie, więc na iPadzie wyglądałby jak rozciągnięta apka.
+        TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: "6.0"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
         CODE_SIGN_STYLE: Automatic
-        DEVELOPMENT_TEAM: JFP5D78785
+        DEVELOPMENT_TEAM: TBWVLKBMF4
     dependencies:
       - package: Supabase
     entitlements:
       path: Longevity/Longevity.entitlements
       properties:
         com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access:
-          - health-records
 
   LongevityTests:
     type: bundle.unit-test
