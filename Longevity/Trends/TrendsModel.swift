@@ -130,6 +130,7 @@ private struct HealthRow: Decodable {
     let sleepAsleepMinutes: Int?
     let sleepDeepMinutes: Int?
     let sleepRegularityIndex: Double?
+    let exerciseMinutes: Int?
     let vo2max: Double?
     let restingHeartRate: Double?
     let hrvSdnnMs: Double?
@@ -143,6 +144,7 @@ private struct HealthRow: Decodable {
         case sleepAsleepMinutes = "sleep_asleep_minutes"
         case sleepDeepMinutes = "sleep_deep_minutes"
         case sleepRegularityIndex = "sleep_regularity_index"
+        case exerciseMinutes = "exercise_minutes"
         case vo2max
         case restingHeartRate = "resting_heart_rate"
         case hrvSdnnMs = "hrv_sdnn_ms"
@@ -219,7 +221,7 @@ final class TrendsViewModel {
             async let health: [HealthRow] = db.from("health_metrics")
                 .select("""
                     metric_date, sleep_asleep_minutes, sleep_deep_minutes, \
-                    sleep_regularity_index, vo2max, resting_heart_rate, hrv_sdnn_ms, \
+                    sleep_regularity_index, exercise_minutes, vo2max, resting_heart_rate, hrv_sdnn_ms, \
                     steps, body_fat_pct, waist_cm, hip_cm
                     """)
                 .gte("metric_date", value: from)
@@ -291,9 +293,14 @@ final class TrendsViewModel {
                    points: series(health) { $0.sleepRegularityIndex }),
             Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false, role: .informational,
                    points: series(health) { $0.bodyFatPct }),
+            // Z HealthKit `appleExerciseTime`. Ta sama kolumna przyjmie kiedyś
+            // minuty intensywności z Garmina — to ten sam pomiar pod inną nazwą
+            // handlową, więc nie zakładamy dla niego osobnego miejsca.
+            Metric(id: "exercise_minutes", title: "Minuty ćwiczeń", unit: "min", positiveHigher: true,
+                   role: .informational, points: series(health) { $0.exerciseMinutes.map(Double.init) }),
             Metric(id: "steps", title: "Kroki", unit: "", positiveHigher: true, role: .informational,
                    points: series(health) { $0.steps.map(Double.init) }),
-            Metric(id: "activity", title: "Ruch", unit: "min", positiveHigher: true, role: .informational,
+            Metric(id: "activity", title: "Ruch (wpisany)", unit: "min", positiveHigher: true, role: .informational,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
 
             Metric(id: "kcal", title: "Kalorie (est.)", unit: "kcal", positiveHigher: true, role: .informational,
