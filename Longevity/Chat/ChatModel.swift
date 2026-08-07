@@ -31,8 +31,8 @@ final class ChatViewModel {
     var draft = ""
 
     /// Gdy analiza posiłku wróciła niepewna, następny wpisany tekst jest
-    /// odpowiedzią na dopytanie, a nie pytaniem do asystenta. Odpowiednik
-    /// `telegram_pending_inputs`, tylko po stronie klienta.
+    /// odpowiedzią na dopytanie, a nie pytaniem do asystenta. Stan żyje tylko
+    /// w pamięci klienta — nie ma dla niego tabeli.
     private var pendingMeal: (id: String, imageBase64: String?)?
 
     /// Ustawiane przez „Opisz słowami" — bez tego opis posiłku poleciałby do
