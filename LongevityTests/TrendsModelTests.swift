@@ -82,51 +82,6 @@ struct MetricTests {
     }
 }
 
-@Suite("Agregacja kalorii")
-@MainActor
-struct DailyKcalTests {
-    @Test("Sumuje środki widełek w obrębie dnia")
-    func sumsMidpointsPerDay() {
-        let points = TrendsViewModel.dailyKcal([
-            ("2026-08-01", 400, 600),   // 500
-            ("2026-08-01", 200, 400),   // 300
-            ("2026-08-02", 1000, 1200), // 1100
-        ])
-
-        #expect(points.map(\.date) == ["2026-08-01", "2026-08-02"])
-        #expect(points.map(\.value) == [800, 1100])
-    }
-
-    @Test("Brakujące widełki liczą się jako zero")
-    func nilBoundsCountAsZero() {
-        let points = TrendsViewModel.dailyKcal([
-            ("2026-08-01", nil, 600),  // 300
-            ("2026-08-01", 400, nil),  // 200
-            ("2026-08-02", nil, nil),  // 0
-        ])
-
-        #expect(points.map(\.value) == [500, 0])
-    }
-
-    @Test("Wynik jest posortowany rosnąco po dacie")
-    func sortedAscending() {
-        let points = TrendsViewModel.dailyKcal([
-            ("2026-08-03", 100, 100),
-            ("2026-08-01", 100, 100),
-            ("2026-08-02", 100, 100),
-        ])
-
-        #expect(points.map(\.date) == ["2026-08-01", "2026-08-02", "2026-08-03"])
-    }
-
-    @Test("Pusta lista daje pustą serię")
-    func emptyInput() {
-        #expect(TrendsViewModel.dailyKcal([]).isEmpty)
-    }
-}
-
-/// Strzałka przy przeciąganiu po wykresie. Musi opisywać wskazany dzień,
-/// bo inaczej karta pokazuje wartość z 12 lipca i kierunek z dziś.
 @Suite("Kierunek dla wybranego dnia")
 struct MetricArrowAtIndexTests {
     private func metric(_ values: [Double], positiveHigher: Bool = true) -> Metric {

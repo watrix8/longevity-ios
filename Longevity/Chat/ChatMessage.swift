@@ -1,76 +1,12 @@
 import Foundation
 import UIKit
 
-/// Karta posiłku po analizie — to, co bot wysyła jako wiadomość z makro i score.
-struct MealCard: Sendable {
-    let title: String
-    let category: String
-    let kcalMin: Int?
-    let kcalMax: Int?
-    let proteinG: Double?
-    let carbsG: Double?
-    let fatG: Double?
-    let score: Int?
-    let insight: String?
-    let action: String?
-
-    /// Kategorie serwer zwraca po angielsku — tu dostają polskie etykiety.
-    static func categoryLabel(_ raw: String?) -> String {
-        switch raw {
-        case "breakfast": "Śniadanie"
-        case "lunch": "Lunch"
-        case "dinner": "Obiad"
-        case "supper": "Kolacja"
-        case "snack": "Przekąska"
-        default: "Posiłek"
-        }
-    }
-
-    init(from meal: LongevityAPI.Meal) {
-        title = meal.mealTitle ?? "Posiłek"
-        category = Self.categoryLabel(meal.mealCategory)
-        kcalMin = meal.kcalMin
-        kcalMax = meal.kcalMax
-        proteinG = meal.proteinG
-        carbsG = meal.carbsG
-        fatG = meal.fatG
-        score = meal.mealScore
-        insight = meal.insightText
-        action = meal.insightAction
-    }
-
-    init(
-        title: String,
-        category: String,
-        kcalMin: Int?,
-        kcalMax: Int?,
-        proteinG: Double?,
-        carbsG: Double?,
-        fatG: Double?,
-        score: Int?,
-        insight: String?,
-        action: String?
-    ) {
-        self.title = title
-        self.category = category
-        self.kcalMin = kcalMin
-        self.kcalMax = kcalMax
-        self.proteinG = proteinG
-        self.carbsG = carbsG
-        self.fatG = fatG
-        self.score = score
-        self.insight = insight
-        self.action = action
-    }
-}
-
 /// Jedna pozycja w feedzie czatu.
 struct ChatMessage: Identifiable, Sendable {
     enum Kind: Sendable {
         case user(String)
         /// Markdown — dokładnie to, co wygenerował model.
         case assistant(String)
-        case meal(MealCard)
         /// Potwierdzenie zapisu (aktywność, check-in). Żyje tylko w sesji.
         case confirmation(String)
         case failure(String)

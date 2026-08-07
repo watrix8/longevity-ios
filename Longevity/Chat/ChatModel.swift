@@ -30,21 +30,14 @@ final class ChatViewModel {
 
     var draft = ""
 
-    /// Gdy analiza posiłku wróciła niepewna, następny wpisany tekst jest
-    /// odpowiedzią na dopytanie, a nie pytaniem do asystenta. Stan żyje tylko
-    /// w pamięci klienta — nie ma dla niego tabeli.
-    private var pendingMeal: (id: String, imageBase64: String?)?
-
     /// Ustawiane przez „Opisz słowami" — bez tego opis posiłku poleciałby do
     /// asystenta jako zwykłe pytanie.
     private var awaitingMealDescription = false
 
-    var isComposingMeal: Bool { pendingMeal != nil || awaitingMealDescription }
+    var isComposingMeal: Bool { awaitingMealDescription }
 
     var placeholder: String {
-        if pendingMeal != nil { return "Odpowiedz na pytanie o posiłek…" }
-        if awaitingMealDescription { return "Co jesz? Podaj też wielkość porcji…" }
-        return "Zapytaj o cokolwiek…"
+        awaitingMealDescription ? "Co jesz? Opisz krótko…" : "Zapytaj o cokolwiek…"
     }
 
     func startMealDescription() {
@@ -62,13 +55,7 @@ final class ChatViewModel {
         isLoadingHistory = true
         defer { isLoadingHistory = false }
 
-        async let turns = loadConversation()
-        async let meals = try? LongevityAPI.todaysMeals()
-
-        let merged = await (turns + mealMessages(from: meals ?? []))
-            .sorted { $0.at < $1.at }
-
-        messages = merged
+        messages = await loadConversation()
     }
 
     private func loadConversation() async -> [ChatMessage] {
@@ -92,18 +79,6 @@ final class ChatViewModel {
         }
     }
 
-    private func mealMessages(from meals: [LongevityAPI.Meal]) -> [ChatMessage] {
-        meals.map { meal in
-            ChatMessage(
-                kind: .meal(MealCard(from: meal)),
-                // Domknięcie, nie referencja: parseTimestamp ma domyślny
-                // `fallback`, a Swift nie stosuje domyślnych argumentów przy
-                // przekazywaniu funkcji jako wartości.
-                at: meal.createdAt.map { ChatDates.parseTimestamp($0) } ?? Date()
-            )
-        }
-    }
-
     // MARK: - Wysyłka tekstu
 
     func send() async {
@@ -113,11 +88,9 @@ final class ChatViewModel {
         draft = ""
         append(.user(text))
 
-        if let pending = pendingMeal {
-            await clarifyMeal(pending, answer: text)
-        } else if awaitingMealDescription {
+        if awaitingMealDescription {
             awaitingMealDescription = false
-            await submitMeal(description: text, imageBase64: nil)
+            await streamMealAdvice(description: text, imageBase64: nil)
         } else {
             await ask(text)
         }
@@ -129,6 +102,46 @@ final class ChatViewModel {
     private(set) var streamTick = 0
 
     private func ask(_ question: String) async {
+        await consume(LongevityAPI.askStream(question: question), whenEmpty: "Asystent nie odpowiedział. Spróbuj ponownie.")
+    }
+
+    // MARK: - Posiłki
+
+    /// Posiłku nie zapisujemy — pytamy o niego model i pokazujemy odpowiedź.
+    ///
+    /// Wcześniej zdjęcie wracało kartą z kaloriami i makro, a przy niepewnej
+    /// analizie pytaniem o wielkość porcji. Dziennik i tak nigdy nie był pełny,
+    /// więc te liczby udawały pomiar. Teraz to zwykła rozmowa o jedzeniu.
+    func adviseMeal(photo: Data) async {
+        guard !isBusy else { return }
+
+        guard let base64 = MealPhoto.base64(from: photo) else {
+            append(.failure("Nie udało się przygotować zdjęcia. Spróbuj innego."))
+            return
+        }
+
+        awaitingMealDescription = false
+        append(.confirmation("📷 Zdjęcie wysłane do oceny…"))
+        await streamMealAdvice(description: nil, imageBase64: base64)
+    }
+
+    /// Dymek użytkownika dokłada wołający — przy zdjęciu jest nim potwierdzenie,
+    /// przy opisie tekst już wpisany w `send()`.
+    private func streamMealAdvice(description: String?, imageBase64: String?) async {
+        await consume(
+            LongevityAPI.mealAdviceStream(description: description, imageBase64: imageBase64),
+            whenEmpty: "Nie udało się ocenić tego posiłku. Spróbuj ponownie."
+        )
+    }
+
+    /// Skleja kawałki w jeden rosnący dymek asystenta.
+    ///
+    /// Wspólne dla pytań i dla oceny posiłku — z punktu widzenia feedu to ta
+    /// sama rzecz: odpowiedź modelu, która pisze się na oczach użytkownika.
+    private func consume(
+        _ stream: AsyncThrowingStream<String, Error>,
+        whenEmpty emptyMessage: String
+    ) async {
         isBusy = true
         defer { isBusy = false }
 
@@ -136,7 +149,7 @@ final class ChatViewModel {
         var reply = ""
 
         do {
-            for try await chunk in LongevityAPI.askStream(question: question) {
+            for try await chunk in stream {
                 reply += chunk
 
                 if let index = bubble {
@@ -151,9 +164,7 @@ final class ChatViewModel {
                 streamTick += 1
             }
 
-            if reply.isEmpty {
-                append(.failure("Asystent nie odpowiedział. Spróbuj ponownie."))
-            }
+            if reply.isEmpty { append(.failure(emptyMessage)) }
         } catch {
             // To, co zdążyło dojść, zostaje na ekranie — kasowanie połowy
             // odpowiedzi byłoby gorsze niż przyznanie się do urwania.
@@ -163,67 +174,6 @@ final class ChatViewModel {
                     : "Połączenie przerwane — odpowiedź może być niepełna."
             ))
         }
-    }
-
-    // MARK: - Posiłki
-
-    func logMeal(photo: Data) async {
-        guard !isBusy else { return }
-
-        guard let base64 = MealPhoto.base64(from: photo) else {
-            append(.failure("Nie udało się przygotować zdjęcia. Spróbuj innego."))
-            return
-        }
-
-        awaitingMealDescription = false
-        append(.confirmation("📷 Zdjęcie posiłku wysłane do analizy…"))
-        await submitMeal(description: nil, imageBase64: base64)
-    }
-
-    /// Dymek użytkownika dokłada wołający — przy zdjęciu jest nim potwierdzenie,
-    /// przy opisie tekst już wpisany w `send()`.
-    private func submitMeal(description: String?, imageBase64: String?) async {
-        isBusy = true
-        defer { isBusy = false }
-
-        do {
-            let result = try await LongevityAPI.logMeal(
-                description: description,
-                imageBase64: imageBase64
-            )
-            handleMealResult(result, imageBase64: imageBase64)
-            await LongevityAPI.refreshScore()
-        } catch {
-            append(.failure(error.localizedDescription))
-        }
-    }
-
-    private func clarifyMeal(_ pending: (id: String, imageBase64: String?), answer: String) async {
-        isBusy = true
-        defer { isBusy = false }
-
-        do {
-            let result = try await LongevityAPI.clarifyMeal(
-                id: pending.id,
-                description: answer,
-                imageBase64: pending.imageBase64
-            )
-            handleMealResult(result, imageBase64: pending.imageBase64)
-            await LongevityAPI.refreshScore()
-        } catch {
-            append(.failure(error.localizedDescription))
-        }
-    }
-
-    private func handleMealResult(_ result: LongevityAPI.MealReply, imageBase64: String?) {
-        if result.meal.needsClarification, let question = result.question {
-            pendingMeal = (id: result.meal.id, imageBase64: imageBase64)
-            append(.assistant(question))
-            return
-        }
-
-        pendingMeal = nil
-        append(.meal(MealCard(from: result.meal)))
     }
 
     // MARK: - Aktywność

@@ -37,12 +37,12 @@ struct ChatView: View {
             }
             Button("Anuluj", role: .cancel) {}
         } message: {
-            Text("Im więcej szczegółów, tym dokładniejsza analiza.")
+            Text("Ocenię, co widać na talerzu — bez liczenia kalorii.")
         }
         .photosPicker(isPresented: $showPhotoPicker, selection: $photoItem, matching: .images)
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker { data in
-                Task { await model.logMeal(photo: data) }
+                Task { await model.adviseMeal(photo: data) }
             }
             .ignoresSafeArea()
         }
@@ -67,7 +67,7 @@ struct ChatView: View {
                 let data = try? await item.loadTransferable(type: Data.self)
                 photoItem = nil
                 guard let data else { return }
-                await model.logMeal(photo: data)
+                await model.adviseMeal(photo: data)
             }
         }
     }
@@ -144,7 +144,7 @@ struct ChatView: View {
                 .lineSpacing(3)
 
             VStack(alignment: .leading, spacing: 9) {
-                welcomeRow("🍽️", "Wrzuć zdjęcie posiłku — policzę kalorie i makro")
+                welcomeRow("🍽️", "Pokaż posiłek — powiem, co o nim myślę")
                 welcomeRow("🏃", "Dopisz aktywność jednym tapnięciem")
                 welcomeRow("✅", "Zrób check-in: stres i nastrój")
                 welcomeRow("📏", "Dopisz pomiary, których nie ma w Apple Health")
@@ -201,9 +201,6 @@ struct ChatView: View {
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Palette.line, lineWidth: 1))
                 Spacer(minLength: 40)
             }
-
-        case .meal(let card):
-            MealCardView(card: card)
 
         case .confirmation(let text):
             Text(text)
@@ -300,90 +297,6 @@ struct ChatView: View {
     }
 }
 
-/// Wynik analizy posiłku — układ jak wiadomość, którą wysyła bot.
-private struct MealCardView: View {
-    let card: MealCard
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(card.title)
-                .font(AtlasFont.display(17))
-                .foregroundStyle(Palette.ink)
-
-            Kicker(text: card.category)
-                .padding(.top, 3)
-
-            if let min = card.kcalMin, let max = card.kcalMax {
-                Text("\(min)–\(max) kcal")
-                    .font(AtlasFont.display(24))
-                    .monospacedDigit()
-                    .foregroundStyle(Palette.ochre)
-                    .padding(.top, 9)
-            }
-
-            if let protein = card.proteinG, let carbs = card.carbsG, let fat = card.fatG {
-                Text("B \(Self.grams(protein)) • W \(Self.grams(carbs)) • T \(Self.grams(fat))")
-                    .font(AtlasFont.mono(11.5))
-                    .foregroundStyle(Palette.muted)
-                    .padding(.top, 5)
-            }
-
-            if let score = card.score {
-                HStack(spacing: 8) {
-                    Text("Meal score")
-                        .font(AtlasFont.body(11.5))
-                        .foregroundStyle(Palette.muted)
-
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(Palette.panel)
-                            Capsule()
-                                .fill(Palette.pine)
-                                .frame(width: geo.size.width * CGFloat(score) / 100)
-                        }
-                    }
-                    .frame(height: 6)
-
-                    Text("\(score)")
-                        .font(AtlasFont.mono(11, .bold))
-                        .monospacedDigit()
-                        .foregroundStyle(Palette.pine)
-                }
-                .padding(.top, 12)
-            }
-
-            if let insight = card.insight {
-                Text(insight)
-                    .font(AtlasFont.body(13))
-                    .foregroundStyle(Palette.ink)
-                    .lineSpacing(3)
-                    .padding(.top, 12)
-            }
-
-            if let action = card.action {
-                HStack(alignment: .top, spacing: 8) {
-                    Text("↳")
-                        .font(AtlasFont.body(12, .bold))
-                        .foregroundStyle(Palette.pine)
-                    Text(action)
-                        .font(AtlasFont.body(12.5))
-                        .foregroundStyle(Palette.muted)
-                        .lineSpacing(2)
-                }
-                .padding(.top, 8)
-            }
-        }
-        .padding(15)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.card, in: RoundedRectangle(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Palette.line, lineWidth: 1))
-    }
-
-    private static func grams(_ value: Double) -> String {
-        value == value.rounded() ? "\(Int(value))g" : String(format: "%.1fg", value)
-    }
-}
-
 #Preview("Pusty") {
     ChatView(model: ChatViewModel(isLoadingHistory: false))
 }
@@ -396,22 +309,6 @@ private struct MealCardView: View {
                 ChatMessage(
                     kind: .assistant(
                         "**Wniosek**\nSen jest Twoim najsłabszym składnikiem — 62/100 przy średniej 74.\n\n**Co zrobić dziś**\n1) Stała godzina snu.\n2) Kofeina do 14:00."
-                    )
-                ),
-                ChatMessage(
-                    kind: .meal(
-                        MealCard(
-                            title: "Kurczak z ryżem",
-                            category: "Obiad",
-                            kcalMin: 620,
-                            kcalMax: 780,
-                            proteinG: 48,
-                            carbsG: 72,
-                            fatG: 18,
-                            score: 74,
-                            insight: "Dobre białko i sensowna porcja węglowodanów.",
-                            action: "Dorzuć warzywa — podniesie błonnik i sytość."
-                        )
                     )
                 ),
                 ChatMessage(kind: .confirmation("🏃 Aktywność zapisana: 45 min")),

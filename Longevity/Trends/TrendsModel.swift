@@ -155,15 +155,6 @@ private struct HealthRow: Decodable {
     }
 }
 
-private struct MealRow: Decodable {
-    let loggedDate: String
-    let kcalMin: Double?
-    let kcalMax: Double?
-    enum CodingKeys: String, CodingKey {
-        case loggedDate = "logged_date", kcalMin = "kcal_min", kcalMax = "kcal_max"
-    }
-}
-
 @MainActor
 @Observable
 final class TrendsViewModel {
@@ -214,10 +205,6 @@ final class TrendsViewModel {
                 .select("logged_date, activity_minutes")
                 .gte("logged_date", value: from)
                 .order("logged_date").execute().value
-            async let meals: [MealRow] = db.from("meal_logs")
-                .select("logged_date, kcal_min, kcal_max")
-                .gte("logged_date", value: from)
-                .order("logged_date").execute().value
             async let health: [HealthRow] = db.from("health_metrics")
                 .select("""
                     metric_date, sleep_asleep_minutes, sleep_deep_minutes, \
@@ -230,7 +217,7 @@ final class TrendsViewModel {
             state = .loaded(
                 try await Self.build(
                     scores: scores, weights: weights,
-                    activity: activity, meals: meals, health: health
+                    activity: activity, health: health
                 )
             )
         } catch {
@@ -240,7 +227,7 @@ final class TrendsViewModel {
 
     /// Kolejność kafelków idzie za wagami z formuły v3: najpierw score, potem
     /// sen (30%), wydolność (25%), skład ciała (20%), regeneracja (15%),
-    /// a na końcu ruch i posiłki — v3 ich nie punktuje, ale opisują dzień.
+    /// a na końcu ruch — v3 go nie punktuje, ale opisuje dzień.
     ///
     /// Metryki bez ani jednego punktu są odsiewane — kafelek metryki, której
     /// nigdy nie zmierzono, nie niesie żadnej informacji. Pojawi się sam, gdy
@@ -249,10 +236,8 @@ final class TrendsViewModel {
         scores: [ScoreRow],
         weights: [WeightRow],
         activity: [ActivityRow],
-        meals: [MealRow],
         health: [HealthRow]
     ) -> [MetricGroup] {
-        let kcalPoints = dailyKcal(meals.map { ($0.loggedDate, $0.kcalMin, $0.kcalMax) })
         let consistencyPoints = scores.compactMap { row -> SeriesPoint? in
             part(row.components, component: "sleep", key: "consistency")
                 .map { SeriesPoint(date: row.scoreDate, value: $0) }
@@ -303,9 +288,6 @@ final class TrendsViewModel {
                    points: series(health) { $0.steps.map(Double.init) }),
             Metric(id: "activity", title: "Ruch (wpisany)", unit: "min", positiveHigher: true, role: .informational,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
-
-            Metric(id: "kcal", title: "Kalorie (est.)", unit: "kcal", positiveHigher: true, role: .informational,
-                   points: kcalPoints),
         ].filter { !$0.points.isEmpty })
     }
 
@@ -373,19 +355,6 @@ final class TrendsViewModel {
     static func waistToHipRatio(waist: Double?, hip: Double?) -> Double? {
         guard let waist, let hip, hip > 0 else { return nil }
         return (waist / hip * 100).rounded() / 100
-    }
-
-    /// Kalorie: środek widełek kcal zsumowany per dzień — ta sama arytmetyka
-    /// co `kcalMidSum` w `app/trends/page.tsx`. Wydzielone i internal, żeby
-    /// dało się przetestować bez wystawiania typów wierszy z Supabase.
-    static func dailyKcal(_ meals: [(date: String, min: Double?, max: Double?)]) -> [SeriesPoint] {
-        var byDay: [String: Double] = [:]
-        for meal in meals {
-            byDay[meal.date, default: 0] += ((meal.min ?? 0) + (meal.max ?? 0)) / 2
-        }
-        return byDay
-            .sorted { $0.key < $1.key }
-            .map { SeriesPoint(date: $0.key, value: $0.value.rounded()) }
     }
 
     private static func isoDate(daysAgo: Int) -> String {

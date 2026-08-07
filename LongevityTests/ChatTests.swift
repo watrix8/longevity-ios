@@ -47,83 +47,6 @@ struct ChatDatesTests {
     }
 }
 
-@Suite("Karta posiłku")
-struct MealCardTests {
-    @Test("Kategorie z serwera mapują się na polskie etykiety")
-    func mapsKnownCategories() {
-        #expect(MealCard.categoryLabel("breakfast") == "Śniadanie")
-        #expect(MealCard.categoryLabel("lunch") == "Lunch")
-        #expect(MealCard.categoryLabel("dinner") == "Obiad")
-        #expect(MealCard.categoryLabel("supper") == "Kolacja")
-        #expect(MealCard.categoryLabel("snack") == "Przekąska")
-    }
-
-    @Test("Nieznana i pusta kategoria lądują na neutralnym 'Posiłek'")
-    func fallsBackForUnknownCategory() {
-        #expect(MealCard.categoryLabel("other") == "Posiłek")
-        #expect(MealCard.categoryLabel(nil) == "Posiłek")
-        #expect(MealCard.categoryLabel("brunch") == "Posiłek")
-    }
-
-    /// Serwer odsyła snake_case — ten test pilnuje, żeby CodingKeys nie rozjechały się
-    /// z kształtem odpowiedzi z `/api/v1/meals`.
-    @Test("Odpowiedź serwera dekoduje się na kartę")
-    func decodesServerResponse() throws {
-        let json = """
-        {
-          "question": null,
-          "meal": {
-            "id": "abc-123",
-            "status": "analyzed",
-            "meal_title": "Kurczak z ryżem",
-            "meal_category": "dinner",
-            "kcal_min": 876,
-            "kcal_max": 1185,
-            "protein_g": 57,
-            "carbs_g": 116.5,
-            "fat_g": 38,
-            "meal_score": 67,
-            "insight_text": "Solidne białko.",
-            "insight_action": "Dorzuć warzywa.",
-            "created_at": "2026-08-06T18:26:00+00:00"
-          }
-        }
-        """
-
-        let reply = try JSONDecoder().decode(
-            LongevityAPI.MealReply.self,
-            from: Data(json.utf8)
-        )
-
-        #expect(reply.question == nil)
-        #expect(reply.meal.needsClarification == false)
-
-        let card = MealCard(from: reply.meal)
-        #expect(card.title == "Kurczak z ryżem")
-        #expect(card.category == "Obiad")
-        #expect(card.kcalMin == 876)
-        #expect(card.carbsG == 116.5)
-        #expect(card.score == 67)
-        #expect(card.action == "Dorzuć warzywa.")
-    }
-
-    @Test("Posiłek bez tytułu dostaje domyślny, nie pusty dymek")
-    func handlesMissingTitle() throws {
-        let json = """
-        {"meal": {"id": "x", "status": "needs_clarification", "meal_title": null,
-        "meal_category": null, "kcal_min": null, "kcal_max": null, "protein_g": null,
-        "carbs_g": null, "fat_g": null, "meal_score": null, "insight_text": null,
-        "insight_action": null, "created_at": null}, "question": "Jaka porcja?"}
-        """
-
-        let reply = try JSONDecoder().decode(LongevityAPI.MealReply.self, from: Data(json.utf8))
-
-        #expect(reply.meal.needsClarification)
-        #expect(reply.question == "Jaka porcja?")
-        #expect(MealCard(from: reply.meal).title == "Posiłek")
-    }
-}
-
 @Suite("Markdown od asystenta")
 struct AssistantMarkdownTests {
     @Test("Nagłówek staje się osobnym blokiem, nie gołym hashem w akapicie")
@@ -310,7 +233,7 @@ struct ChatRoutingTests {
         model.startMealDescription()
 
         #expect(model.isComposingMeal)
-        #expect(model.placeholder == "Co jesz? Podaj też wielkość porcji…")
+        #expect(model.placeholder == "Co jesz? Opisz krótko…")
     }
 
     @Test("Pusty i sam biały znak nie wysyłają nic")

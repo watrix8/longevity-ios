@@ -18,52 +18,6 @@ enum LongevityAPI {
         let reply: String
     }
 
-    /// Podzbiór `meal_logs` + wyliczenia z `personalizeMealInsight`, które
-    /// serwer dokłada do odpowiedzi.
-    struct Meal: Decodable, Sendable {
-        let id: String
-        let status: String
-        let mealTitle: String?
-        let mealCategory: String?
-        let kcalMin: Int?
-        let kcalMax: Int?
-        let proteinG: Double?
-        let carbsG: Double?
-        let fatG: Double?
-        let mealScore: Int?
-        let insightText: String?
-        let insightAction: String?
-        /// Brak przy odpowiedzi z PATCH-a, dlatego opcjonalne.
-        let createdAt: String?
-
-        enum CodingKeys: String, CodingKey {
-            case id, status
-            case mealTitle = "meal_title"
-            case mealCategory = "meal_category"
-            case kcalMin = "kcal_min"
-            case kcalMax = "kcal_max"
-            case proteinG = "protein_g"
-            case carbsG = "carbs_g"
-            case fatG = "fat_g"
-            case mealScore = "meal_score"
-            case insightText = "insight_text"
-            case insightAction = "insight_action"
-            case createdAt = "created_at"
-        }
-
-        var needsClarification: Bool { status == "needs_clarification" }
-    }
-
-    struct MealReply: Decodable, Sendable {
-        /// Dopytanie, gdy analiza jest niepewna — ta sama pętla co w bocie.
-        let question: String?
-        let meal: Meal
-    }
-
-    struct MealsToday: Decodable, Sendable {
-        let meals: [Meal]
-    }
-
     /// Liczniki z `/health/sync`. `activitySynced` i `weightSynced` bywają
     /// mniejsze od `saved` — serwer pomija dni, w których jest wpis ręczny.
     struct HealthSyncResult: Decodable, Sendable {
@@ -109,18 +63,25 @@ enum LongevityAPI {
     /// ten czas wygląda jak zawieszona apka. Kawałki lecą tak, jak schodzą
     /// z serwera — sklejanie ich w całość należy do wołającego.
     static func askStream(question: String) -> AsyncThrowingStream<String, Error> {
+        streamSSE(path: "/api/v1/assistant") {
+            try JSONEncoder().encode(AskStreamBody(question: question))
+        }
+    }
+
+    /// Wspólny transport dla odpowiedzi strumieniowych: asystenta i oceny posiłku.
+    private static func streamSSE(
+        path: String,
+        body: @escaping @Sendable () throws -> Data
+    ) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    var request = try await authorizedRequest(
-                        path: "/api/v1/assistant",
-                        method: "POST"
-                    )
+                    var request = try await authorizedRequest(path: path, method: "POST")
                     // Model bywa powolniejszy niż zwykłe zapytanie, a przy
                     // strumieniu limit dotyczy przerwy między kawałkami.
                     request.timeoutInterval = 120
                     request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
-                    request.httpBody = try JSONEncoder().encode(AskStreamBody(question: question))
+                    request.httpBody = try body()
 
                     let (bytes, response) = try await URLSession.shared.bytes(for: request)
                     let status = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -169,34 +130,27 @@ enum LongevityAPI {
         return parsed?.error ?? "Serwer odpowiedział błędem (\(status))."
     }
 
-    /// Posiłki z dziś razem z meal score i insightem — te są liczone na serwerze,
-    /// więc czytanie `meal_logs` wprost z Supabase dałoby same surowe makro.
-    static func todaysMeals() async throws -> [Meal] {
-        let response: MealsToday = try await send(
-            "/api/v1/meals/today",
-            method: "GET",
-            body: Empty?.none
-        )
-        return response.meals
+    private struct MealAdviceBody: Encodable {
+        let description: String?
+        let image_base64: String?
     }
 
-    static func logMeal(description: String?, imageBase64: String?) async throws -> MealReply {
-        var body: [String: String] = ["source": "ios"]
-        if let description, !description.isEmpty { body["description"] = description }
-        if let imageBase64 { body["image_base64"] = imageBase64 }
-
-        return try await send("/api/v1/meals", method: "POST", body: body)
-    }
-
-    static func clarifyMeal(
-        id: String,
-        description: String,
+    /// Opinia o posiłku, nie wpis do dziennika.
+    ///
+    /// Serwer nie liczy makro i nie odbija pytania o wielkość porcji — oddaje
+    /// komentarz strumieniem, tak samo jak asystent odpowiada na pytania.
+    static func mealAdviceStream(
+        description: String?,
         imageBase64: String?
-    ) async throws -> MealReply {
-        var body = ["description": description]
-        if let imageBase64 { body["image_base64"] = imageBase64 }
-
-        return try await send("/api/v1/meals/\(id)", method: "PATCH", body: body)
+    ) -> AsyncThrowingStream<String, Error> {
+        streamSSE(path: "/api/v1/meals/advice") {
+            try JSONEncoder().encode(
+                MealAdviceBody(
+                    description: (description?.isEmpty ?? true) ? nil : description,
+                    image_base64: imageBase64
+                )
+            )
+        }
     }
 
     /// Bez `sleep_quality` — apka o sen nie pyta. Serwer wyprowadza ocenę
