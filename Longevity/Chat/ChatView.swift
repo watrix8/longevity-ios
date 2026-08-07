@@ -121,6 +121,12 @@ struct ChatView: View {
                     proxy.scrollTo(scrollAnchor, anchor: .bottom)
                 }
             }
+            // Rosnący dymek nie zmienia liczby wiadomości, a i tak spycha
+            // koniec odpowiedzi poza ekran. Bez animacji, bo przy kilkudziesięciu
+            // kawałkach na sekundę nakładałyby się na siebie.
+            .onChange(of: model.streamTick) { _, _ in
+                proxy.scrollTo(scrollAnchor, anchor: .bottom)
+            }
         }
     }
 
@@ -187,13 +193,10 @@ struct ChatView: View {
 
         case .assistant(let markdown):
             HStack {
-                Text(AssistantMarkdown.attributed(markdown))
-                    .font(AtlasFont.body(14.5))
-                    .foregroundStyle(Palette.ink)
-                    .lineSpacing(3)
+                AssistantMarkdownView(markdown: markdown)
                     .textSelection(.enabled)
                     .padding(.horizontal, 14)
-                    .padding(.vertical, 11)
+                    .padding(.vertical, 12)
                     .background(Palette.card, in: RoundedRectangle(cornerRadius: 16))
                     .overlay(RoundedRectangle(cornerRadius: 16).stroke(Palette.line, lineWidth: 1))
                 Spacer(minLength: 40)

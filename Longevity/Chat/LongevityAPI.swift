@@ -89,6 +89,86 @@ enum LongevityAPI {
         return response.reply
     }
 
+    private struct AskStreamBody: Encodable {
+        let question: String
+        let source = "ios"
+        let stream = true
+    }
+
+    /// Zdarzenie SSE z `/api/v1/assistant`. Serwer emituje własny format,
+    /// nie surowy strumień dostawcy — stąd te trzy pola i nic więcej.
+    private struct StreamEvent: Decodable {
+        let delta: String?
+        let done: Bool?
+        let error: String?
+    }
+
+    /// Odpowiedź asystenta kawałkami.
+    ///
+    /// Model potrafi pisać kilkanaście sekund, a pojedynczy kręciołek przez
+    /// ten czas wygląda jak zawieszona apka. Kawałki lecą tak, jak schodzą
+    /// z serwera — sklejanie ich w całość należy do wołającego.
+    static func askStream(question: String) -> AsyncThrowingStream<String, Error> {
+        AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    var request = try await authorizedRequest(
+                        path: "/api/v1/assistant",
+                        method: "POST"
+                    )
+                    // Model bywa powolniejszy niż zwykłe zapytanie, a przy
+                    // strumieniu limit dotyczy przerwy między kawałkami.
+                    request.timeoutInterval = 120
+                    request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+                    request.httpBody = try JSONEncoder().encode(AskStreamBody(question: question))
+
+                    let (bytes, response) = try await URLSession.shared.bytes(for: request)
+                    let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+
+                    guard (200..<300).contains(status) else {
+                        throw Failure(message: try await errorMessage(from: bytes, status: status))
+                    }
+
+                    for try await line in bytes.lines {
+                        guard line.hasPrefix("data:") else { continue }
+
+                        let payload = line.dropFirst(5).trimmingCharacters(in: .whitespaces)
+                        guard !payload.isEmpty,
+                              let event = try? JSONDecoder().decode(
+                                  StreamEvent.self,
+                                  from: Data(payload.utf8)
+                              )
+                        else { continue }
+
+                        if let message = event.error { throw Failure(message: message) }
+                        if let delta = event.delta { continuation.yield(delta) }
+                        if event.done == true { break }
+                    }
+
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+
+            // Zamknięcie ekranu w trakcie odpowiedzi ma ubić połączenie,
+            // a nie zostawić je dociągające dane w tle.
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    /// Błąd przy strumieniu przychodzi zwykłym JSON-em, zanim zacznie się SSE.
+    private static func errorMessage(from bytes: URLSession.AsyncBytes, status: Int) async throws -> String {
+        var body = Data()
+        for try await byte in bytes {
+            body.append(byte)
+            if body.count > 4096 { break }
+        }
+
+        let parsed = try? JSONDecoder().decode(ServerError.self, from: body)
+        return parsed?.error ?? "Serwer odpowiedział błędem (\(status))."
+    }
+
     /// Posiłki z dziś razem z meal score i insightem — te są liczone na serwerze,
     /// więc czytanie `meal_logs` wprost z Supabase dałoby same surowe makro.
     static func todaysMeals() async throws -> [Meal] {
@@ -161,11 +241,8 @@ enum LongevityAPI {
 
     private struct ServerError: Decodable { let error: String? }
 
-    private static func send<Body: Encodable, Response: Decodable>(
-        _ path: String,
-        method: String,
-        body: Body
-    ) async throws -> Response {
+    /// Adres, metoda i token — wspólne dla zapytań zwykłych i strumieniowych.
+    private static func authorizedRequest(path: String, method: String) async throws -> URLRequest {
         // `appending(path:)` traktuje argument jako względny, więc wiodący ukośnik
         // musi zniknąć — inaczej dostajemy podwójny w środku adresu.
         let url = AppSupabase.webBaseURL.appending(path: path.trimmingPrefix("/"))
@@ -178,6 +255,19 @@ enum LongevityAPI {
 
         if method != "GET" {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        }
+
+        return request
+    }
+
+    private static func send<Body: Encodable, Response: Decodable>(
+        _ path: String,
+        method: String,
+        body: Body
+    ) async throws -> Response {
+        var request = try await authorizedRequest(path: path, method: method)
+
+        if method != "GET" {
             request.httpBody = try JSONEncoder().encode(body)
         }
 

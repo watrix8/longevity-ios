@@ -126,44 +126,110 @@ struct MealCardTests {
 
 @Suite("Markdown od asystenta")
 struct AssistantMarkdownTests {
-    @Test("Nagłówek zamienia się w pogrubienie, zamiast zostać gołym hashem")
+    @Test("Nagłówek staje się osobnym blokiem, nie gołym hashem w akapicie")
     func headings() {
-        #expect(AssistantMarkdown.flattenBlocks("# Wniosek") == "**Wniosek**")
-        #expect(AssistantMarkdown.flattenBlocks("### Co zrobić dziś") == "**Co zrobić dziś**")
-        #expect(AssistantMarkdown.flattenBlocks("   ## Z wcięciem") == "**Z wcięciem**")
+        #expect(AssistantMarkdown.blocks("## Wniosek") == [.heading("Wniosek")])
+        #expect(AssistantMarkdown.blocks("# Sen") == [.heading("Sen")])
+        #expect(AssistantMarkdown.blocks("### Co zrobić dziś") == [.heading("Co zrobić dziś")])
     }
 
-    @Test("Punkt listy dostaje kropkę, bo parser inline list nie rysuje")
+    @Test("Wiersz złożony z samego pogrubienia też jest nagłówkiem")
+    func boldLineIsHeading() {
+        #expect(AssistantMarkdown.blocks("**Wniosek**") == [.heading("Wniosek")])
+    }
+
+    @Test("Emoji z fallbacku regułowego zostaje w tytule sekcji")
+    func ornamentedHeading() {
+        #expect(AssistantMarkdown.blocks("✅ **Wniosek**") == [.heading("✅ Wniosek")])
+    }
+
+    @Test("Zdanie z wyróżnieniem nie awansuje na nagłówek")
+    func emphasisIsNotAHeading() {
+        #expect(
+            AssistantMarkdown.blocks("🧠 **Pytanie:** co z moim snem")
+                == [.paragraph("🧠 **Pytanie:** co z moim snem")]
+        )
+        #expect(
+            AssistantMarkdown.blocks("**Sen** wpływa na **stres**")
+                == [.paragraph("**Sen** wpływa na **stres**")]
+        )
+    }
+
+    @Test("Punkty listy stają się osobnymi blokami")
     func bullets() {
-        #expect(AssistantMarkdown.flattenBlocks("- stała pora snu") == "• stała pora snu")
-        #expect(AssistantMarkdown.flattenBlocks("  * kofeina do 14:00") == "• kofeina do 14:00")
+        #expect(
+            AssistantMarkdown.blocks("- stała pora snu\n* kofeina do 14:00\n• bez ekranu")
+                == [.bullet("stała pora snu"), .bullet("kofeina do 14:00"), .bullet("bez ekranu")]
+        )
     }
 
-    @Test("Pogrubienie i tekst bez składni blokowej przechodzą bez zmian")
-    func inlineUntouched() {
-        #expect(AssistantMarkdown.flattenBlocks("**Wniosek**") == "**Wniosek**")
-        #expect(AssistantMarkdown.flattenBlocks("bez formatowania") == "bez formatowania")
-        #expect(AssistantMarkdown.flattenBlocks("5 - 7 godzin snu") == "5 - 7 godzin snu")
+    @Test("Numeracja zachowuje marker, bo '1)' i '1.' to nie to samo")
+    func numbered() {
+        #expect(
+            AssistantMarkdown.blocks("1) Wniosek\n2. Dlaczego")
+                == [.numbered(marker: "1)", text: "Wniosek"), .numbered(marker: "2.", text: "Dlaczego")]
+        )
     }
 
-    @Test("Hash bez spacji to nie nagłówek, tylko treść")
-    func notAHeading() {
-        #expect(AssistantMarkdown.flattenBlocks("#sen") == "#sen")
-        #expect(AssistantMarkdown.flattenBlocks("#### za głęboko") == "#### za głęboko")
+    @Test("Myślnik w środku zdania nie robi z niego listy")
+    func dashInsideSentence() {
+        #expect(AssistantMarkdown.blocks("5 - 7 godzin snu") == [.paragraph("5 - 7 godzin snu")])
+        #expect(AssistantMarkdown.blocks("#sen") == [.paragraph("#sen")])
     }
 
-    @Test("Wielolinijkowa odpowiedź zachowuje układ wierszy")
-    func multiline() {
-        let flattened = AssistantMarkdown.flattenBlocks("## Wniosek\n\n- krok jeden\n- krok dwa")
-        #expect(flattened == "**Wniosek**\n\n• krok jeden\n• krok dwa")
+    @Test("Sąsiadujące wiersze sklejają się w akapit, pusta linia go zamyka")
+    func paragraphs() {
+        #expect(
+            AssistantMarkdown.blocks("Pierwszy wiersz\ndrugi wiersz\n\nOsobny akapit")
+                == [.paragraph("Pierwszy wiersz drugi wiersz"), .paragraph("Osobny akapit")]
+        )
     }
 
-    @Test("Odpowiedź z HTML-em nie wywraca dymka, tylko ląduje jako tekst")
-    func brokenMarkdownFallsBack() {
-        let rendered = AssistantMarkdown.attributed("## Wniosek\n- sen")
-        #expect(String(rendered.characters).contains("Wniosek"))
-        #expect(String(rendered.characters).contains("• sen"))
-        #expect(!String(rendered.characters).contains("##"))
+    @Test("Pełna odpowiedź rozkłada się na sekcje, akapity i listę")
+    func fullReply() {
+        let markdown = """
+            ## Wniosek
+            Spałeś 8h 55m.
+
+            ## Co zrobić dziś
+            - stała pora snu
+            - kofeina do 14:00
+            """
+
+        #expect(
+            AssistantMarkdown.blocks(markdown) == [
+                .heading("Wniosek"),
+                .paragraph("Spałeś 8h 55m."),
+                .heading("Co zrobić dziś"),
+                .bullet("stała pora snu"),
+                .bullet("kofeina do 14:00"),
+            ]
+        )
+    }
+
+    @Test("Pusty tekst nie tworzy pustych bloków")
+    func empty() {
+        #expect(AssistantMarkdown.blocks("") == [])
+        #expect(AssistantMarkdown.blocks("\n\n   \n") == [])
+    }
+
+    @Test("Niedomknięte pogrubienie ze strumienia nie miga gwiazdkami")
+    func partialEmphasis() {
+        #expect(AssistantMarkdown.closingOpenEmphasis("Sen **jest wa") == "Sen jest wa")
+        #expect(AssistantMarkdown.closingOpenEmphasis("Sen *jest") == "Sen jest")
+        #expect(AssistantMarkdown.closingOpenEmphasis("Wartość `123") == "Wartość 123")
+    }
+
+    @Test("Domknięte pogrubienie zostaje nietknięte")
+    func closedEmphasisSurvives() {
+        #expect(AssistantMarkdown.closingOpenEmphasis("**Wniosek**") == "**Wniosek**")
+        #expect(AssistantMarkdown.closingOpenEmphasis("bez formatowania") == "bez formatowania")
+    }
+
+    @Test("Składnia inline znika z wyrenderowanego tekstu")
+    func inlineRendered() {
+        let rendered = AssistantMarkdown.attributed("**Wniosek** i *kursywa*")
+        #expect(String(rendered.characters) == "Wniosek i kursywa")
     }
 }
 

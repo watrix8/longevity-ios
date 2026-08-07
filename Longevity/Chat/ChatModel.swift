@@ -123,15 +123,45 @@ final class ChatViewModel {
         }
     }
 
+    /// Rośnie z każdym kawałkiem odpowiedzi. Liczba wiadomości w trakcie
+    /// strumienia się nie zmienia, więc widok nie miałby po czym poznać,
+    /// że dymek urósł i trzeba dociągnąć przewijanie.
+    private(set) var streamTick = 0
+
     private func ask(_ question: String) async {
         isBusy = true
         defer { isBusy = false }
 
+        var bubble: Int?
+        var reply = ""
+
         do {
-            let reply = try await LongevityAPI.ask(question: question)
-            append(.assistant(reply))
+            for try await chunk in LongevityAPI.askStream(question: question) {
+                reply += chunk
+
+                if let index = bubble {
+                    messages[index].kind = .assistant(reply)
+                } else {
+                    // Dymek zakładamy dopiero przy pierwszym znaku — pusta
+                    // ramka czekająca na model wygląda jak usterka.
+                    append(.assistant(reply))
+                    bubble = messages.count - 1
+                }
+
+                streamTick += 1
+            }
+
+            if reply.isEmpty {
+                append(.failure("Asystent nie odpowiedział. Spróbuj ponownie."))
+            }
         } catch {
-            append(.failure(error.localizedDescription))
+            // To, co zdążyło dojść, zostaje na ekranie — kasowanie połowy
+            // odpowiedzi byłoby gorsze niż przyznanie się do urwania.
+            append(.failure(
+                bubble == nil
+                    ? error.localizedDescription
+                    : "Połączenie przerwane — odpowiedź może być niepełna."
+            ))
         }
     }
 
