@@ -16,20 +16,42 @@ enum MetricRole: Sendable, Equatable {
     /// Sam wynik — nie jest ani składnikiem, ani metryką poboczną.
     case total
 
-    var badge: String {
+    /// Klucz sekcji. Metryki tej samej roli lądują razem, w kolejności
+    /// pierwszego wystąpienia na liście.
+    var groupID: String {
         switch self {
-        case .feeds(let component, let weight):
-            "\(component) · \(Int((weight * 100).rounded()))%"
-        case .informational:
-            "poza wynikiem"
-        case .total:
-            "wynik"
+        case .feeds(let component, _): component
+        case .informational: "informational"
+        case .total: "total"
         }
     }
 
-    var countsToScore: Bool {
-        if case .feeds = self { return true }
-        return false
+    var groupTitle: String {
+        switch self {
+        case .feeds(let component, _): component
+        case .informational: "Poza wynikiem"
+        case .total: "Wynik"
+        }
+    }
+
+    var groupWeight: Double? {
+        if case .feeds(_, let weight) = self { return weight }
+        return nil
+    }
+}
+
+/// Sekcja Trendów. Odpowiada jednemu komponentowi score'u, żeby kolejność
+/// i podział na ekranie zgadzały się z rozbiciem na dashboardzie.
+struct MetricGroup: Identifiable, Sendable {
+    let id: String
+    let title: String
+    /// Udział komponentu w wyniku. `nil` dla sekcji spoza score'u.
+    let weight: Double?
+    let metrics: [Metric]
+
+    var header: String {
+        guard let weight else { return title }
+        return "\(title) · \(Int((weight * 100).rounded()))%"
     }
 }
 
@@ -75,8 +97,12 @@ struct Metric: Identifiable, Sendable {
 private struct ScoreRow: Decodable {
     let scoreDate: String
     let scoreTotal: Double
+    /// Potrzebne dla składowych, które nie mają własnej kolumny w bazie —
+    /// rozrzut długości snu liczy serwer przy score i tylko tu go widać.
+    let components: ScoreComponents?
+
     enum CodingKeys: String, CodingKey {
-        case scoreDate = "score_date", scoreTotal = "score_total"
+        case scoreDate = "score_date", scoreTotal = "score_total", components
     }
 }
 
@@ -141,7 +167,7 @@ private struct MealRow: Decodable {
 final class TrendsViewModel {
     enum State {
         case loading
-        case loaded([Metric])
+        case loaded([MetricGroup])
         case failed(String)
     }
 
@@ -160,7 +186,7 @@ final class TrendsViewModel {
             let db = AppSupabase.client
 
             async let scores: [ScoreRow] = db.from("score_snapshots")
-                .select("score_date, score_total")
+                .select("score_date, score_total, components")
                 .gte("score_date", value: from)
                 .order("score_date").execute().value
             async let weights: [WeightRow] = db.from("weight_log")
@@ -208,10 +234,14 @@ final class TrendsViewModel {
         activity: [ActivityRow],
         meals: [MealRow],
         health: [HealthRow]
-    ) -> [Metric] {
+    ) -> [MetricGroup] {
         let kcalPoints = dailyKcal(meals.map { ($0.loggedDate, $0.kcalMin, $0.kcalMax) })
+        let consistencyPoints = scores.compactMap { row -> SeriesPoint? in
+            part(row.components, component: "sleep", key: "consistency")
+                .map { SeriesPoint(date: row.scoreDate, value: $0) }
+        }
 
-        return [
+        return grouped([
             Metric(id: "score", title: "Longevity Score", unit: "/100", positiveHigher: true, role: .total,
                    points: scores.map { SeriesPoint(date: $0.scoreDate, value: $0.scoreTotal) }),
 
@@ -222,8 +252,8 @@ final class TrendsViewModel {
                    points: series(health) {
                        deepSleepShare(deep: $0.sleepDeepMinutes, asleep: $0.sleepAsleepMinutes)
                    }),
-            Metric(id: "sleep_regularity", title: "Regularność snu (SRI)", unit: "", positiveHigher: true, role: .informational,
-                   points: series(health) { $0.sleepRegularityIndex }),
+            Metric(id: "sleep_consistency", title: "Równa długość snu", unit: "/100", positiveHigher: true,
+                   role: .feeds(component: "Sen", weight: 0.30), points: consistencyPoints),
 
             // Wydolność — 25%
             Metric(id: "vo2max", title: "VO₂max", unit: "ml/kg/min", positiveHigher: true, role: .feeds(component: "VO₂max", weight: 0.25),
@@ -234,8 +264,6 @@ final class TrendsViewModel {
                    points: weights.map { SeriesPoint(date: $0.measuredAt, value: $0.weightKg) }),
             Metric(id: "whr", title: "WHR (talia/biodra)", unit: "", positiveHigher: false, role: .feeds(component: "Ciało", weight: 0.20),
                    points: series(health) { waistToHipRatio(waist: $0.waistCm, hip: $0.hipCm) }),
-            Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false, role: .informational,
-                   points: series(health) { $0.bodyFatPct }),
 
             // Regeneracja — 15%
             Metric(id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm", positiveHigher: false, role: .feeds(component: "Regeneracja", weight: 0.15),
@@ -243,7 +271,11 @@ final class TrendsViewModel {
             Metric(id: "hrv", title: "HRV (SDNN)", unit: "ms", positiveHigher: true, role: .feeds(component: "Regeneracja", weight: 0.15),
                    points: series(health) { $0.hrvSdnnMs }),
 
-            // Ruch
+            // Poza wynikiem — v3 tego nie punktuje, ale opisuje dzień.
+            Metric(id: "sleep_regularity", title: "Regularność snu (SRI)", unit: "", positiveHigher: true, role: .informational,
+                   points: series(health) { $0.sleepRegularityIndex }),
+            Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false, role: .informational,
+                   points: series(health) { $0.bodyFatPct }),
             Metric(id: "steps", title: "Kroki", unit: "", positiveHigher: true, role: .informational,
                    points: series(health) { $0.steps.map(Double.init) }),
             Metric(id: "activity", title: "Ruch", unit: "min", positiveHigher: true, role: .informational,
@@ -251,7 +283,43 @@ final class TrendsViewModel {
 
             Metric(id: "kcal", title: "Kalorie (est.)", unit: "kcal", positiveHigher: true, role: .informational,
                    points: kcalPoints),
-        ].filter { !$0.points.isEmpty }
+        ].filter { !$0.points.isEmpty })
+    }
+
+    /// Wartość składowej ze snapshotu. Aplikacja niczego nie przelicza —
+    /// czyta dokładnie tę liczbę, którą dashboard pokazuje pod score'em.
+    private static func part(
+        _ components: ScoreComponents?,
+        component: String,
+        key: String
+    ) -> Double? {
+        components?.parts?[component]?.first { $0.key == key }?.value
+    }
+
+    /// Sekcje w kolejności pierwszego wystąpienia metryki — dzięki temu układ
+    /// listy powyżej jest jedynym miejscem, które o tej kolejności decyduje.
+    ///
+    /// Internal, nie private: kolejność sekcji jest tym, co użytkownik zauważy
+    /// jako pierwsze, gdy się rozjedzie z dashboardem.
+    static func grouped(_ metrics: [Metric]) -> [MetricGroup] {
+        var order: [String] = []
+        var byGroup: [String: [Metric]] = [:]
+
+        for metric in metrics {
+            let id = metric.role.groupID
+            if byGroup[id] == nil { order.append(id) }
+            byGroup[id, default: []].append(metric)
+        }
+
+        return order.compactMap { id in
+            guard let items = byGroup[id], let role = items.first?.role else { return nil }
+            return MetricGroup(
+                id: id,
+                title: role.groupTitle,
+                weight: role.groupWeight,
+                metrics: items
+            )
+        }
     }
 
     /// `health_metrics` ma prawie wszystkie kolumny opcjonalne, więc każdy

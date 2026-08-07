@@ -185,30 +185,57 @@ struct MetricArrowAtIndexTests {
     }
 }
 
-@Suite("Rola metryki w wyniku")
-struct MetricRoleTests {
-    @Test("Etykieta składnika podaje komponent i jego wagę")
-    func feedsBadge() {
-        #expect(MetricRole.feeds(component: "Sen", weight: 0.30).badge == "Sen · 30%")
-        #expect(MetricRole.feeds(component: "Regeneracja", weight: 0.15).badge == "Regeneracja · 15%")
+@Suite("Grupowanie Trendów")
+@MainActor
+struct MetricGroupTests {
+    private static func metric(_ id: String, _ role: MetricRole) -> Metric {
+        Metric(id: id, title: id, unit: "", positiveHigher: true, role: role,
+               points: [SeriesPoint(date: "2026-08-01", value: 1)])
     }
 
-    /// Kroki, ruch i kalorie nie wchodzą dziś do v3 — kafelek ma to mówić
-    /// wprost, zamiast wyglądać tak samo ważnie jak sen.
-    @Test("Metryka poboczna jest oznaczona i nie liczy się do wyniku")
-    func informationalBadge() {
-        #expect(MetricRole.informational.badge == "poza wynikiem")
-        #expect(!MetricRole.informational.countsToScore)
+    @Test("Nagłówek sekcji podaje komponent i wagę")
+    func groupHeader() {
+        let scored = MetricGroup(id: "Sen", title: "Sen", weight: 0.30, metrics: [])
+        let side = MetricGroup(id: "informational", title: "Poza wynikiem", weight: nil, metrics: [])
+
+        #expect(scored.header == "Sen · 30%")
+        #expect(side.header == "Poza wynikiem")
     }
 
-    @Test("Sam wynik nie udaje ani składnika, ani metryki pobocznej")
-    func totalBadge() {
-        #expect(MetricRole.total.badge == "wynik")
-        #expect(!MetricRole.total.countsToScore)
+    @Test("Rola wskazuje sekcję, do której trafia metryka")
+    func roleMapsToGroup() {
+        let sleep = MetricRole.feeds(component: "Sen", weight: 0.30)
+
+        #expect(sleep.groupID == "Sen")
+        #expect(sleep.groupTitle == "Sen")
+        #expect(sleep.groupWeight == 0.30)
+
+        #expect(MetricRole.informational.groupID == "informational")
+        #expect(MetricRole.informational.groupWeight == nil)
+        #expect(MetricRole.total.groupTitle == "Wynik")
     }
 
-    @Test("Tylko składniki liczą się do wyniku")
-    func onlyFeedsCounts() {
-        #expect(MetricRole.feeds(component: "Ciało", weight: 0.2).countsToScore)
+    /// Kolejność sekcji ma wynikać z kolejności metryk, żeby układ listy
+    /// w `build` był jedynym miejscem, które o niej decyduje.
+    @Test("Metryki tej samej roli trafiają razem, bez rozbijania sekcji")
+    func groupsFollowFirstAppearance() {
+        let sleep = MetricRole.feeds(component: "Sen", weight: 0.30)
+        let body = MetricRole.feeds(component: "Ciało", weight: 0.20)
+
+        let groups = TrendsViewModel.grouped([
+            Self.metric("a", .total),
+            Self.metric("b", sleep),
+            Self.metric("c", sleep),
+            Self.metric("d", body),
+            Self.metric("e", .informational),
+        ])
+
+        #expect(groups.map(\.id) == ["total", "Sen", "Ciało", "informational"])
+        #expect(groups[1].metrics.map(\.id) == ["b", "c"])
+    }
+
+    @Test("Pusta lista nie tworzy pustych sekcji")
+    func emptyInput() {
+        #expect(TrendsViewModel.grouped([]).isEmpty)
     }
 }

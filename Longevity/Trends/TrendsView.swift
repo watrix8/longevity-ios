@@ -33,8 +33,14 @@ struct TrendsView: View {
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 60)
-                case .loaded(let metrics):
-                    ForEach(metrics) { MetricCardView(metric: $0) }
+                case .loaded(let groups):
+                    ForEach(groups) { group in
+                        // Nagłówek niesie komponent i wagę, więc kafelki nie
+                        // powtarzają tego u siebie.
+                        Kicker(text: group.header, color: groupColor(group))
+                            .padding(.top, group.id == "total" ? 0 : 8)
+                        ForEach(group.metrics) { MetricCardView(metric: $0) }
+                    }
                 }
             }
             .padding(.horizontal, 20)
@@ -48,12 +54,18 @@ struct TrendsView: View {
         }
     }
 
+    /// Sekcje wchodzące do wyniku wyróżnione kolorem — „Poza wynikiem"
+    /// zostaje szare, żeby nie konkurowało wzrokowo z komponentami.
+    private func groupColor(_ group: MetricGroup) -> Color {
+        group.weight == nil ? Palette.tick : Palette.pine
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Trendy")
                 .font(AtlasFont.display(28, .heavy))
                 .foregroundStyle(Palette.ink)
-            Text("Ostatnie 30 dni. Przeciągnij po wykresie, żeby odczytać dzień.")
+            Text("Ostatnie 30 dni, w tym samym podziale co rozbicie na dashboardzie.\nPrzeciągnij po wykresie, żeby odczytać dzień.")
                 .font(AtlasFont.body(13))
                 .foregroundStyle(Palette.muted)
         }
@@ -79,22 +91,9 @@ struct MetricCardView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(metric.title)
-                        .font(AtlasFont.display(16, .semibold))
-                        .foregroundStyle(Palette.ink)
-                    // Bez tej etykiety kafelek kroków wygląda tak samo ważnie
-                    // jak sen, który odpowiada za 30% wyniku.
-                    Text(metric.role.badge)
-                        .font(AtlasFont.mono(9))
-                        .foregroundStyle(metric.role.countsToScore ? Palette.pine : Palette.tick)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2.5)
-                        .background(
-                            metric.role.countsToScore ? Palette.pineSoft : Palette.panel,
-                            in: Capsule()
-                        )
-                }
+                Text(metric.title)
+                    .font(AtlasFont.display(16, .semibold))
+                    .foregroundStyle(Palette.ink)
                 Spacer()
                 // Data zastępuje licznik punktów dopiero po dotknięciu wykresu —
                 // bez niej nie wiadomo, czy wielka liczba to dziś, czy 12 lipca.
