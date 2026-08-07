@@ -10,8 +10,14 @@ enum HealthSyncPlan: Equatable {
     case sync(days: Int)
     case skip
 
-    /// Pierwsze uruchomienie ciąga miesiąc wstecz.
-    static let backfillDays = 30
+    /// Pierwsze uruchomienie ciąga całą dostępną historię, nie miesiąc.
+    ///
+    /// HealthKit trzyma dane, które Garmin zapisywał tam od lat — sen, tętno
+    /// spoczynkowe, kroki. Przy oknie 30 dni cała ta historia zostawała poza
+    /// zasięgiem na zawsze, bo kolejne synchronizacje biorą już tylko ostatnie
+    /// dni. Puste doby i tak odpadają, więc żądanie głębsze niż realne dane
+    /// nic nie kosztuje.
+    static let backfillDays = 1095
 
     /// Kolejne tylko ostatnie dni. Trzy, a nie jeden: dane z Watcha dochodzą
     /// z opóźnieniem, a sen z ostatniej nocy potrafi się doprecyzować jeszcze
@@ -21,6 +27,16 @@ enum HealthSyncPlan: Equatable {
     /// Auto-sync po powrocie z tła nie częściej niż raz na godzinę — HealthKit
     /// nie zmienia się co minutę, a każdy odczyt to kilkanaście zapytań.
     static let autoSyncInterval: TimeInterval = 3600
+
+    /// Odcinki snu wysyłamy tylko dla świeżych dni.
+    ///
+    /// Służą wyłącznie do liczenia SRI z okna ośmiu dób, a trzy lata historii
+    /// to około 22 tysiące obiektów w JSON-ie — ciężar bez wartości.
+    static let sleepSegmentsWithinDays = 30
+
+    /// Ile dni mieści jeden POST. Musi zgadzać się z `MAX_SYNC_DAYS` na serwerze —
+    /// większa paczka wraca błędem 400, nie obcięciem.
+    static let daysPerRequest = 90
 
     /// `automatic` odróżnia powrót apki na wierzch od kliknięcia w Opcjach.
     /// Odstęp obowiązuje wyłącznie automat — jeśli użytkownik prosi, to
@@ -55,6 +71,10 @@ final class HealthSyncModel {
     private(set) var isConnected = false
     private(set) var lastSyncedAt: Date?
     private(set) var sources: SourceSummary?
+
+    /// Postęp głębokiego backfillu. Trzy lata to kilkanaście żądań i kilkadziesiąt
+    /// sekund — bez tego ekran stoi na samym spinnerze i wygląda na zawieszony.
+    private(set) var progress: String?
 
     /// Co pisze do Zdrowia. Interesuje nas głównie moment, w którym pojawia się
     /// drugie urządzenie — wtedy suma kroków może się zdublować, a średnia
@@ -180,21 +200,41 @@ final class HealthSyncModel {
     private func sync(days: Int) async {
         guard !isSyncing else { return }
         state = .syncing
+        progress = nil
+        defer { progress = nil }
 
         do {
-            let metrics = try await HealthKitManager.shared.readMetrics(days: days)
+            let metrics = try await HealthKitManager.shared.readMetrics(
+                days: days,
+                segmentsWithinDays: HealthSyncPlan.sleepSegmentsWithinDays
+            )
             guard !metrics.isEmpty else {
                 state = .done("Brak danych w Apple Health z ostatnich \(days) dni")
                 return
             }
 
-            let result = try await LongevityAPI.syncHealth(days: metrics)
+            // Paczkowanie, bo serwer przyjmuje najwyżej 90 dni na żądanie,
+            // a backfill potrafi przynieść trzy lata naraz.
+            let batches = metrics.chunked(into: HealthSyncPlan.daysPerRequest)
+            var saved = 0
+            var activity = 0
+            var weight = 0
+
+            for (index, batch) in batches.enumerated() {
+                if batches.count > 1 { progress = "Wysyłam \(index + 1)/\(batches.count)…" }
+                let result = try await LongevityAPI.syncHealth(days: batch)
+                saved += result.saved
+                activity += result.activitySynced
+                weight += result.weightSynced
+            }
+
             markSynced()
             // Aktywność z Watcha wchodzi do activity_logs, więc score trzeba przeliczyć —
             // ten sam krok co po zapisie check-inu czy posiłku.
             await LongevityAPI.refreshScore()
+            await loadSources()
 
-            state = .done(Self.summary(result))
+            state = .done(Self.summary(saved: saved, activity: activity, weight: weight))
         } catch {
             state = .failed(error.localizedDescription)
         }
@@ -215,10 +255,10 @@ final class HealthSyncModel {
         UserDefaults.standard.set(now.timeIntervalSince1970, forKey: Self.lastSyncKey)
     }
 
-    private static func summary(_ result: LongevityAPI.HealthSyncResult) -> String {
-        var parts = ["Zapisano \(result.saved) \(dayWord(result.saved))"]
-        if result.activitySynced > 0 { parts.append("aktywność \(result.activitySynced)") }
-        if result.weightSynced > 0 { parts.append("waga \(result.weightSynced)") }
+    private static func summary(saved: Int, activity: Int, weight: Int) -> String {
+        var parts = ["Zapisano \(saved) \(dayWord(saved))"]
+        if activity > 0 { parts.append("aktywność \(activity)") }
+        if weight > 0 { parts.append("waga \(weight)") }
         return parts.joined(separator: " · ")
     }
 

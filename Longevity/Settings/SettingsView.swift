@@ -133,7 +133,8 @@ struct SettingsView: View {
             footer: """
                 Sen, VO₂max, tętno spoczynkowe, HRV, ruch, skład ciała i waga. \
                 Wpis zrobiony ręcznie ma pierwszeństwo — zegarek go nie nadpisze. \
-                Wagę i pozostałe pomiary dopisujesz w czacie, a oglądasz na Trendach.
+                Wagę i pozostałe pomiary dopisujesz w czacie, a oglądasz na Trendach. \
+                Pierwsza synchronizacja ciągnie całą historię z Apple Health i trwa dłużej.
                 """
         ) {
             row("Połączenie") {
@@ -151,7 +152,14 @@ struct SettingsView: View {
             divider
             row("Ostatnia synchronizacja") {
                 if health.isSyncing {
-                    ProgressView().tint(Palette.muted)
+                    HStack(spacing: 8) {
+                        if let progress = health.progress {
+                            Text(progress)
+                                .font(AtlasFont.mono(10.5))
+                                .foregroundStyle(Palette.muted)
+                        }
+                        ProgressView().tint(Palette.muted)
+                    }
                 } else {
                     Text(health.lastSyncedLabel)
                         .font(AtlasFont.body(14))

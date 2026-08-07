@@ -46,7 +46,15 @@ final class HealthKitManager {
     /// Zapytania idą po kolei, bo pojedyncze trwa milisekundy, a błąd jednego
     /// typu (np. temperatura nadgarstka na starszym Watchu) nie może wywalić
     /// całej synchronizacji.
-    func readMetrics(days: Int, calendar: Calendar = .current, now: Date = Date()) async throws -> [DailyHealthMetrics] {
+    /// `segmentsWithinDays` ogranicza odcinki snu do świeżej części zakresu —
+    /// przy głębokim backfillu reszta byłaby dziesiątkami tysięcy obiektów,
+    /// z których i tak nikt nie policzy nic sensownego.
+    func readMetrics(
+        days: Int,
+        segmentsWithinDays: Int? = nil,
+        calendar: Calendar = .current,
+        now: Date = Date()
+    ) async throws -> [DailyHealthMetrics] {
         guard isAvailable else { throw HealthKitError.unavailable }
 
         let today = calendar.startOfDay(for: now)
@@ -82,6 +90,14 @@ final class HealthKitManager {
         }
 
         await applySleep(to: &metrics, days: dayList, calendar: calendar)
+
+        if let segmentsWithinDays,
+           let cutoff = calendar.date(byAdding: .day, value: -segmentsWithinDays, to: today) {
+            let cutoffKey = HealthDates.day(cutoff, calendar: calendar)
+            for key in metrics.keys where key < cutoffKey {
+                metrics[key]?.sleepSegments = nil
+            }
+        }
 
         return dayList
             .compactMap { metrics[HealthDates.day($0, calendar: calendar)] }

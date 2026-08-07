@@ -36,7 +36,7 @@ struct MetricTests {
         let m = metric((1...10).map(Double.init))
 
         #expect(m.avg7 == 7)
-        #expect(m.avg30 == 5.5)
+        #expect(m.avgAll == 5.5)
     }
 
     @Test("Strzałka w górę, gdy wyżej znaczy lepiej")
@@ -61,7 +61,7 @@ struct MetricTests {
         #expect(m.last == nil)
         #expect(m.previous == nil)
         #expect(m.avg7 == nil)
-        #expect(m.avg30 == nil)
+        #expect(m.avgAll == nil)
         #expect(m.arrow == "→")
     }
 
@@ -77,8 +77,8 @@ struct MetricTests {
 
     @Test("Średnie zaokrąglają się do jednego miejsca")
     func averageRounding() {
-        #expect(metric([1, 2]).avg30 == 1.5)
-        #expect(metric([1, 1, 2]).avg30 == 1.3)
+        #expect(metric([1, 2]).avgAll == 1.5)
+        #expect(metric([1, 1, 2]).avgAll == 1.3)
     }
 }
 
@@ -215,5 +215,72 @@ struct RefreshTests {
         if case .loaded = dashboard.state {} else {
             Issue.record("Dashboard zmienił stan mimo wstrzykniętych danych")
         }
+    }
+}
+
+@Suite("Zakres i agregacja Trendów")
+@MainActor
+struct TrendRangeTests {
+    private static func metric(_ values: [Double]) -> Metric {
+        Metric(
+            id: "t", title: "T", unit: "", positiveHigher: true, role: .informational,
+            points: values.enumerated().map {
+                SeriesPoint(date: String(format: "2026-08-%02d", $0.offset + 1), value: $0.element)
+            }
+        )
+    }
+
+    @Test("Dzienny zakres nie rusza punktów")
+    func dailyUntouched() {
+        let metric = Self.metric([1, 2, 3, 4])
+        #expect(metric.bucketed(by: 1).points.count == 4)
+        #expect(TrendRange.month.bucketDays == 1)
+        #expect(TrendRange.quarter.bucketDays == 1)
+    }
+
+    @Test("Kubełki uśredniają wartości i skracają szereg")
+    func averagesIntoBuckets() {
+        // Cztery tygodnie po siedem dni: 1…7, 8…14, itd.
+        let metric = Self.metric((1...28).map(Double.init))
+        let weekly = metric.bucketed(by: 7)
+
+        #expect(weekly.points.count == 4)
+        #expect(weekly.points.map(\.value) == [4, 11, 18, 25])
+    }
+
+    /// Liczenie od najnowszego: ostatni kubełek ma być pełnym, świeżym
+    /// tygodniem, a nie ogryzkiem zależnym od tego, kiedy zaczyna się historia.
+    @Test("Niepełny kubełek ląduje na początku, nie na końcu")
+    func partialBucketGoesFirst() {
+        let metric = Self.metric((1...10).map(Double.init))
+        let weekly = metric.bucketed(by: 7)
+
+        #expect(weekly.points.count == 2)
+        // Ostatnie siedem dni (4…10) daje 7; pierwsze trzy (1…3) dają 2.
+        #expect(weekly.points.map(\.value) == [2, 7])
+    }
+
+    @Test("Oś czasu zostaje rosnąca")
+    func keepsChronology() {
+        let weekly = Self.metric((1...28).map(Double.init)).bucketed(by: 7)
+        let dates = weekly.points.map(\.date)
+
+        #expect(dates == dates.sorted())
+    }
+
+    @Test("Zakres wybiera głębokość i sposób agregacji")
+    func rangeMapping() {
+        #expect(TrendRange.month.days == 30)
+        #expect(TrendRange.year.days == 365)
+        #expect(TrendRange.all.days == nil)
+        #expect(TrendRange.year.bucketDays == 7)
+        #expect(TrendRange.all.bucketDays == 30)
+        #expect(TrendRange.month.bucketNote == nil)
+        #expect(TrendRange.all.bucketNote != nil)
+    }
+
+    @Test("Pojedynczy punkt przeżywa agregację")
+    func singlePoint() {
+        #expect(Self.metric([5]).bucketed(by: 30).points.count == 1)
     }
 }

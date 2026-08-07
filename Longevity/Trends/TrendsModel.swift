@@ -6,6 +6,53 @@ struct SeriesPoint: Sendable {
     let value: Double
 }
 
+/// Zakres widoczny na Trendach.
+///
+/// Powyżej kwartału punkty są uśredniane, bo trzy lata to ponad tysiąc dni na
+/// wykresie szerokim na jakieś 300 punktów — bez agregacji linia zamienia się
+/// w szum, a przeciąganie palcem przestaje trafiać w cokolwiek konkretnego.
+enum TrendRange: String, CaseIterable, Identifiable, Sendable {
+    case month, quarter, year, all
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .month: "30 dni"
+        case .quarter: "90 dni"
+        case .year: "Rok"
+        case .all: "Wszystko"
+        }
+    }
+
+    /// `nil` = bez ograniczenia daty.
+    var days: Int? {
+        switch self {
+        case .month: 30
+        case .quarter: 90
+        case .year: 365
+        case .all: nil
+        }
+    }
+
+    /// Ile dni składa się na jeden punkt wykresu.
+    var bucketDays: Int {
+        switch self {
+        case .month, .quarter: 1
+        case .year: 7
+        case .all: 30
+        }
+    }
+
+    var bucketNote: String? {
+        switch self {
+        case .month, .quarter: nil
+        case .year: "średnie tygodniowe"
+        case .all: "średnie miesięczne"
+        }
+    }
+}
+
 /// Skąd metryka bierze się w score. Kafelek bez tej informacji wygląda tak
 /// samo ważnie jak ten, który realnie waży 30% wyniku.
 enum MetricRole: Sendable, Equatable {
@@ -65,11 +112,25 @@ struct Metric: Identifiable, Sendable {
     /// Czy wyższa wartość jest lepsza (waga, WHR i tętno spoczynkowe odwrotnie).
     let positiveHigher: Bool
     let role: MetricRole
+    /// Ile dni składa się na jeden punkt. 1 = punkt to doba.
+    let bucketDays: Int
 
     var last: Double? { points.last?.value }
     var previous: Double? { points.dropLast().last?.value }
     var avg7: Double? { Self.average(points.suffix(7).map(\.value)) }
-    var avg30: Double? { Self.average(points.map(\.value)) }
+    /// Średnia CAŁEGO szeregu, nie trzydziestu dni — przy dłuższym zakresie
+    /// obejmuje wszystko, co widać na wykresie.
+    var avgAll: Double? { Self.average(points.map(\.value)) }
+
+    /// „7 dni" tylko przy punktach dobowych; przy kubełkach mowa o tygodniach
+    /// albo miesiącach i etykieta musi to oddać.
+    var recentLabel: String {
+        switch bucketDays {
+        case 1: "Śr. 7 dni"
+        case 7: "Śr. 7 tyg."
+        default: "Śr. 7 mies."
+        }
+    }
 
     /// Strzałka jak w webie: porównanie z poprzednim punktem, odwrócona
     /// dla metryk, w których mniej znaczy lepiej.
@@ -89,6 +150,31 @@ struct Metric: Identifiable, Sendable {
     private static func average(_ values: [Double]) -> Double? {
         guard !values.isEmpty else { return nil }
         return (values.reduce(0, +) / Double(values.count) * 10).rounded() / 10
+    }
+
+    /// Uśrednia punkty w kubełki po `days` dni, licząc od NAJNOWSZEGO —
+    /// dzięki temu ostatni kubełek jest zawsze pełnym, świeżym okresem,
+    /// a nie ogryzkiem zależnym od tego, kiedy zaczyna się historia.
+    ///
+    /// Datą kubełka jest jego najwcześniejszy dzień, więc oś czasu zostaje
+    /// rosnąca i przeciąganie po wykresie dalej pokazuje sensowny okres.
+    func bucketed(by days: Int) -> Metric {
+        guard days > 1, points.count > 1 else { return self }
+
+        let reversed = Array(points.reversed())
+        let buckets = stride(from: 0, to: reversed.count, by: days).map { start -> SeriesPoint in
+            let slice = reversed[start..<Swift.min(start + days, reversed.count)]
+            let mean = slice.reduce(0) { $0 + $1.value } / Double(slice.count)
+            return SeriesPoint(
+                date: slice.last!.date,
+                value: (mean * 10).rounded() / 10
+            )
+        }
+
+        return Metric(
+            id: id, title: title, unit: unit, positiveHigher: positiveHigher,
+            role: role, bucketDays: days, points: buckets.reversed()
+        )
     }
 }
 
@@ -166,8 +252,9 @@ final class TrendsViewModel {
 
     private(set) var state: State
 
-    /// Okno jak `DAYS_WINDOW` w webie.
-    private let daysWindow = 30
+    /// Zakres wybrany przez użytkownika. Zmiana przeładowuje dane, bo dłuższe
+    /// okna sięgają dalej niż to, co już mamy wczytane.
+    var range: TrendRange = .month
 
     /// Podgląd wstrzykuje gotowy stan i nie ma czego dociągać — bez tej flagi
     /// każdy `#Preview` uderzałby w sieć i kończył na ekranie błędu.
@@ -190,7 +277,10 @@ final class TrendsViewModel {
 
     func load() async {
         do {
-            let from = Self.isoDate(daysAgo: daysWindow)
+            // Przy "wszystko" i tak trzeba jakiejś granicy dla zapytania —
+            // limit backfillu jest naturalną, bo starszych danych nie ma.
+            let from = Self.isoDate(daysAgo: range.days ?? 1500)
+            let bucket = range.bucketDays
             let db = AppSupabase.client
 
             async let scores: [ScoreRow] = db.from("score_snapshots")
@@ -217,7 +307,8 @@ final class TrendsViewModel {
             state = .loaded(
                 try await Self.build(
                     scores: scores, weights: weights,
-                    activity: activity, health: health
+                    activity: activity, health: health,
+                    bucketDays: bucket
                 )
             )
         } catch {
@@ -236,7 +327,8 @@ final class TrendsViewModel {
         scores: [ScoreRow],
         weights: [WeightRow],
         activity: [ActivityRow],
-        health: [HealthRow]
+        health: [HealthRow],
+        bucketDays: Int = 1
     ) -> [MetricGroup] {
         let consistencyPoints = scores.compactMap { row -> SeriesPoint? in
             part(row.components, component: "sleep", key: "consistency")
@@ -288,7 +380,9 @@ final class TrendsViewModel {
                    points: series(health) { $0.steps.map(Double.init) }),
             Metric(id: "activity", title: "Ruch (wpisany)", unit: "min", positiveHigher: true, role: .informational,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
-        ].filter { !$0.points.isEmpty })
+        ]
+        .map { $0.bucketed(by: bucketDays) }
+        .filter { !$0.points.isEmpty })
     }
 
     /// Wartość składowej ze snapshotu. Aplikacja niczego nie przelicza —
@@ -375,6 +469,7 @@ extension Metric {
         unit: String,
         positiveHigher: Bool,
         role: MetricRole,
+        bucketDays: Int = 1,
         points: [SeriesPoint]
     ) {
         self.id = id
@@ -382,6 +477,7 @@ extension Metric {
         self.unit = unit
         self.positiveHigher = positiveHigher
         self.role = role
+        self.bucketDays = bucketDays
         self.points = points.sorted { $0.date < $1.date }
     }
 }

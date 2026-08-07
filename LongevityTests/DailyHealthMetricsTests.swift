@@ -150,3 +150,24 @@ struct DailyHealthMetricsTests {
         #expect(HealthDates.day(midnightish, calendar: Self.calendar) == "2026-08-06")
     }
 }
+
+@Suite("Paczkowanie i głębokość backfillu")
+struct BackfillTests {
+    /// Serwer odrzuca paczki większe niż 90 dni błędem 400, nie obcięciem —
+    /// więc podział musi trzymać limit co do jednego dnia.
+    @Test("Paczki nie przekraczają limitu serwera")
+    func chunkRespectsLimit() {
+        let days = Array(1...1095)
+        let batches = days.chunked(into: HealthSyncPlan.daysPerRequest)
+
+        #expect(batches.allSatisfy { $0.count <= HealthSyncPlan.daysPerRequest })
+        #expect(batches.flatMap { $0 } == days)
+        #expect(batches.count == 13)
+    }
+
+    @Test("Krótszy zakres to jedna paczka")
+    func shortRangeSingleBatch() {
+        #expect(Array(1...3).chunked(into: 90).count == 1)
+        #expect([Int]().chunked(into: 90).isEmpty)
+    }
+}

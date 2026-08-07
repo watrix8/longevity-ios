@@ -11,6 +11,7 @@ struct TrendsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 header
+                rangePicker
 
                 switch model.state {
                 case .loading:
@@ -58,10 +59,28 @@ struct TrendsView: View {
         group.weight == nil ? Palette.tick : Palette.pine
     }
 
+    /// Zmiana zakresu przeładowuje dane, bo dłuższe okna sięgają dalej niż to,
+    /// co jest już wczytane.
+    private var rangePicker: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Picker("Zakres", selection: $model.range) {
+                ForEach(TrendRange.allCases) { Text($0.label).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: model.range) { Task { await model.load() } }
+
+            if let note = model.range.bucketNote {
+                Text(note)
+                    .font(AtlasFont.mono(9.5))
+                    .foregroundStyle(Palette.tick)
+            }
+        }
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             ScreenTitle(text: "Trendy")
-            Text("Ostatnie 30 dni, w tym samym podziale co rozbicie na dashboardzie.\nPrzeciągnij po wykresie, żeby odczytać dzień.")
+            Text("W tym samym podziale co rozbicie na dashboardzie.\nPrzeciągnij po wykresie, żeby odczytać punkt.")
                 .font(AtlasFont.body(13))
                 .foregroundStyle(Palette.muted)
         }
@@ -143,8 +162,8 @@ struct MetricCardView: View {
             }
 
             HStack(spacing: 16) {
-                Text("Śr. 7d: \(metric.avg7.map(Self.format) ?? "—")\(unitSuffix)")
-                Text("Śr. 30d: \(metric.avg30.map(Self.format) ?? "—")\(unitSuffix)")
+                Text("\(metric.recentLabel): \(metric.avg7.map(Self.format) ?? "—")\(unitSuffix)")
+                Text("Śr. zakresu: \(metric.avgAll.map(Self.format) ?? "—")\(unitSuffix)")
             }
             .font(AtlasFont.body(12))
             .foregroundStyle(Palette.muted)

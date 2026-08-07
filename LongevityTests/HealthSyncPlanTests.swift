@@ -78,10 +78,11 @@ struct HealthSyncPlanTests {
         )
     }
 
-    @Test("Backfill jest wyraźnie dłuższy od przyrostowego")
-    func backfillIsLonger() {
+    /// Backfill celowo przekracza limit jednego żądania — ma sięgnąć całej
+    /// historii z HealthKit, a nie zmieścić się w jednym POST. Stąd paczkowanie.
+    @Test("Backfill sięga lat i nie mieści się w jednym żądaniu")
+    func backfillIsDeep() {
         #expect(HealthSyncPlan.backfillDays > HealthSyncPlan.incrementalDays)
-        // Serwer przyjmuje maksymalnie 90 dni w jednym żądaniu.
-        #expect(HealthSyncPlan.backfillDays <= 90)
+        #expect(HealthSyncPlan.backfillDays > HealthSyncPlan.daysPerRequest)
     }
 }
