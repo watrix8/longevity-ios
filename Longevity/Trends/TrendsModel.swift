@@ -147,6 +147,45 @@ struct Metric: Identifiable, Sendable {
         }
     }
 
+    /// Czy szereg przekracza granicę roku. Wtedy „08-06" przestaje wystarczać,
+    /// bo nie wiadomo, o który rok chodzi.
+    var spansYears: Bool {
+        guard let first = points.first?.date.prefix(4), let last = points.last?.date.prefix(4)
+        else { return false }
+        return first != last
+    }
+
+    /// Opis punktu pod przeciągniętym palcem.
+    ///
+    /// Kubełek zmienia sens etykiety: przy dobowym to konkretny dzień, przy
+    /// tygodniowym początek tygodnia, przy miesięcznym sam miesiąc. Pokazanie
+    /// „6 sierpnia" dla średniej z całego sierpnia byłoby myleniem tropu.
+    ///
+    /// Rok dochodzi, gdy punkt nie jest z bieżącego roku — tak samo, jak pisze
+    /// się daty po polsku.
+    func pointLabel(_ iso: String, now: Date = Date(), calendar: Calendar = .current) -> String {
+        guard let date = try? Date("\(iso)T12:00:00Z", strategy: .iso8601) else { return iso }
+
+        let polish = Locale(identifier: "pl_PL")
+        let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
+
+        if bucketDays > 13 {
+            return date.formatted(.dateTime.locale(polish).month(.wide).year())
+        }
+
+        var text = date.formatted(.dateTime.locale(polish).day().month(.wide))
+        if !sameYear {
+            text += " " + date.formatted(.dateTime.locale(polish).year())
+        }
+        return bucketDays > 1 ? "tydz. od \(text)" : text
+    }
+
+    /// Etykieta osi. Przy szeregu przekraczającym rok miesiąc z rokiem, bo
+    /// „07-08" w takim zakresie jest nieczytelne.
+    func axisLabel(_ iso: String) -> String {
+        spansYears ? String(iso.prefix(7)) : String(iso.suffix(5))
+    }
+
     /// Strzałka jak w webie: porównanie z poprzednim punktem, odwrócona
     /// dla metryk, w których mniej znaczy lepiej.
     var arrow: String { arrow(at: points.indices.last) }

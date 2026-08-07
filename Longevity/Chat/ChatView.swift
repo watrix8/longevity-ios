@@ -7,7 +7,6 @@ struct ChatView: View {
     let bottomRequest: Int
 
     @State private var model: ChatViewModel
-    @State private var scroll = ScrollPosition()
 
     @State private var showMealOptions = false
     @State private var showPhotoPicker = false
@@ -99,23 +98,46 @@ struct ChatView: View {
         }
     }
 
-    /// Feed trzyma się dołu natywnie, bez `ScrollViewReader` i ręcznego
-    /// `scrollTo`.
+    /// Feed trzyma się dołu natywnymi kotwicami. Ręczne przewijanie zostaje
+    /// wyłącznie na jawne żądanie użytkownika — tap w aktywną zakładkę.
     ///
     /// Sterowanie przewijaniem z ręki miało dwie wady naraz. Historia dociera
     /// po pojawieniu się widoku, więc `scrollTo` na zmianę liczby wiadomości
     /// leciało w tej samej klatce, w której stos dopiero układał wiersze —
     /// nie było do czego przewinąć i czat otwierał się na najstarszej
     /// wiadomości. A trafienie offsetem poza zmaterializowany zakres
-    /// `LazyVStack` zostawiało pusty ekran do czasu, aż gest wymusił
-    /// ponowne wyliczenie.
+    /// zostawiało pusty ekran do czasu, aż gest wymusił ponowne wyliczenie.
     ///
-    /// `VStack` zamiast leniwego: rozmowa jest ograniczona do 40 wiadomości
-    /// z historii plus bieżąca sesja, więc nie ma czego odraczać, a znika
-    /// cała klasa błędów z materializacją.
+    /// Stos zostaje leniwy. Zachłanny wydawał się bezpieczniejszy, skoro
+    /// rozmowa ma najwyżej 40 wiadomości — ale każdy dymek parsuje Markdown
+    /// na bloki i buduje `AttributedString` na blok, więc czterdzieści naraz
+    /// to setki wywołań na głównym wątku. Klawiatura czekała w kolejce za tą
+    /// robotą. Materializacja przestała być groźna, gdy zniknął ręczny
+    /// `scrollTo` — to on, a nie lenistwo stosu, gasił ekran.
     private var feed: some View {
+        ScrollViewReader { proxy in
+            feedScroll
+                .onChange(of: bottomRequest) { _, _ in
+                    // Celujemy w identyfikator ostatniej wiadomości, nie w krawędź:
+                    // przy leniwym stosie skok „na dół" dojeżdża tylko do granicy
+                    // tego, co już zmaterializowane, i staje w połowie rozmowy.
+                    // Wskazanie konkretnego wiersza każe go najpierw zbudować.
+                    guard let last = model.messages.last?.id else { return }
+
+                    // Odroczenie o cykl, bo w tej samej klatce wygrywa systemowy
+                    // skok na górę, który iOS odpala przy tapnięciu w aktywną zakładkę.
+                    Task { @MainActor in
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            proxy.scrollTo(last, anchor: .bottom)
+                        }
+                    }
+                }
+        }
+    }
+
+    private var feedScroll: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            LazyVStack(alignment: .leading, spacing: 12) {
                 if model.isLoadingHistory {
                     ProgressView().tint(Palette.pine)
                         .frame(maxWidth: .infinity)
@@ -131,7 +153,6 @@ struct ChatView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
         }
-        .scrollPosition($scroll)
         // Otwarcie na najnowszej wiadomości.
         .defaultScrollAnchor(.bottom, for: .initialOffset)
         // Rosnący dymek w trakcie strumienia trzyma koniec odpowiedzi na
@@ -139,16 +160,6 @@ struct ChatView: View {
         // wyścigu z układaniem widoku.
         .defaultScrollAnchor(.bottom, for: .sizeChanges)
         .scrollDismissesKeyboard(.interactively)
-        .onChange(of: bottomRequest) { _, _ in
-            // Własne przewinięcie musi wejść PO systemowym skoku na górę,
-            // który iOS odpala przy tapnięciu w aktywną zakładkę. Bez
-            // odroczenia obie animacje idą w tej samej klatce i wygrywa system.
-            Task { @MainActor in
-                withAnimation(.easeOut(duration: 0.2)) {
-                    scroll.scrollTo(edge: .bottom)
-                }
-            }
-        }
     }
 
     private var welcome: some View {

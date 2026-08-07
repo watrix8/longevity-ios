@@ -113,7 +113,7 @@ struct MetricCardView: View {
                 // Data zastępuje licznik punktów dopiero po dotknięciu wykresu —
                 // bez niej nie wiadomo, czy wielka liczba to dziś, czy 12 lipca.
                 if selection != nil, let shown {
-                    Text(Self.polishDay(shown.date))
+                    Text(metric.pointLabel(shown.date))
                         .font(AtlasFont.mono(10.5))
                         .foregroundStyle(Palette.ochreInk)
                 } else {
@@ -147,9 +147,9 @@ struct MetricCardView: View {
                     .padding(.top, 10)
 
                 HStack {
-                    Text(String(metric.points.first?.date.suffix(5) ?? ""))
+                    Text(metric.points.first.map { metric.axisLabel($0.date) } ?? "")
                     Spacer()
-                    Text(String(metric.points.last?.date.suffix(5) ?? ""))
+                    Text(metric.points.last.map { metric.axisLabel($0.date) } ?? "")
                 }
                 .font(AtlasFont.mono(9.5))
                 .foregroundStyle(Palette.tick)
@@ -184,15 +184,6 @@ struct MetricCardView: View {
             : String(format: "%.1f", value)
     }
 
-    /// "2026-08-06" → "6 sierpnia". `FormatStyle` zamiast `DateFormatter`,
-    /// bo ten drugi nie jest `Sendable` i musiałby wisieć jako współdzielony stan.
-    /// Południe w parsowanym znaczniku chroni przed przeskokiem daty o strefę.
-    private static func polishDay(_ iso: String) -> String {
-        guard let date = try? Date("\(iso)T12:00:00Z", strategy: .iso8601) else { return iso }
-        return date.formatted(
-            .dateTime.locale(Locale(identifier: "pl_PL")).day().month(.wide)
-        )
-    }
 }
 
 /// Geometria wykresu — jedno źródło prawdy dla rysowania linii i dla trafiania
