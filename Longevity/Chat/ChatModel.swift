@@ -34,10 +34,31 @@ final class ChatViewModel {
     /// asystenta jako zwykłe pytanie.
     private var awaitingMealDescription = false
 
-    var isComposingMeal: Bool { awaitingMealDescription }
+    /// Zdjęcie czekające w composerze. Leci dopiero razem z wiadomością,
+    /// więc użytkownik może dopisać kontekst („porcja jak pięść", „bez sosu"),
+    /// zanim model cokolwiek zobaczy.
+    private(set) var attachedPhoto: Data?
+
+    var isComposingMeal: Bool { awaitingMealDescription || attachedPhoto != nil }
 
     var placeholder: String {
-        awaitingMealDescription ? "Co jesz? Opisz krótko…" : "Zapytaj o cokolwiek…"
+        if attachedPhoto != nil { return "Dodaj komentarz albo wyślij samo zdjęcie…" }
+        return awaitingMealDescription ? "Co jesz? Opisz krótko…" : "Zapytaj o cokolwiek…"
+    }
+
+    /// Zdjęcie z aparatu albo galerii — tylko podpięcie, bez wysyłki.
+    func attach(photo: Data) {
+        guard MealPhoto.base64(from: photo) != nil else {
+            append(.failure("Nie udało się przygotować zdjęcia. Spróbuj innego."))
+            return
+        }
+
+        awaitingMealDescription = false
+        attachedPhoto = photo
+    }
+
+    func removeAttachment() {
+        attachedPhoto = nil
     }
 
     func startMealDescription() {
@@ -81,11 +102,26 @@ final class ChatViewModel {
 
     // MARK: - Wysyłka tekstu
 
+    /// Wysłać można tekst, samo zdjęcie albo jedno z drugim.
+    var canSend: Bool {
+        !isBusy && (attachedPhoto != nil || !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+    }
+
     func send() async {
+        guard canSend else { return }
+
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty, !isBusy else { return }
+        let photo = attachedPhoto
 
         draft = ""
+        attachedPhoto = nil
+
+        if let photo {
+            append(.photo(photo, caption: text.isEmpty ? nil : text))
+            await streamMealAdvice(description: text, imageBase64: MealPhoto.base64(from: photo))
+            return
+        }
+
         append(.user(text))
 
         if awaitingMealDescription {
@@ -107,21 +143,6 @@ final class ChatViewModel {
     /// Wcześniej zdjęcie wracało kartą z kaloriami i makro, a przy niepewnej
     /// analizie pytaniem o wielkość porcji. Dziennik i tak nigdy nie był pełny,
     /// więc te liczby udawały pomiar. Teraz to zwykła rozmowa o jedzeniu.
-    func adviseMeal(photo: Data) async {
-        guard !isBusy else { return }
-
-        guard let base64 = MealPhoto.base64(from: photo) else {
-            append(.failure("Nie udało się przygotować zdjęcia. Spróbuj innego."))
-            return
-        }
-
-        awaitingMealDescription = false
-        append(.confirmation("📷 Zdjęcie wysłane do oceny…"))
-        await streamMealAdvice(description: nil, imageBase64: base64)
-    }
-
-    /// Dymek użytkownika dokłada wołający — przy zdjęciu jest nim potwierdzenie,
-    /// przy opisie tekst już wpisany w `send()`.
     private func streamMealAdvice(description: String?, imageBase64: String?) async {
         await consume(
             LongevityAPI.mealAdviceStream(description: description, imageBase64: imageBase64),

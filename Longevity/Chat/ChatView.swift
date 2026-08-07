@@ -2,7 +2,12 @@ import PhotosUI
 import SwiftUI
 
 struct ChatView: View {
+    /// Zmiana wartości to prośba o zjechanie na dół — rośnie, gdy użytkownik
+    /// tapnie w już aktywną zakładkę asystenta.
+    let bottomRequest: Int
+
     @State private var model: ChatViewModel
+    @State private var scroll = ScrollPosition()
 
     @State private var showMealOptions = false
     @State private var showPhotoPicker = false
@@ -13,7 +18,8 @@ struct ChatView: View {
     @State private var photoItem: PhotosPickerItem?
     @FocusState private var composerFocused: Bool
 
-    init(model: ChatViewModel = ChatViewModel()) {
+    init(bottomRequest: Int = 0, model: ChatViewModel = ChatViewModel()) {
+        self.bottomRequest = bottomRequest
         _model = State(initialValue: model)
     }
 
@@ -42,7 +48,8 @@ struct ChatView: View {
         .photosPicker(isPresented: $showPhotoPicker, selection: $photoItem, matching: .images)
         .fullScreenCover(isPresented: $showCamera) {
             CameraPicker { data in
-                Task { await model.adviseMeal(photo: data) }
+                model.attach(photo: data)
+                composerFocused = true
             }
             .ignoresSafeArea()
         }
@@ -67,7 +74,7 @@ struct ChatView: View {
                 let data = try? await item.loadTransferable(type: Data.self)
                 photoItem = nil
                 guard let data else { return }
-                await model.adviseMeal(photo: data)
+                model.attach(photo: data)
             }
         }
     }
@@ -124,6 +131,7 @@ struct ChatView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
         }
+        .scrollPosition($scroll)
         // Otwarcie na najnowszej wiadomości.
         .defaultScrollAnchor(.bottom, for: .initialOffset)
         // Rosnący dymek w trakcie strumienia trzyma koniec odpowiedzi na
@@ -131,6 +139,16 @@ struct ChatView: View {
         // wyścigu z układaniem widoku.
         .defaultScrollAnchor(.bottom, for: .sizeChanges)
         .scrollDismissesKeyboard(.interactively)
+        .onChange(of: bottomRequest) { _, _ in
+            // Własne przewinięcie musi wejść PO systemowym skoku na górę,
+            // który iOS odpala przy tapnięciu w aktywną zakładkę. Bez
+            // odroczenia obie animacje idą w tej samej klatce i wygrywa system.
+            Task { @MainActor in
+                withAnimation(.easeOut(duration: 0.2)) {
+                    scroll.scrollTo(edge: .bottom)
+                }
+            }
+        }
     }
 
     private var welcome: some View {
@@ -189,6 +207,33 @@ struct ChatView: View {
                     .padding(.horizontal, 14)
                     .padding(.vertical, 10)
                     .background(Palette.pine, in: RoundedRectangle(cornerRadius: 16))
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+
+        case .photo(let data, let caption):
+            HStack {
+                Spacer(minLength: 50)
+                VStack(alignment: .trailing, spacing: 0) {
+                    if let image = UIImage(data: data) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: 220, maxHeight: 220)
+                            .clipped()
+                    }
+
+                    if let caption {
+                        Text(caption)
+                            .font(AtlasFont.body(14.5))
+                            .foregroundStyle(.white)
+                            .lineSpacing(3)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: 220, alignment: .leading)
+                    }
+                }
+                .background(Palette.pine, in: RoundedRectangle(cornerRadius: 16))
+                .clipShape(RoundedRectangle(cornerRadius: 16))
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
 
@@ -261,6 +306,48 @@ struct ChatView: View {
     }
 
     private var composer: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let photo = model.attachedPhoto, let image = UIImage(data: photo) {
+                attachmentPreview(image)
+            }
+
+            composerRow
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 4)
+        .padding(.bottom, 10)
+        .background(Palette.panel)
+    }
+
+    /// Miniatura zdjęcia czekającego na wysłanie. Bez tego użytkownik nie ma
+    /// jak sprawdzić, co właściwie podpiął, ani się z tego wycofać.
+    private func attachmentPreview(_ image: UIImage) -> some View {
+        ZStack(alignment: .topTrailing) {
+            Image(uiImage: image)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 64, height: 64)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .overlay(RoundedRectangle(cornerRadius: 12).stroke(Palette.ochre, lineWidth: 1))
+
+            Button {
+                model.removeAttachment()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 20, height: 20)
+                    .background(Palette.ink.opacity(0.75), in: Circle())
+            }
+            .buttonStyle(.plain)
+            .offset(x: 7, y: -7)
+            .accessibilityLabel("Usuń zdjęcie")
+        }
+        .padding(.top, 6)
+        .padding(.trailing, 7)
+    }
+
+    private var composerRow: some View {
         HStack(alignment: .bottom, spacing: 10) {
             TextField(model.placeholder, text: $model.draft, axis: .vertical)
                 .font(AtlasFont.body(14.5))
@@ -283,19 +370,11 @@ struct ChatView: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 38, height: 38)
-                    .background(canSend ? Palette.pine : Palette.tick, in: Circle())
+                    .background(model.canSend ? Palette.pine : Palette.tick, in: Circle())
             }
             .buttonStyle(.plain)
-            .disabled(!canSend)
+            .disabled(!model.canSend)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 4)
-        .padding(.bottom, 10)
-        .background(Palette.panel)
-    }
-
-    private var canSend: Bool {
-        !model.isBusy && !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }
 

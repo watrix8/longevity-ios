@@ -5,6 +5,9 @@ import UIKit
 struct ChatMessage: Identifiable, Sendable {
     enum Kind: Sendable {
         case user(String)
+        /// Zdjęcie posiłku z opcjonalnym komentarzem — to, co użytkownik
+        /// wysłał. Żyje tylko w sesji: w historii zostaje sam tekst.
+        case photo(Data, caption: String?)
         /// Markdown — dokładnie to, co wygenerował model.
         case assistant(String)
         /// Potwierdzenie zapisu (aktywność, check-in). Żyje tylko w sesji.
