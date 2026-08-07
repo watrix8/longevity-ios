@@ -21,7 +21,6 @@ Skoro apka musi istnieć dla Watcha, naturalnie przejmuje check-in, posiłki i d
 │  Backend: Next.js API + Supabase (istnieje) │
 │  — jedyne źródło prawdy, bez zmian          │
 ├─────────────────────────────────────────────┤
-│  Telegram → nudges/alerty (opcjonalnie)     │
 │  Web → może zostać jako desktop dashboard    │
 └─────────────────────────────────────────────┘
 ```
@@ -35,8 +34,7 @@ Skoro apka musi istnieć dla Watcha, naturalnie przejmuje check-in, posiłki i d
 - **Scoring**: `lib/scoring.ts` — Longevity Score v1 (sen 25%, ruch 25%, odżywianie 20%, stres 15%, nastrój 15%)
 - **NBA**: `lib/nba-v15.ts` — Next Best Action rules engine
 - **Meal scoring**: `lib/meal-score.ts` (v1.3 z body_type)
-- **API routes**: /api/v1/checkins/today, /score/today, /nba/today, /meals/today, /labs/results
-- **Telegram webhook**: /api/v1/telegram/webhook — działa, ma secret_token (zabezpieczony)
+- **API routes**: /api/v1/checkins/today, /score/today, /nba/today, /meals/today, /labs/results, /assistant, /health/sync
 - **RLS**: wszystkie tabele mają Row Level Security
 - AGENTS.md: TS-only, praca przez GitHub Issues, commit style `type(scope): opis (#N)`
 
@@ -61,7 +59,7 @@ Skoro apka musi istnieć dla Watcha, naturalnie przejmuje check-in, posiłki i d
 - Implementacja HealthKitManager: requestAuthorization + readMetrics
   (VO2max, resting HR, HRV SDNN, sen/sleep duration)
 - Endpoint backendu: `/api/v1/health/sync` (wzorzec z checkins/today) + migracja `health_metrics`
-- Priorytet źródeł: ręczny > watch > telegram
+- Priorytet źródeł: ręczny (web/ios, plus historyczne wpisy z telegrama) > watch
 
 ### Krok 2: Dashboard w apce
 - Longevity Score (z /api/v1/score/today)
@@ -92,7 +90,6 @@ Skoro apka musi istnieć dla Watcha, naturalnie przejmuje check-in, posiłki i d
 - Symulatory: iPhone 17, 17 Pro dostępne (iOS 26.5 runtime)
 - Backend prod: https://longevity-chi.vercel.app
 - Supabase: auth email/password, RLS na wszystkich tabelach
-- Telegram: nudges co 5 min (cron), webhook z secret_token
 - HealthKit dane docelowe: VO2max, resting HR, HRV SDNN, sen (SRI), kroki, active energy
 - VO2max z Watcha aktualizuje się tylko podczas outdoor walk/run/hike (NIE rower)
 - Garmin nie eksportuje VO2max do HealthKit — rowerowy VO2max zostaje w Garminie (dwa źródła, jeden score)
@@ -102,4 +99,4 @@ Skoro apka musi istnieć dla Watcha, naturalnie przejmuje check-in, posiłki i d
 - RAG wyszukiwanie w bazie artykułów medycznych = osobny serwis Python (FastAPI) na Fly.io/Railway
 - pgvector w Supabase, komunikacja REST JSON, auth serwis→serwis shared secret
 - Stripe subskrypcja (nie w tym miesiącu)
-- Telegram jako opcjonalny kanał nudges (nie główny interfejs)
+- Powiadomienia push jako kanał nudge'ów (po bocie Telegram nie ma żadnego)

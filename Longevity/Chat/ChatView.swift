@@ -132,7 +132,7 @@ struct ChatView: View {
                 .font(AtlasFont.display(24))
                 .foregroundStyle(Palette.ink)
 
-            Text("Wszystko, co robiłeś przez Telegram, jest teraz tutaj.")
+            Text("Tu zapisujesz dzień i pytasz o to, czego nie widać w liczbach.")
                 .font(AtlasFont.body(14.5))
                 .foregroundStyle(Palette.ink)
                 .lineSpacing(3)
@@ -187,7 +187,7 @@ struct ChatView: View {
 
         case .assistant(let markdown):
             HStack {
-                Text(Self.attributed(markdown))
+                Text(AssistantMarkdown.attributed(markdown))
                     .font(AtlasFont.body(14.5))
                     .foregroundStyle(Palette.ink)
                     .lineSpacing(3)
@@ -294,14 +294,6 @@ struct ChatView: View {
 
     private var canSend: Bool {
         !model.isBusy && !model.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    }
-
-    /// Serwer odsyła Markdown, bo tylko Telegram renderuje HTML-a z `lib/assistant.ts`.
-    private static func attributed(_ markdown: String) -> AttributedString {
-        (try? AttributedString(
-            markdown: markdown,
-            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
-        )) ?? AttributedString(markdown)
     }
 }
 

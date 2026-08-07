@@ -49,7 +49,7 @@ struct ChatDatesTests {
 
 @Suite("Karta posiłku")
 struct MealCardTests {
-    @Test("Kategorie mapują się na etykiety jak w webhooku Telegrama")
+    @Test("Kategorie z serwera mapują się na polskie etykiety")
     func mapsKnownCategories() {
         #expect(MealCard.categoryLabel("breakfast") == "Śniadanie")
         #expect(MealCard.categoryLabel("lunch") == "Lunch")
@@ -121,6 +121,49 @@ struct MealCardTests {
         #expect(reply.meal.needsClarification)
         #expect(reply.question == "Jaka porcja?")
         #expect(MealCard(from: reply.meal).title == "Posiłek")
+    }
+}
+
+@Suite("Markdown od asystenta")
+struct AssistantMarkdownTests {
+    @Test("Nagłówek zamienia się w pogrubienie, zamiast zostać gołym hashem")
+    func headings() {
+        #expect(AssistantMarkdown.flattenBlocks("# Wniosek") == "**Wniosek**")
+        #expect(AssistantMarkdown.flattenBlocks("### Co zrobić dziś") == "**Co zrobić dziś**")
+        #expect(AssistantMarkdown.flattenBlocks("   ## Z wcięciem") == "**Z wcięciem**")
+    }
+
+    @Test("Punkt listy dostaje kropkę, bo parser inline list nie rysuje")
+    func bullets() {
+        #expect(AssistantMarkdown.flattenBlocks("- stała pora snu") == "• stała pora snu")
+        #expect(AssistantMarkdown.flattenBlocks("  * kofeina do 14:00") == "• kofeina do 14:00")
+    }
+
+    @Test("Pogrubienie i tekst bez składni blokowej przechodzą bez zmian")
+    func inlineUntouched() {
+        #expect(AssistantMarkdown.flattenBlocks("**Wniosek**") == "**Wniosek**")
+        #expect(AssistantMarkdown.flattenBlocks("bez formatowania") == "bez formatowania")
+        #expect(AssistantMarkdown.flattenBlocks("5 - 7 godzin snu") == "5 - 7 godzin snu")
+    }
+
+    @Test("Hash bez spacji to nie nagłówek, tylko treść")
+    func notAHeading() {
+        #expect(AssistantMarkdown.flattenBlocks("#sen") == "#sen")
+        #expect(AssistantMarkdown.flattenBlocks("#### za głęboko") == "#### za głęboko")
+    }
+
+    @Test("Wielolinijkowa odpowiedź zachowuje układ wierszy")
+    func multiline() {
+        let flattened = AssistantMarkdown.flattenBlocks("## Wniosek\n\n- krok jeden\n- krok dwa")
+        #expect(flattened == "**Wniosek**\n\n• krok jeden\n• krok dwa")
+    }
+
+    @Test("Odpowiedź z HTML-em nie wywraca dymka, tylko ląduje jako tekst")
+    func brokenMarkdownFallsBack() {
+        let rendered = AssistantMarkdown.attributed("## Wniosek\n- sen")
+        #expect(String(rendered.characters).contains("Wniosek"))
+        #expect(String(rendered.characters).contains("• sen"))
+        #expect(!String(rendered.characters).contains("##"))
     }
 }
 

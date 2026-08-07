@@ -14,7 +14,7 @@ struct MealCard: Sendable {
     let insight: String?
     let action: String?
 
-    /// Etykiety 1:1 z `mealCategoryLabel()` w webhooku Telegrama.
+    /// Kategorie serwer zwraca po angielsku — tu dostają polskie etykiety.
     static func categoryLabel(_ raw: String?) -> String {
         switch raw {
         case "breakfast": "Śniadanie"
@@ -68,7 +68,7 @@ struct MealCard: Sendable {
 struct ChatMessage: Identifiable, Sendable {
     enum Kind: Sendable {
         case user(String)
-        /// Markdown — serwer konwertuje HTML-a spod Telegrama zanim odeśle.
+        /// Markdown — dokładnie to, co wygenerował model.
         case assistant(String)
         case meal(MealCard)
         /// Potwierdzenie zapisu (aktywność, check-in). Żyje tylko w sesji.
@@ -106,6 +106,48 @@ enum ChatDates {
         let plain = ISO8601DateFormatter()
         plain.formatOptions = [.withInternetDateTime]
         return plain.date(from: raw) ?? fallback
+    }
+}
+
+enum AssistantMarkdown {
+    /// `AttributedString` renderuje wyłącznie składnię inline, więc nagłówek
+    /// zostałby na ekranie jako gołe `##`, a lista jako myślniki. Spłaszczamy
+    /// oba do inline'u, zanim tekst pójdzie do parsera.
+    ///
+    /// Do wersji z sierpnia 2026 robił to serwer, przepuszczając odpowiedź
+    /// przez HTML-a pod Telegrama. Bota nie ma, konwersja została tutaj.
+    static func flattenBlocks(_ markdown: String) -> String {
+        markdown
+            .split(separator: "\n", omittingEmptySubsequences: false)
+            .map { line -> Substring in
+                let trimmed = line.drop { $0 == " " }
+                guard line.count - trimmed.count <= 3 else { return line }
+
+                let hashes = trimmed.prefix { $0 == "#" }
+                if (1...3).contains(hashes.count), trimmed.dropFirst(hashes.count).first == " " {
+                    let title = trimmed.dropFirst(hashes.count)
+                        .trimmingCharacters(in: .whitespaces)
+                    return title.isEmpty ? line : Substring("**\(title)**")
+                }
+
+                if let marker = trimmed.first, marker == "-" || marker == "*",
+                   trimmed.dropFirst().first == " " {
+                    return Substring("• " + trimmed.dropFirst(2))
+                }
+
+                return line
+            }
+            .joined(separator: "\n")
+    }
+
+    /// Nieparsowalny Markdown ląduje w dymku jako czysty tekst — lepsze to
+    /// niż pusta odpowiedź.
+    static func attributed(_ markdown: String) -> AttributedString {
+        let flattened = flattenBlocks(markdown)
+        return (try? AttributedString(
+            markdown: flattened,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        )) ?? AttributedString(flattened)
     }
 }
 

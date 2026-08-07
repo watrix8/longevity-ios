@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Wiersz `assistant_messages` — historia rozmowy współdzielona z Telegramem.
+/// Wiersz `assistant_messages` — historia rozmowy z asystentem.
 private struct AssistantMessageRow: Decodable {
     let role: String
     let content: String
