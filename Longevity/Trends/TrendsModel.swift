@@ -35,8 +35,8 @@ enum TrendRange: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    /// Ile dni składa się na jeden punkt wykresu.
-    var bucketDays: Int {
+    /// Największy kubełek, jaki ten zakres dopuszcza.
+    var maxBucketDays: Int {
         switch self {
         case .month, .quarter: 1
         case .year: 7
@@ -44,11 +44,26 @@ enum TrendRange: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
-    var bucketNote: String? {
-        switch self {
-        case .month, .quarter: nil
-        case .year: "średnie tygodniowe"
-        case .all: "średnie miesięczne"
+    /// Kubełek dobrany do LICZBY REALNYCH PUNKTÓW, nie do szerokości okna.
+    ///
+    /// Bez tego szerszy zakres dawał gorszy wykres: przy miesiącu danych
+    /// „Wszystko" zwijało 31 dni do dwóch punktów miesięcznych i wyglądało
+    /// na zepsute ładowanie. Agregacja ma włączać się dopiero wtedy, gdy jest
+    /// co agregować.
+    func bucketDays(forPointCount count: Int) -> Int {
+        guard count > Self.densePointLimit else { return 1 }
+        let needed = Int(ceil(Double(count) / Double(Self.densePointLimit)))
+        return Swift.min(Swift.max(needed, 1), maxBucketDays)
+    }
+
+    /// Powyżej tylu punktów wykres przestaje być czytelny na szerokości telefonu.
+    static let densePointLimit = 120
+
+    func bucketNote(forPointCount count: Int) -> String? {
+        switch bucketDays(forPointCount: count) {
+        case 1: nil
+        case 2...13: "średnie tygodniowe"
+        default: "średnie miesięczne"
         }
     }
 }
@@ -265,6 +280,14 @@ final class TrendsViewModel {
         autoLoads = { if case .loading = state { true } else { false } }()
     }
 
+    /// Notka o agregacji bierze się z najgęstszego szeregu na ekranie — to on
+    /// decyduje, czy w ogóle doszło do uśredniania.
+    var bucketNote: String? {
+        guard case .loaded(let groups) = state else { return nil }
+        let widest = groups.flatMap(\.metrics).map(\.points.count).max() ?? 0
+        return range.bucketNote(forPointCount: widest * range.maxBucketDays)
+    }
+
     /// Wołane przy każdym wejściu na zakładkę.
     ///
     /// Ekran wczytywał się dotąd raz na uruchomienie, więc wpis zrobiony
@@ -280,7 +303,7 @@ final class TrendsViewModel {
             // Przy "wszystko" i tak trzeba jakiejś granicy dla zapytania —
             // limit backfillu jest naturalną, bo starszych danych nie ma.
             let from = Self.isoDate(daysAgo: range.days ?? 1500)
-            let bucket = range.bucketDays
+            let selectedRange = range
             let db = AppSupabase.client
 
             async let scores: [ScoreRow] = db.from("score_snapshots")
@@ -308,7 +331,7 @@ final class TrendsViewModel {
                 try await Self.build(
                     scores: scores, weights: weights,
                     activity: activity, health: health,
-                    bucketDays: bucket
+                    range: selectedRange
                 )
             )
         } catch {
@@ -328,7 +351,7 @@ final class TrendsViewModel {
         weights: [WeightRow],
         activity: [ActivityRow],
         health: [HealthRow],
-        bucketDays: Int = 1
+        range: TrendRange = .month
     ) -> [MetricGroup] {
         let consistencyPoints = scores.compactMap { row -> SeriesPoint? in
             part(row.components, component: "sleep", key: "consistency")
@@ -381,7 +404,9 @@ final class TrendsViewModel {
             Metric(id: "activity", title: "Ruch (wpisany)", unit: "min", positiveHigher: true, role: .informational,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
         ]
-        .map { $0.bucketed(by: bucketDays) }
+        // Kubełek per metryka, bo szeregi mają różną gęstość: sen bywa co dzień,
+        // a waga raz na tydzień. Jeden wspólny rozmiar rozjechałby te drugie.
+        .map { $0.bucketed(by: range.bucketDays(forPointCount: $0.points.count)) }
         .filter { !$0.points.isEmpty })
     }
 

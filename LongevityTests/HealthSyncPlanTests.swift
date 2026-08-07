@@ -86,3 +86,45 @@ struct HealthSyncPlanTests {
         #expect(HealthSyncPlan.backfillDays > HealthSyncPlan.daysPerRequest)
     }
 }
+
+@Suite("Znacznik głębokiego importu")
+struct DeepBackfillPlanTests {
+    private static let now = Date(timeIntervalSince1970: 1_800_000_000)
+
+    /// Regresja: głęboki import był wiązany z `lastSyncedAt == nil`, więc konto,
+    /// które kiedykolwiek się zsynchronizowało, nigdy go nie dostawało — a to
+    /// właśnie te konta mają w HealthKit lata historii do odzyskania.
+    @Test("Konto po wcześniejszych syncach nadal dostaje głęboki import")
+    func syncedAccountStillGetsBackfill() {
+        let recent = Self.now.addingTimeInterval(-60)
+
+        #expect(
+            HealthSyncPlan.next(
+                lastSyncedAt: recent, deepBackfillAt: nil, now: Self.now, automatic: false
+            ) == .sync(days: HealthSyncPlan.backfillDays)
+        )
+    }
+
+    /// Nadrobienie zaległości nie jest odświeżeniem, więc odstęp go nie blokuje.
+    @Test("Brak głębokiego importu bije odstęp automatu")
+    func backfillBeatsThrottle() {
+        let recent = Self.now.addingTimeInterval(-60)
+
+        #expect(
+            HealthSyncPlan.next(
+                lastSyncedAt: recent, deepBackfillAt: nil, now: Self.now, automatic: true
+            ) == .sync(days: HealthSyncPlan.backfillDays)
+        )
+    }
+
+    @Test("Po odrobionym imporcie wracamy do trybu przyrostowego")
+    func afterBackfillIncremental() {
+        let old = Self.now.addingTimeInterval(-7200)
+
+        #expect(
+            HealthSyncPlan.next(
+                lastSyncedAt: old, deepBackfillAt: Self.now, now: Self.now, automatic: false
+            ) == .sync(days: HealthSyncPlan.incrementalDays)
+        )
+    }
+}

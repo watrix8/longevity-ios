@@ -234,8 +234,8 @@ struct TrendRangeTests {
     func dailyUntouched() {
         let metric = Self.metric([1, 2, 3, 4])
         #expect(metric.bucketed(by: 1).points.count == 4)
-        #expect(TrendRange.month.bucketDays == 1)
-        #expect(TrendRange.quarter.bucketDays == 1)
+        #expect(TrendRange.month.maxBucketDays == 1)
+        #expect(TrendRange.quarter.maxBucketDays == 1)
     }
 
     @Test("Kubełki uśredniają wartości i skracają szereg")
@@ -268,15 +268,47 @@ struct TrendRangeTests {
         #expect(dates == dates.sorted())
     }
 
-    @Test("Zakres wybiera głębokość i sposób agregacji")
+    @Test("Zakres wybiera głębokość zapytania")
     func rangeMapping() {
         #expect(TrendRange.month.days == 30)
         #expect(TrendRange.year.days == 365)
         #expect(TrendRange.all.days == nil)
-        #expect(TrendRange.year.bucketDays == 7)
-        #expect(TrendRange.all.bucketDays == 30)
-        #expect(TrendRange.month.bucketNote == nil)
-        #expect(TrendRange.all.bucketNote != nil)
+        #expect(TrendRange.year.maxBucketDays == 7)
+        #expect(TrendRange.all.maxBucketDays == 30)
+    }
+
+    /// Regresja, którą było widać na ekranie: przy miesiącu danych „Wszystko"
+    /// zwijało 31 dni do dwóch punktów miesięcznych, więc szerszy zakres dawał
+    /// GORSZY wykres niż węższy. Agregacja ma się włączać dopiero wtedy, gdy
+    /// jest co agregować.
+    @Test("Mało danych zostaje dobowe niezależnie od zakresu")
+    func sparseDataStaysDaily() {
+        for range in TrendRange.allCases {
+            #expect(range.bucketDays(forPointCount: 31) == 1, "\(range.label) zwija 31 dni")
+            #expect(range.bucketNote(forPointCount: 31) == nil)
+        }
+    }
+
+    @Test("Gęsty szereg jest uśredniany, ale nie poniżej limitu zakresu")
+    func denseDataAggregates() {
+        // Rok danych: 365 punktów na limicie 120 → kubełek 4-dniowy, w granicy 7.
+        #expect(TrendRange.year.bucketDays(forPointCount: 365) == 4)
+        // Trzy lata: 1095/120 = 10, ale „rok" nie pozwala wyjść poza tydzień.
+        #expect(TrendRange.year.bucketDays(forPointCount: 1095) == 7)
+        // „Wszystko" dopuszcza miesiąc.
+        #expect(TrendRange.all.bucketDays(forPointCount: 1095) == 10)
+        #expect(TrendRange.all.bucketDays(forPointCount: 5000) == 30)
+    }
+
+    @Test("Wynik agregacji nigdy nie schodzi poniżej limitu czytelności")
+    func neverTooDense() {
+        for count in [200, 365, 1095, 5000] {
+            let bucket = TrendRange.all.bucketDays(forPointCount: count)
+            let resulting = Int(ceil(Double(count) / Double(bucket)))
+            // Sufit 30 dni sprawia, że bardzo długa historia może przekroczyć
+            // limit — ale nie o rząd wielkości.
+            #expect(resulting <= TrendRange.densePointLimit * 2)
+        }
     }
 
     @Test("Pojedynczy punkt przeżywa agregację")

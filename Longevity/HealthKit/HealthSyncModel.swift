@@ -41,11 +41,21 @@ enum HealthSyncPlan: Equatable {
     /// `automatic` odróżnia powrót apki na wierzch od kliknięcia w Opcjach.
     /// Odstęp obowiązuje wyłącznie automat — jeśli użytkownik prosi, to
     /// synchronizujemy, choćby minutę po poprzednim razie.
+    ///
+    /// `deepBackfillAt` to osobny znacznik i musi taki być. Wiązanie głębokiego
+    /// importu z `lastSyncedAt == nil` znaczyło, że konto, które kiedykolwiek
+    /// się zsynchronizowało, NIGDY go nie dostanie — a to właśnie te konta mają
+    /// w HealthKit lata historii do odzyskania.
     static func next(
         lastSyncedAt: Date?,
+        deepBackfillAt: Date? = Date(),
         now: Date = Date(),
         automatic: Bool
     ) -> HealthSyncPlan {
+        // Jednorazowy import całej historii ma pierwszeństwo przed odstępem:
+        // to nie jest odświeżenie, tylko nadrobienie zaległości.
+        if deepBackfillAt == nil { return .sync(days: backfillDays) }
+
         guard let lastSyncedAt else { return .sync(days: backfillDays) }
         if automatic, now.timeIntervalSince(lastSyncedAt) < autoSyncInterval { return .skip }
         return .sync(days: incrementalDays)
@@ -88,10 +98,19 @@ final class HealthSyncModel {
     }
 
     private static let lastSyncKey = "health.lastSyncedAt"
+    private static let deepBackfillKey = "health.deepBackfillAt"
+
+    /// `nil` = głębokiego importu jeszcze nie było.
+    private(set) var deepBackfillAt: Date?
 
     private init() {
-        let stored = UserDefaults.standard.double(forKey: Self.lastSyncKey)
-        lastSyncedAt = stored > 0 ? Date(timeIntervalSince1970: stored) : nil
+        lastSyncedAt = Self.storedDate(Self.lastSyncKey)
+        deepBackfillAt = Self.storedDate(Self.deepBackfillKey)
+    }
+
+    private static func storedDate(_ key: String) -> Date? {
+        let stored = UserDefaults.standard.double(forKey: key)
+        return stored > 0 ? Date(timeIntervalSince1970: stored) : nil
     }
 
     // MARK: - Stan dla widoku
@@ -177,8 +196,11 @@ final class HealthSyncModel {
     }
 
     func syncNow() async {
-        guard case .sync(let days) = HealthSyncPlan.next(lastSyncedAt: lastSyncedAt, automatic: false)
-        else { return }
+        guard case .sync(let days) = HealthSyncPlan.next(
+            lastSyncedAt: lastSyncedAt,
+            deepBackfillAt: deepBackfillAt,
+            automatic: false
+        ) else { return }
         await sync(days: days)
     }
 
@@ -190,8 +212,11 @@ final class HealthSyncModel {
         await refreshConnection()
         guard isConnected else { return }
 
-        guard case .sync(let days) = HealthSyncPlan.next(lastSyncedAt: lastSyncedAt, automatic: true)
-        else { return }
+        guard case .sync(let days) = HealthSyncPlan.next(
+            lastSyncedAt: lastSyncedAt,
+            deepBackfillAt: deepBackfillAt,
+            automatic: true
+        ) else { return }
         await sync(days: days)
     }
 
@@ -228,7 +253,7 @@ final class HealthSyncModel {
                 weight += result.weightSynced
             }
 
-            markSynced()
+            markSynced(deepBackfill: days >= HealthSyncPlan.backfillDays)
             // Aktywność z Watcha wchodzi do activity_logs, więc score trzeba przeliczyć —
             // ten sam krok co po zapisie check-inu czy posiłku.
             await LongevityAPI.refreshScore()
@@ -246,13 +271,22 @@ final class HealthSyncModel {
     func reset() {
         state = .idle
         lastSyncedAt = nil
+        deepBackfillAt = nil
         UserDefaults.standard.removeObject(forKey: Self.lastSyncKey)
+        UserDefaults.standard.removeObject(forKey: Self.deepBackfillKey)
     }
 
-    private func markSynced() {
+    /// Znacznik głębokiego importu stawiamy dopiero po UDANYM przebiegu —
+    /// przerwany w połowie ma się powtórzyć, a nie zostać uznany za odrobiony.
+    private func markSynced(deepBackfill: Bool) {
         let now = Date()
         lastSyncedAt = now
         UserDefaults.standard.set(now.timeIntervalSince1970, forKey: Self.lastSyncKey)
+
+        if deepBackfill {
+            deepBackfillAt = now
+            UserDefaults.standard.set(now.timeIntervalSince1970, forKey: Self.deepBackfillKey)
+        }
     }
 
     private static func summary(saved: Int, activity: Int, weight: Int) -> String {

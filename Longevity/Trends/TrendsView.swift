@@ -69,7 +69,7 @@ struct TrendsView: View {
             .pickerStyle(.segmented)
             .onChange(of: model.range) { Task { await model.load() } }
 
-            if let note = model.range.bucketNote {
+            if let note = model.bucketNote {
                 Text(note)
                     .font(AtlasFont.mono(9.5))
                     .foregroundStyle(Palette.tick)
