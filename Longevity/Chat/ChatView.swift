@@ -76,13 +76,7 @@ struct ChatView: View {
 
     private var header: some View {
         HStack {
-            HStack(spacing: 0) {
-                Text("ASYSTENT")
-                Text(".").foregroundStyle(Palette.ochre)
-            }
-            .font(AtlasFont.display(15, .heavy))
-            .tracking(2.1)
-            .foregroundStyle(Palette.ink)
+            ScreenTitle(text: "Asystent")
 
             Spacer()
 

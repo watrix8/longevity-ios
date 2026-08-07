@@ -45,6 +45,28 @@ enum AtlasFont {
     }
 }
 
+/// Nagłówek zakładki: wersaliki, szeroki tracking, ochrowa kropka.
+///
+/// Jeden typ dla wszystkich czterech ekranów — wcześniej Dashboard i Asystent
+/// niosły ten kształt inline, a Trendy i Opcje dryfowały we własny stopień
+/// pisma bez kropki.
+struct ScreenTitle: View {
+    let text: String
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Text(text.uppercased())
+            Text(".").foregroundStyle(Palette.ochre)
+        }
+        .font(AtlasFont.display(15, .heavy))
+        .tracking(2.1)
+        .foregroundStyle(Palette.ink)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(text)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
 /// Nagłówek sekcji: mono, wersaliki, szeroki tracking.
 struct Kicker: View {
     let text: String

@@ -42,18 +42,17 @@ struct SettingsView: View {
     // MARK: - Nagłówek
 
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Opcje")
-                    .font(AtlasFont.display(28, .heavy))
-                    .foregroundStyle(Palette.ink)
-                Text("Zmiany zapisują się same.")
-                    .font(AtlasFont.body(13))
-                    .foregroundStyle(Palette.muted)
+        VStack(alignment: .leading, spacing: 8) {
+            // Status po prawej w linii tytułu, jak spinner w Asystencie
+            // i pigułka dni na Dashboardzie.
+            HStack {
+                ScreenTitle(text: "Opcje")
+                Spacer()
+                saveIndicator
             }
-            Spacer()
-            saveIndicator
-                .padding(.top, 6)
+            Text("Zmiany zapisują się same.")
+                .font(AtlasFont.body(13))
+                .foregroundStyle(Palette.muted)
         }
         .padding(.bottom, 18)
     }

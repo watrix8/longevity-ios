@@ -97,13 +97,7 @@ struct DashboardView: View {
 
     private func topbar(_ data: DashboardData) -> some View {
         HStack {
-            HStack(spacing: 0) {
-                Text("LONGEVITY")
-                Text(".").foregroundStyle(Palette.ochre)
-            }
-            .font(AtlasFont.display(15, .heavy))
-            .tracking(2.1)
-            .foregroundStyle(Palette.ink)
+            ScreenTitle(text: "Longevity")
 
             Spacer()
 

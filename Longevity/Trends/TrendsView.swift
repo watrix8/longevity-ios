@@ -59,10 +59,8 @@ struct TrendsView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Trendy")
-                .font(AtlasFont.display(28, .heavy))
-                .foregroundStyle(Palette.ink)
+        VStack(alignment: .leading, spacing: 8) {
+            ScreenTitle(text: "Trendy")
             Text("Ostatnie 30 dni, w tym samym podziale co rozbicie na dashboardzie.\nPrzeciągnij po wykresie, żeby odczytać dzień.")
                 .font(AtlasFont.body(13))
                 .foregroundStyle(Palette.muted)
