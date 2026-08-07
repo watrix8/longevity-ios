@@ -28,7 +28,10 @@ struct DashboardView: View {
                             Text("Brak wyników")
                                 .font(AtlasFont.display(20))
                                 .foregroundStyle(Palette.ink)
-                            Text("Zrób check-in na webie albo w Telegramie — wynik pojawi się tutaj.")
+                            // Check-in (stres, nastrój) wypadł ze score'u razem
+                            // z v2 — sam nie stworzy snapshotu. Wynik robią
+                            // pomiary, i tak ma brzmieć rada.
+                            Text("Zsynchronizuj dane zdrowotne albo dodaj pomiary — wynik pojawi się tutaj.")
                                 .font(AtlasFont.body(14))
                                 .foregroundStyle(Palette.muted)
                                 .multilineTextAlignment(.center)
@@ -115,7 +118,7 @@ struct DashboardView: View {
                 .frame(width: 9, height: 9)
 
                 // Dni zamiast procenta: „pewność 7%" brzmi jak ocena
-                // użytkownika, a to tylko licznik zebranych check-inów.
+                // użytkownika, a to tylko licznik dni z pomiarami.
                 Text("\(data.coverageDays) z 30 dni")
                     .font(AtlasFont.mono(11))
                     .foregroundStyle(Palette.muted)
@@ -260,7 +263,7 @@ struct DashboardView: View {
             )
             .padding(.top, 12)
 
-            Text("Wykres i norma włączą się po \(target) dniach z check-inem. Wcześniej dwa punkty rysowałyby się jak trend, którym nie są.")
+            Text("Wykres i norma włączą się po \(target) dniach z pomiarami. Wcześniej dwa punkty rysowałyby się jak trend, którym nie są.")
                 .font(AtlasFont.body(12))
                 .foregroundStyle(Palette.muted)
                 .lineSpacing(3)
@@ -487,12 +490,12 @@ struct ScoreExplainerSheet: View {
                     entry(
                         "Zebrane dni",
                         Palette.muted,
-                        "Licznik u góry mówi, ile z ostatnich 30 dni ma check-in. Im mniej dni, tym mocniej wynik zależy od pojedynczego pomiaru."
+                        "Licznik u góry mówi, ile z ostatnich 30 dni ma pomiary. Dzień bez żadnego pomiaru nie dostaje wyniku — im mniej dni, tym mocniej norma zależy od pojedynczego z nich."
                     )
                     entry(
                         "Skąd bierze się liczba",
                         Palette.muted,
-                        "Wynik v3 — średnia ważona pomiarów. Komponenty bez danych są pomijane, a wagi pozostałych przenormowane."
+                        "Wynik v3 — średnia ważona pomiarów: sen, VO₂max, ciało, regeneracja, markery z krwi. Komponenty bez danych są pomijane, a wagi pozostałych przenormowane."
                     )
                 }
                 .padding(20)

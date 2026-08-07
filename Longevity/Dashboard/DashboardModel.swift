@@ -104,19 +104,24 @@ extension DashboardData {
             normDelta: todayNorm.map { Int((Double(headline) - $0).rounded()) },
             points: Array(points.suffix(14)),
             breakdown: [
+                // Podwagi i kolejność jak w `sleepParts`/`bodyParts` z
+                // `lib/scoring-v3.ts` — podgląd ma pokazywać kształt, który
+                // naprawdę przychodzi w snapshocie.
                 ScoreComponentRow(
                     id: "sleep", label: "Sen", weight: 0.30, value: 84,
                     parts: [
-                        ScorePartRow(id: "duration", label: "Długość snu", weight: 0.6, value: 94),
-                        ScorePartRow(id: "deep", label: "Sen głęboki", weight: 0.25, value: 71),
-                        ScorePartRow(id: "consistency", label: "Równa długość snu", weight: 0.15, value: 62),
+                        ScorePartRow(id: "duration", label: "Długość snu", weight: 0.5, value: 94),
+                        ScorePartRow(id: "deep", label: "Sen głęboki", weight: 0.2, value: 71),
+                        ScorePartRow(id: "regularity", label: "Regularność pory snu", weight: 0.2, value: 78),
+                        ScorePartRow(id: "consistency", label: "Równa długość snu", weight: 0.1, value: 62),
                     ]
                 ),
                 ScoreComponentRow(
                     id: "body", label: "Ciało", weight: 0.20, value: 72,
                     parts: [
-                        ScorePartRow(id: "bmi", label: "BMI", weight: 0.5, value: 72),
                         ScorePartRow(id: "whr", label: "Talia/biodra", weight: 0.5, value: nil),
+                        ScorePartRow(id: "body_fat", label: "Tkanka tłuszczowa", weight: 0.3, value: 68),
+                        ScorePartRow(id: "bmi", label: "BMI", weight: 0.2, value: 72),
                     ]
                 ),
                 ScoreComponentRow(
