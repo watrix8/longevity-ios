@@ -24,8 +24,6 @@ struct SettingsView: View {
                 default:
                     healthCard
                     appleHealthCard
-                    integrationsCard
-                    notificationsCard
                     securityCard
                 }
             }
@@ -38,7 +36,6 @@ struct SettingsView: View {
         .task { await health.refreshConnection() }
         // Zmiany lecą same; sygnatury pilnują, żeby wczytanie nie zapisywało zwrotnie.
         .onChange(of: model.profileSignature) { model.profileChanged() }
-        .onChange(of: model.prefsSignature) { model.prefsChanged() }
         .onDisappear { Task { await model.flushPendingSaves() } }
     }
 
@@ -178,67 +175,6 @@ struct SettingsView: View {
                     .foregroundStyle(health.statusIsError ? .red : Palette.pine)
                     .padding(.horizontal, 15)
                     .padding(.vertical, 12)
-            }
-        }
-    }
-
-    // MARK: - Integracje
-
-    private var integrationsCard: some View {
-        section(
-            kicker: "integracje",
-            footer: "Konto łączysz w wersji web — generuje jednorazowy link do bota."
-        ) {
-            row("Telegram") {
-                Text(model.telegramLinked ? "Połączony" : "Niepołączony")
-                    .font(AtlasFont.body(14))
-                    .foregroundStyle(model.telegramLinked ? Palette.pine : Palette.muted)
-            }
-        }
-    }
-
-    // MARK: - Powiadomienia
-
-    private var notificationsCard: some View {
-        section(
-            kicker: "powiadomienia",
-            footer: "Powiadomienia wysyła bot Telegram, nie aplikacja."
-        ) {
-            row("Przypomnienia") {
-                Toggle("", isOn: $model.nudgesEnabled)
-                    .labelsHidden()
-                    .tint(Palette.ochre)
-            }
-            if model.nudgesEnabled {
-                divider
-                row("Godzina") {
-                    DatePicker(
-                        "",
-                        selection: $model.nudgeTime,
-                        displayedComponents: .hourAndMinute
-                    )
-                    .labelsHidden()
-                    .tint(Palette.ochre)
-                }
-            }
-            divider
-            row("Podsumowanie tygodnia") {
-                Toggle("", isOn: $model.weeklyRecapEnabled)
-                    .labelsHidden()
-                    .tint(Palette.ochre)
-            }
-            if model.weeklyRecapEnabled {
-                divider
-                row("Dzień") {
-                    Picker("", selection: $model.weeklyRecapDow) {
-                        ForEach(SettingsOptions.weekdays.indices, id: \.self) { i in
-                            Text(SettingsOptions.weekdays[i]).tag(i)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
-                    .tint(Palette.ochre)
-                }
             }
         }
     }

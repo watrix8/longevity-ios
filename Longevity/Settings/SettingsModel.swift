@@ -23,16 +23,10 @@ enum SettingsOptions {
         ("overweight", "Nadwaga"),
         ("obese", "Otyłość"),
     ]
-    /// Indeks = wartość `weekly_recap_dow` (0 = niedziela).
-    static let weekdays = [
-        "Niedziela", "Poniedziałek", "Wtorek", "Środa",
-        "Czwartek", "Piątek", "Sobota",
-    ]
 }
 
 private struct ProfileRow: Decodable {
     let fullName: String?
-    let telegramChatId: Int?
     let birthDate: String?
     let sex: String?
     let heightCm: Double?
@@ -41,26 +35,11 @@ private struct ProfileRow: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case fullName = "full_name"
-        case telegramChatId = "telegram_chat_id"
         case birthDate = "birth_date"
         case sex
         case heightCm = "height_cm"
         case primaryGoal = "primary_goal"
         case bodyType = "body_type"
-    }
-}
-
-private struct PrefsRow: Decodable {
-    let nudgesEnabled: Bool
-    let nudgeTimeLocal: String
-    let weeklyRecapEnabled: Bool
-    let weeklyRecapDow: Int
-
-    enum CodingKeys: String, CodingKey {
-        case nudgesEnabled = "nudges_enabled"
-        case nudgeTimeLocal = "nudge_time_local"
-        case weeklyRecapEnabled = "weekly_recap_enabled"
-        case weeklyRecapDow = "weekly_recap_dow"
     }
 }
 
@@ -71,15 +50,6 @@ private struct ProfilePayload: Encodable {
     let height_cm: Double?
     let primary_goal: String?
     let body_type: String?
-}
-
-private struct PrefsPayload: Encodable {
-    let user_id: String
-    let nudges_enabled: Bool
-    let nudge_time_local: String
-    let weekly_recap_enabled: Bool
-    let weekly_recap_dow: Int
-    let timezone: String
 }
 
 @MainActor
@@ -110,15 +80,6 @@ final class SettingsViewModel {
     var primaryGoal = ""
     var bodyType = ""
 
-    // Integracje
-    var telegramLinked = false
-
-    // Powiadomienia
-    var nudgesEnabled = true
-    var nudgeTime = Date()
-    var weeklyRecapEnabled = true
-    var weeklyRecapDow = 0
-
     // Hasła nie zmienia się w formularzu ustawień — wysyłamy link na maila.
     var passwordStatus: String?
     var passwordIsError = false
@@ -133,17 +94,8 @@ final class SettingsViewModel {
         ].joined(separator: "|")
     }
 
-    var prefsSignature: String {
-        [
-            String(nudgesEnabled), String(nudgeTime.timeIntervalSince1970),
-            String(weeklyRecapEnabled), String(weeklyRecapDow),
-        ].joined(separator: "|")
-    }
-
     private var savedProfileSignature: String?
-    private var savedPrefsSignature: String?
     private var profileSaveTask: Task<Void, Never>?
-    private var prefsSaveTask: Task<Void, Never>?
     private var statusResetTask: Task<Void, Never>?
 
     // MARK: - Wczytanie
@@ -159,14 +111,13 @@ final class SettingsViewModel {
 
             let profile: ProfileRow = try await AppSupabase.client
                 .from("profiles")
-                .select("full_name, telegram_chat_id, birth_date, sex, height_cm, primary_goal, body_type")
+                .select("full_name, birth_date, sex, height_cm, primary_goal, body_type")
                 .eq("id", value: userId)
                 .single()
                 .execute()
                 .value
 
             fullName = profile.fullName ?? ""
-            telegramLinked = profile.telegramChatId != nil
             sex = profile.sex ?? ""
             heightCm = profile.heightCm.map { Self.trimZero($0) } ?? ""
             primaryGoal = profile.primaryGoal ?? ""
@@ -176,25 +127,9 @@ final class SettingsViewModel {
                 birthDateIsSet = true
             }
 
-            // Web robi tu upsert, żeby wiersz preferencji na pewno istniał.
-            let prefs: PrefsRow = try await AppSupabase.client
-                .from("notification_prefs")
-                .upsert(["user_id": userId], onConflict: "user_id")
-                .select("nudges_enabled, nudge_time_local, weekly_recap_enabled, weekly_recap_dow")
-                .single()
-                .execute()
-                .value
-
-            nudgesEnabled = prefs.nudgesEnabled
-            weeklyRecapEnabled = prefs.weeklyRecapEnabled
-            weeklyRecapDow = prefs.weeklyRecapDow
-            nudgeTime = Self.timeParser.date(from: String(prefs.nudgeTimeLocal.prefix(5)))
-                ?? Self.timeParser.date(from: "20:00")!
-
             // Punkt odniesienia dla auto-zapisu: dopóki sygnatura się nie ruszy,
             // nic nie wysyłamy. Bez tego samo wypełnienie pól zapisywałoby z powrotem.
             savedProfileSignature = profileSignature
-            savedPrefsSignature = prefsSignature
         } catch {
             loadError = error.localizedDescription
         }
@@ -212,23 +147,11 @@ final class SettingsViewModel {
         }
     }
 
-    func prefsChanged() {
-        guard savedPrefsSignature != nil, prefsSignature != savedPrefsSignature else { return }
-        prefsSaveTask?.cancel()
-        prefsSaveTask = Task { [weak self] in
-            try? await Task.sleep(for: .milliseconds(600))
-            guard !Task.isCancelled else { return }
-            await self?.savePreferences()
-        }
-    }
-
     /// Domyka zapis natychmiast, gdy widok znika — inaczej ostatnia zmiana
     /// mogłaby zginąć razem z odliczaniem debounce'u.
     func flushPendingSaves() async {
         profileSaveTask?.cancel()
-        prefsSaveTask?.cancel()
         if profileSignature != savedProfileSignature { await saveProfile() }
-        if prefsSignature != savedPrefsSignature { await savePreferences() }
     }
 
     private func saveProfile() async {
@@ -252,32 +175,6 @@ final class SettingsViewModel {
                 .execute()
 
             savedProfileSignature = signature
-            flash(.saved)
-        } catch {
-            saveState = .failed(error.localizedDescription)
-        }
-    }
-
-    private func savePreferences() async {
-        let signature = prefsSignature
-        saveState = .saving
-
-        do {
-            let userId = try await AppSupabase.client.auth.session.user.id.uuidString
-            let payload = PrefsPayload(
-                user_id: userId,
-                nudges_enabled: nudgesEnabled,
-                nudge_time_local: "\(Self.timeParser.string(from: nudgeTime)):00",
-                weekly_recap_enabled: weeklyRecapEnabled,
-                weekly_recap_dow: weeklyRecapDow,
-                timezone: "Europe/Warsaw"
-            )
-            try await AppSupabase.client
-                .from("notification_prefs")
-                .upsert(payload, onConflict: "user_id")
-                .execute()
-
-            savedPrefsSignature = signature
             flash(.saved)
         } catch {
             saveState = .failed(error.localizedDescription)

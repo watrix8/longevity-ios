@@ -57,39 +57,6 @@ struct SettingsModelTests {
         #expect(seen.count == 7)
     }
 
-    @Test("Sygnatura preferencji reaguje na każde pole")
-    func prefsSignatureTracksFields() {
-        let model = SettingsViewModel()
-        var seen: Set<String> = [model.prefsSignature]
-
-        model.nudgesEnabled.toggle()
-        seen.insert(model.prefsSignature)
-        model.nudgeTime = Date(timeIntervalSince1970: 42)
-        seen.insert(model.prefsSignature)
-        model.weeklyRecapEnabled.toggle()
-        seen.insert(model.prefsSignature)
-        model.weeklyRecapDow = 3
-        seen.insert(model.prefsSignature)
-
-        #expect(seen.count == 5)
-    }
-
-    /// Obie sekcje zapisują się osobno, więc sygnatury nie mogą się przenikać.
-    @Test("Sygnatury nie przeciekają między sekcjami")
-    func signaturesAreIndependent() {
-        let model = SettingsViewModel()
-
-        let prefsBefore = model.prefsSignature
-        model.fullName = "Tomasz"
-        #expect(model.prefsSignature == prefsBefore)
-
-        // Punkt odniesienia bierzemy dopiero teraz — nazwisko już zmieniło
-        // sygnaturę profilu i to jest oczekiwane.
-        let profileBefore = model.profileSignature
-        model.weeklyRecapDow = 5
-        #expect(model.profileSignature == profileBefore)
-    }
-
     @Test("Zmiana i powrót do wartości wyjściowej daje tę samą sygnaturę")
     func signatureIsStable() {
         let model = SettingsViewModel()
