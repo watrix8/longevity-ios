@@ -113,8 +113,18 @@ struct ChartGeometryTests {
     private static let size = CGSize(width: 300, height: 92)
     private static let values: [Double] = [10, 40, 25, 60, 30]
 
+    /// Pięć kolejnych dni w oknie równym szeregowi — przy codziennych pomiarach
+    /// oś kalendarzowa daje dokładnie te same odstępy co poprzednia, pozycyjna.
+    private static let span = DaySpan(from: "2026-08-01", to: "2026-08-05")
+
+    private static func points(_ values: [Double]) -> [SeriesPoint] {
+        values.enumerated().map {
+            SeriesPoint(date: String(format: "2026-08-%02d", $0.offset + 1), value: $0.element)
+        }
+    }
+
     private static var geometry: ChartGeometry {
-        ChartGeometry(values: values, size: size)
+        ChartGeometry(points: points(values), span: span, size: size)
     }
 
     @Test("Pierwszy punkt siedzi na lewej krawędzi, ostatni na prawej")
@@ -154,9 +164,12 @@ struct ChartGeometryTests {
 
     @Test("Jeden punkt albo zero punktów nie wywraca wyliczeń")
     func degenerateInputs() {
-        #expect(ChartGeometry(values: [], size: Self.size).index(atX: 100) == 0)
-        #expect(ChartGeometry(values: [5], size: Self.size).index(atX: 100) == 0)
-        #expect(ChartGeometry(values: [], size: Self.size).point(at: 0) == .zero)
+        let empty = ChartGeometry(points: [], span: Self.span, size: Self.size)
+        let single = ChartGeometry(points: Self.points([5]), span: Self.span, size: Self.size)
+
+        #expect(empty.index(atX: 100) == 0)
+        #expect(single.index(atX: 100) == 0)
+        #expect(empty.point(at: 0) == .zero)
     }
 }
 

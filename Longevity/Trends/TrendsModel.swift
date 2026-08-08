@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-struct SeriesPoint: Sendable {
+struct SeriesPoint: Sendable, Equatable {
     let date: String
     let value: Double
 }
@@ -29,6 +29,35 @@ enum TrendWindow: String, CaseIterable, Identifiable, Sendable {
         case .month: String(localized: "30 dni")
         case .quarter: String(localized: "3 miesiące")
         }
+    }
+}
+
+/// Widoczne okno jako daty ISO.
+///
+/// Wykres rozstawia punkty po dniach, więc musi znać granice okna — także
+/// te dni, w których nic nie zmierzono. Bez tego pomiar co tydzień rysował
+/// się identycznie jak pomiar co dzień.
+struct DaySpan: Equatable, Sendable {
+    let from: String
+    let to: String
+
+    /// Długość okna w dniach, obie granice włącznie.
+    var days: Int {
+        guard let start = CalendarDays.date(fromISO: from),
+              let end = CalendarDays.date(fromISO: to)
+        else { return 1 }
+        return max(1, CalendarDays.days(from: start, to: end) + 1)
+    }
+
+    /// Pozycja dnia w oknie, 0...1. Poza oknem przycięta do krawędzi.
+    func fraction(of iso: String) -> Double {
+        guard days > 1,
+              let start = CalendarDays.date(fromISO: from),
+              let day = CalendarDays.date(fromISO: iso)
+        else { return 0 }
+
+        let offset = Double(CalendarDays.days(from: start, to: day))
+        return min(max(offset / Double(days - 1), 0), 1)
     }
 }
 
@@ -259,6 +288,12 @@ final class TrendsViewModel {
         let end = calendar.date(byAdding: .day, value: -page * window.days, to: now) ?? now
         let start = calendar.date(byAdding: .day, value: -(window.days - 1), to: end) ?? end
         return (start, end)
+    }
+
+    /// To samo okno co `periodLabel`, tylko dla wykresu.
+    var visibleSpan: DaySpan {
+        let (from, to) = visibleRange()
+        return DaySpan(from: Self.isoDate(from), to: Self.isoDate(to))
     }
 
     var periodLabel: String {

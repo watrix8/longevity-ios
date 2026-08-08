@@ -30,13 +30,31 @@ struct MetricTests {
         #expect(m.previous == 2)
     }
 
-    @Test("Średnia 7-dniowa bierze tylko ogon")
-    func avg7UsesTail() {
-        // 10 punktów: 1...10. Ostatnie 7 to 4...10 → średnia 7.
+    @Test("Średnia 7-dniowa bierze ostatnie siedem DNI, nie siedem pomiarów")
+    func avg7UsesCalendarWindow() {
+        // 10 kolejnych dni: 1...10. Okno 08-04...08-10 → średnia 7.
         let m = metric((1...10).map(Double.init))
 
         #expect(m.avg7 == 7)
         #expect(m.avgAll == 5.5)
+    }
+
+    /// Sedno przejścia na kalendarz: pomiar co kilka dni nie może wciągać
+    /// do „średniej 7 dni" wyników sprzed miesiąca.
+    @Test("Pomiary rzadsze niż codzienne nie rozciągają okna średniej")
+    func avg7IgnoresOlderMeasurements() {
+        let sparse = [
+            SeriesPoint(date: "2026-07-01", value: 100),
+            SeriesPoint(date: "2026-07-10", value: 100),
+            SeriesPoint(date: "2026-08-05", value: 40),
+            SeriesPoint(date: "2026-08-08", value: 60),
+        ]
+        let m = Metric(id: "t", title: "T", unit: "", positiveHigher: true,
+                       role: .informational, points: sparse)
+
+        // Okno 08-02...08-08 obejmuje tylko dwa ostatnie pomiary.
+        #expect(m.avg7 == 50)
+        #expect(m.avgAll == 75)
     }
 
     @Test("Strzałka w górę, gdy wyżej znaczy lepiej")
@@ -310,5 +328,61 @@ struct AxisLabelTests {
 
         #expect(metric.pointLabel("2026-08-06", now: now) == "6 sierpnia")
         #expect(metric.pointLabel("2024-08-06", now: now).contains("2024"))
+    }
+}
+
+@Suite("Oś czasu wykresu")
+struct ChartCalendarAxisTests {
+    private let span = DaySpan(from: "2026-08-01", to: "2026-08-31")
+
+    @Test("Okno liczy obie granice")
+    func spanLength() {
+        #expect(span.days == 31)
+        #expect(DaySpan(from: "2026-08-08", to: "2026-08-08").days == 1)
+    }
+
+    @Test("Pozycja dnia idzie po kalendarzu")
+    func fractionFollowsCalendar() {
+        #expect(span.fraction(of: "2026-08-01") == 0)
+        #expect(span.fraction(of: "2026-08-31") == 1)
+        #expect(span.fraction(of: "2026-08-16") == 0.5)
+    }
+
+    @Test("Dzień spoza okna przywiera do krawędzi")
+    func fractionClamps() {
+        #expect(span.fraction(of: "2026-07-20") == 0)
+        #expect(span.fraction(of: "2026-09-10") == 1)
+    }
+
+    /// Wcześniej pozycja wynikała z numeru pomiaru, więc dwa punkty odległe
+    /// o trzy tygodnie rysowały się obok siebie.
+    @Test("Odstęp między punktami odpowiada odstępowi w dniach")
+    func spacingFollowsGaps() {
+        let points = [
+            SeriesPoint(date: "2026-08-01", value: 10),
+            SeriesPoint(date: "2026-08-02", value: 20),
+            SeriesPoint(date: "2026-08-31", value: 30),
+        ]
+        let geometry = ChartGeometry(points: points, span: span, size: CGSize(width: 300, height: 100))
+
+        #expect(geometry.point(at: 0).x == 0)
+        #expect(geometry.point(at: 1).x == 10)
+        #expect(geometry.point(at: 2).x == 300)
+    }
+
+    @Test("Palec trafia w dzień najbliższy w czasie")
+    func touchPicksNearestDay() {
+        let points = [
+            SeriesPoint(date: "2026-08-01", value: 10),
+            SeriesPoint(date: "2026-08-02", value: 20),
+            SeriesPoint(date: "2026-08-31", value: 30),
+        ]
+        let geometry = ChartGeometry(points: points, span: span, size: CGSize(width: 300, height: 100))
+
+        #expect(geometry.index(atX: 0) == 0)
+        #expect(geometry.index(atX: 12) == 1)
+        // Środek okna: bliżej 2 sierpnia niż 31 sierpnia.
+        #expect(geometry.index(atX: 150) == 1)
+        #expect(geometry.index(atX: 290) == 2)
     }
 }

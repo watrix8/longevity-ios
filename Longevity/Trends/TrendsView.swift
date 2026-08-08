@@ -40,7 +40,7 @@ struct TrendsView: View {
                         // powtarzają tego u siebie.
                         Kicker(verbatim: group.header, color: groupColor(group))
                             .padding(.top, group.id == "total" ? 0 : 8)
-                        ForEach(group.metrics) { MetricCardView(metric: $0) }
+                        ForEach(group.metrics) { MetricCardView(metric: $0, span: model.visibleSpan) }
                     }
                 }
             }
@@ -137,6 +137,9 @@ struct TrendsView: View {
 
 struct MetricCardView: View {
     let metric: Metric
+    /// Okno, w którym karta rysuje szereg — wspólne dla wszystkich kart,
+    /// żeby ta sama data wypadała na tej samej pionowej linii.
+    let span: DaySpan
 
     /// Dzień wskazany palcem. `nil` = karta pokazuje ostatni pomiar.
     @State private var selection: Int?
@@ -190,13 +193,15 @@ struct MetricCardView: View {
             .animation(.easeOut(duration: 0.12), value: shownIndex)
 
             if metric.points.count > 1 {
-                MetricChart(points: metric.points, selection: $selection)
+                MetricChart(points: metric.points, span: span, selection: $selection)
                     .padding(.top, 10)
 
+                // Podpisy to granice OKNA, nie pierwszy i ostatni pomiar —
+                // oś idzie teraz po kalendarzu, więc kończy się tam, gdzie okno.
                 HStack {
-                    Text(metric.points.first.map { metric.axisLabel($0.date) } ?? "")
+                    Text(metric.axisLabel(span.from))
                     Spacer()
-                    Text(metric.points.last.map { metric.axisLabel($0.date) } ?? "")
+                    Text(metric.axisLabel(span.to))
                 }
                 .font(AtlasFont.mono(9.5))
                 .foregroundStyle(Palette.tick)
@@ -244,35 +249,46 @@ struct ChartGeometry: Equatable {
     let count: Int
 
     private let lo: Double
-    private let span: Double
-    private let step: CGFloat
-    private let values: [Double]
+    private let valueSpan: Double
+    private let span: DaySpan
+    private let points: [SeriesPoint]
 
-    init(values: [Double], size: CGSize) {
-        self.values = values
+    init(points: [SeriesPoint], span: DaySpan, size: CGSize) {
+        self.points = points
+        self.span = span
         self.size = size
-        count = values.count
+        count = points.count
 
         // Skala jak w webie: dół przyklejony do zera (albo minimum, gdy ujemne).
+        let values = points.map(\.value)
         lo = min(values.min() ?? 0, 0)
         let hi = max(values.max() ?? 1, 1)
-        span = max(1, hi - lo)
-        step = values.count > 1 ? size.width / CGFloat(values.count - 1) : 0
+        valueSpan = max(1, hi - lo)
     }
 
+    /// Pozioma pozycja wynika z DATY, nie z numeru pomiaru. Przy przerwie
+    /// w noszeniu zegarka wykres zostawia w tym miejscu odstęp, zamiast
+    /// ściskać czas i udawać, że pomiary szły dzień po dniu.
     func point(at index: Int) -> CGPoint {
-        guard values.indices.contains(index) else { return .zero }
+        guard points.indices.contains(index) else { return .zero }
+        let point = points[index]
         return CGPoint(
-            x: CGFloat(index) * step,
-            y: size.height - CGFloat((values[index] - lo) / span) * size.height
+            x: CGFloat(span.fraction(of: point.date)) * size.width,
+            y: size.height - CGFloat((point.value - lo) / valueSpan) * size.height
         )
     }
 
     /// Punkt NAJBLIŻSZY, a nie ten po lewej — pod palcem ma się zaznaczyć to,
-    /// co widać pod palcem. Poza wykresem przywiera do skrajnego dnia.
+    /// co widać pod palcem. Odległość mierzona po osi czasu, bo przy nierównych
+    /// odstępach dzielenie przez stały krok wskazywało nie ten dzień.
     func index(atX x: CGFloat) -> Int {
-        guard count > 1, step > 0 else { return 0 }
-        return min(max(Int((x / step).rounded()), 0), count - 1)
+        guard count > 1, size.width > 0 else { return 0 }
+        let target = min(max(Double(x / size.width), 0), 1)
+
+        return points.indices.min { left, right in
+            abs(span.fraction(of: points[left].date) - target)
+                < abs(span.fraction(of: points[right].date) - target)
+        } ?? 0
     }
 }
 
@@ -280,14 +296,20 @@ struct ChartGeometry: Equatable {
 /// wielką liczbą.
 struct MetricChart: View {
     let points: [SeriesPoint]
+    let span: DaySpan
     @Binding var selection: Int?
 
     @State private var size: CGSize = .zero
 
+    /// Przy pomiarach rzadszych niż co drugi dzień sama linia nie mówi, gdzie
+    /// są prawdziwe odczyty — dostają wtedy kropki. Przy szeregu codziennym
+    /// byłoby ich tyle, że zlałyby się w pasek.
+    private var showsDots: Bool { points.count * 2 <= span.days }
+
     var body: some View {
         Canvas { context, canvasSize in
             guard points.count > 1 else { return }
-            let geometry = ChartGeometry(values: points.map(\.value), size: canvasSize)
+            let geometry = ChartGeometry(points: points, span: span, size: canvasSize)
 
             var line = Path()
             for index in points.indices {
@@ -299,6 +321,16 @@ struct MetricChart: View {
                 with: .color(Palette.pine),
                 style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)
             )
+
+            if showsDots {
+                for index in points.indices {
+                    let point = geometry.point(at: index)
+                    context.fill(
+                        Path(ellipseIn: CGRect(x: point.x - 2.5, y: point.y - 2.5, width: 5, height: 5)),
+                        with: .color(Palette.pine)
+                    )
+                }
+            }
 
             if let selection, points.indices.contains(selection) {
                 let point = geometry.point(at: selection)
@@ -333,7 +365,7 @@ struct MetricChart: View {
         .gesture(
             DragGesture(minimumDistance: 6)
                 .onChanged { drag in
-                    let geometry = ChartGeometry(values: points.map(\.value), size: size)
+                    let geometry = ChartGeometry(points: points, span: span, size: size)
                     selection = geometry.index(atX: drag.location.x)
                 }
                 // Podniesienie palca kasuje wybór: karta wraca do ostatniego
@@ -371,11 +403,16 @@ struct MetricChart: View {
 
     ScrollView {
         VStack(spacing: 14) {
+            // Okno szersze niż sam szereg — podgląd ma pokazywać, że pomiary
+            // kończą się przed prawą krawędzią, a nie dobijają do niej zawsze.
+            let span = DaySpan(from: "2026-07-10", to: "2026-08-08")
+
             MetricCardView(
                 metric: Metric(
                     id: "sleep_hours", title: String(localized: "Sen"), unit: "h", positiveHigher: true,
                     role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30), points: points
-                )
+                ),
+                span: span
             )
             MetricCardView(
                 metric: Metric(
@@ -383,7 +420,8 @@ struct MetricChart: View {
                     positiveHigher: false,
                     role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15),
                     points: points.map { SeriesPoint(date: $0.date, value: $0.value * 6.4) }
-                )
+                ),
+                span: span
             )
         }
         .padding(20)
