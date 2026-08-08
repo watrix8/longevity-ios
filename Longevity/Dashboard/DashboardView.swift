@@ -128,9 +128,12 @@ struct DashboardView: View {
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                     .contentTransition(.numericText())
+                // Mono i drobne, jak reszta adnotacji na ekranie — skala ma
+                // rozwiać wątpliwość, a nie konkurować z cyfrą.
                 Text(verbatim: "/100")
-                    .font(AtlasFont.display(26))
+                    .font(AtlasFont.mono(14))
                     .foregroundStyle(Palette.tick)
+                    .baselineOffset(2)
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(Text("\(data.headline) na 100"))
