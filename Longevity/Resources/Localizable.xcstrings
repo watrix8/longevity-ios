@@ -95,6 +95,22 @@
         }
       }
     },
+    "%lld na 100": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld na 100"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld out of 100"
+          }
+        }
+      }
+    },
     "%lld pkt": {
       "localizations": {
         "pl": {
@@ -884,22 +900,6 @@
         }
       }
     },
-    "Imię i nazwisko": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Imię i nazwisko"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Full name"
-          }
-        }
-      }
-    },
     "Inna": {
       "localizations": {
         "pl": {
@@ -992,6 +992,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Steps"
+          }
+        }
+      }
+    },
+    "Kropka na marginesie znaczy, że pole czeka na uzupełnienie. Wszystko zmienisz później w Opcjach.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kropka na marginesie znaczy, że pole czeka na uzupełnienie. Wszystko zmienisz później w Opcjach."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A dot in the margin means the field is still waiting. You can change any of it later in Settings."
           }
         }
       }
@@ -1568,6 +1584,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show a meal — I'll tell you what I think"
+          }
+        }
+      }
+    },
+    "Pole wymaga uzupełnienia": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pole wymaga uzupełnienia"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This field still needs a value"
           }
         }
       }
@@ -2308,6 +2340,22 @@
         }
       }
     },
+    "Wiek, płeć i wzrost wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiek, płeć i wzrost wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Age, sex and height feed straight into your score. Without them we compute it from half the inputs."
+          }
+        }
+      }
+    },
     "Więcej energii": {
       "localizations": {
         "pl": {
@@ -2702,6 +2750,22 @@
         }
       }
     },
+    "Wzrost musi mieścić się w zakresie 80–260 cm": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wzrost musi mieścić się w zakresie 80–260 cm"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Height must be between 80 and 260 cm"
+          }
+        }
+      }
+    },
     "Za dużo prób. Odczekaj chwilę i spróbuj ponownie.": {
       "localizations": {
         "pl": {
@@ -2863,6 +2927,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Save check-in"
+          }
+        }
+      }
+    },
+    "Zapisz i zaczynamy": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapisz i zaczynamy"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save and get started"
           }
         }
       }
@@ -3502,6 +3582,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "body fat %@%%"
+          }
+        }
+      }
+    },
+    "uzupełnij profil": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "uzupełnij profil"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "complete your profile"
           }
         }
       }

@@ -116,14 +116,24 @@ struct DashboardView: View {
     /// liczb do porównania.
     private func hero(_ data: DashboardData) -> some View {
         VStack(spacing: 0) {
-            Text("\(data.headline)")
-                .font(AtlasFont.display(112, .bold))
-                .tracking(-3)
-                .monospacedDigit()
-                .foregroundStyle(Palette.ochre)
-                .minimumScaleFactor(0.6)
-                .lineLimit(1)
-                .contentTransition(.numericText())
+            // Skala przy cyfrze, tak samo jak na kartach w Trendach: wartość
+            // dużym krojem, jednostka mała i wyciszona. Bez „/100" nie widać,
+            // czy 89 to dużo — a to pierwsza rzecz, o którą pyta ekran.
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text("\(data.headline)")
+                    .font(AtlasFont.display(112, .bold))
+                    .tracking(-3)
+                    .monospacedDigit()
+                    .foregroundStyle(Palette.ochre)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                    .contentTransition(.numericText())
+                Text(verbatim: "/100")
+                    .font(AtlasFont.display(26))
+                    .foregroundStyle(Palette.tick)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(Text("\(data.headline) na 100"))
 
             // „Wynik dnia", nie „wynik długowieczności" — ta liczba jest
             // z dzisiaj i etykieta ma to mówić sama, bez osobnej karty „Dziś".
