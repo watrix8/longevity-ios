@@ -30,31 +30,9 @@ struct MetricTests {
         #expect(m.previous == 2)
     }
 
-    @Test("Średnia 7-dniowa bierze ostatnie siedem DNI, nie siedem pomiarów")
-    func avg7UsesCalendarWindow() {
-        // 10 kolejnych dni: 1...10. Okno 08-04...08-10 → średnia 7.
-        let m = metric((1...10).map(Double.init))
-
-        #expect(m.avg7 == 7)
-        #expect(m.avgAll == 5.5)
-    }
-
-    /// Sedno przejścia na kalendarz: pomiar co kilka dni nie może wciągać
-    /// do „średniej 7 dni" wyników sprzed miesiąca.
-    @Test("Pomiary rzadsze niż codzienne nie rozciągają okna średniej")
-    func avg7IgnoresOlderMeasurements() {
-        let sparse = [
-            SeriesPoint(date: "2026-07-01", value: 100),
-            SeriesPoint(date: "2026-07-10", value: 100),
-            SeriesPoint(date: "2026-08-05", value: 40),
-            SeriesPoint(date: "2026-08-08", value: 60),
-        ]
-        let m = Metric(id: "t", title: "T", unit: "", positiveHigher: true,
-                       role: .informational, points: sparse)
-
-        // Okno 08-02...08-08 obejmuje tylko dwa ostatnie pomiary.
-        #expect(m.avg7 == 50)
-        #expect(m.avgAll == 75)
+    @Test("Średnia obejmuje cały widoczny szereg")
+    func averageCoversWholeSeries() {
+        #expect(metric((1...10).map(Double.init)).avgAll == 5.5)
     }
 
     @Test("Strzałka w górę, gdy wyżej znaczy lepiej")
@@ -78,7 +56,6 @@ struct MetricTests {
 
         #expect(m.last == nil)
         #expect(m.previous == nil)
-        #expect(m.avg7 == nil)
         #expect(m.avgAll == nil)
         #expect(m.arrow == "→")
     }
@@ -89,7 +66,6 @@ struct MetricTests {
 
         #expect(m.last == 42)
         #expect(m.previous == nil)
-        #expect(m.avg7 == 42)
         #expect(m.arrow == "→")
     }
 
@@ -386,8 +362,33 @@ struct ChartCalendarAxisTests {
 
         #expect(geometry.point(at: 0).x == ChartGeometry.inset)
         #expect(geometry.point(at: 1).x == size.width - ChartGeometry.inset)
-        // Najwyższa wartość też schodzi z górnej krawędzi.
-        #expect(geometry.point(at: 1).y == ChartGeometry.inset)
+        // W pionie też: okno wartości ma zapas, więc skrajne punkty nie kładą
+        // się na krawędziach płótna.
+        #expect(geometry.point(at: 1).y > ChartGeometry.inset)
+        #expect(geometry.point(at: 0).y < size.height - ChartGeometry.inset)
+    }
+
+    /// Przy skali przyklejonej do zera szereg 89, 90, 89 rysował się cienkim
+    /// paskiem tuż pod górną krawędzią — cała wysokość szła na pustkę.
+    @Test("Skala obejmuje dane, a nie zero")
+    func scaleFollowsData() {
+        let points = [
+            SeriesPoint(date: "2026-08-01", value: 88),
+            SeriesPoint(date: "2026-08-16", value: 90),
+            SeriesPoint(date: "2026-08-31", value: 89),
+        ]
+        let size = CGSize(width: 300, height: 100)
+        let geometry = ChartGeometry(points: points, span: span, size: size)
+
+        let inner = size.height - ChartGeometry.inset * 2
+        let spread = geometry.point(at: 0).y - geometry.point(at: 1).y
+
+        // Widoczna różnica: przy skali od zera te dwa punkty dzieliłoby
+        // niecałe 2% wysokości.
+        #expect(spread > inner * 0.2)
+        // Ale nie na całą wysokość — minimalna rozpiętość okna pilnuje, żeby
+        // wahnięcie o dwa punkty nie wyglądało jak załamanie formy.
+        #expect(spread < inner * 0.6)
     }
 
     @Test("Palec trafia w dzień najbliższy w czasie")

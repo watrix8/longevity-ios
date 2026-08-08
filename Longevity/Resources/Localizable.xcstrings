@@ -1007,7 +1007,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A dot in the margin means the field is still waiting. You can change any of it later in Settings."
+            "value": "A dot in the margin means the field is still waiting. You can change all of it later in Settings."
           }
         }
       }
@@ -1599,7 +1599,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This field still needs a value"
+            "value": "This field is required"
           }
         }
       }
@@ -2292,22 +2292,6 @@
         }
       }
     },
-    "W tym samym podziale co rozbicie na dashboardzie.\nStrzałkami cofasz się w czasie, przeciągnięciem odczytujesz dzień.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "W tym samym podziale co rozbicie na dashboardzie.\nStrzałkami cofasz się w czasie, przeciągnięciem odczytujesz dzień."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Same breakdown as on the dashboard.\nArrows move back in time, drag to read a day."
-          }
-        }
-      }
-    },
     "WHR (talia/biodra)": {
       "localizations": {
         "pl": {
@@ -2367,7 +2351,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Age, sex, height and weight feed straight into your score. Without them we compute it from half the inputs."
+            "value": "Age, sex, height and weight feed the score directly. Without them we calculate it from half the components."
           }
         }
       }
@@ -3762,34 +3746,18 @@
         }
       }
     },
-    "Śr. 7 dni: %@%@": {
+    "Średnia: %@%@": {
       "localizations": {
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Śr. 7 dni: %@%@"
+            "value": "Średnia: %@%@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "7-day avg: %1$@%2$@"
-          }
-        }
-      }
-    },
-    "Śr. okna: %@%@": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Śr. okna: %@%@"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Window avg: %1$@%2$@"
+            "value": "Average: %1$@%2$@"
           }
         }
       }

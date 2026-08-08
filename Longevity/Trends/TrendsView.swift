@@ -96,15 +96,10 @@ struct TrendsView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                ScreenTitle(text: "Trendy")
-                Spacer()
-                windowPill
-            }
-            Text("W tym samym podziale co rozbicie na dashboardzie.\nStrzałkami cofasz się w czasie, przeciągnięciem odczytujesz dzień.")
-                .font(AtlasFont.body(13))
-                .foregroundStyle(Palette.muted)
+        HStack {
+            ScreenTitle(text: "Trendy")
+            Spacer()
+            windowPill
         }
         .padding(.bottom, 4)
     }
@@ -213,13 +208,13 @@ struct MetricCardView: View {
                     .padding(.top, 8)
             }
 
-            HStack(spacing: 16) {
-                Text("Śr. 7 dni: \(metric.avg7.map(Self.format) ?? "—")\(unitSuffix)")
-                Text("Śr. okna: \(metric.avgAll.map(Self.format) ?? "—")\(unitSuffix)")
-            }
-            .font(AtlasFont.body(12))
-            .foregroundStyle(Palette.muted)
-            .padding(.top, 12)
+            // Jedna średnia, z całego widocznego okna. „Śr. 7 dni" obok niej
+            // zmuszała do porównywania dwóch liczb, których karta i tak nie
+            // zestawiała ze sobą — od porównania jest strzałka i wykres.
+            Text("Średnia: \(metric.avgAll.map(Self.format) ?? "—")\(unitSuffix)")
+                .font(AtlasFont.body(12))
+                .foregroundStyle(Palette.muted)
+                .padding(.top, 12)
         }
         .padding(15)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -264,11 +259,19 @@ struct ChartGeometry: Equatable {
         self.size = size
         count = points.count
 
-        // Skala jak w webie: dół przyklejony do zera (albo minimum, gdy ujemne).
+        // Okno wyśrodkowane na danych, nie przyklejone do zera. Przy zerze
+        // szereg 89, 90, 89 lądował cienkim paskiem przy górnej krawędzi,
+        // a cała reszta pola stała pusta. Minimalna rozpiętość jest liczona
+        // od skali metryki — bez niej płaski szereg rozciągnąłby się na całą
+        // wysokość i wyglądał jak huśtawka.
         let values = points.map(\.value)
-        lo = min(values.min() ?? 0, 0)
-        let hi = max(values.max() ?? 1, 1)
-        valueSpan = max(1, hi - lo)
+        let rawLo = values.min() ?? 0
+        let rawHi = values.max() ?? 1
+        let minSpan = max(abs(rawHi) * 0.08, 0.001)
+        let needed = max(minSpan, (rawHi - rawLo) * 1.35)
+
+        lo = (rawLo + rawHi) / 2 - needed / 2
+        valueSpan = needed
     }
 
     /// Pozioma pozycja wynika z DATY, nie z numeru pomiaru. Przy przerwie
@@ -388,15 +391,11 @@ struct MetricChart: View {
         .sensoryFeedback(trigger: selection) { _, new in
             new == nil ? nil : .selection
         }
-        // Bez zielonego bloku pod spodem — linia leży wprost na karcie, tak samo
-        // jak pasek na Dashboardzie. Zamiast wypełnienia zostaje sama podstawa:
-        // cienka kreska mówi, gdzie kończy się wykres, i nie maluje tła pod
-        // danymi kolorem, który niesie znaczenie gdzie indziej.
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Palette.line)
-                .frame(height: 1)
-        }
+        // Tło wraca, ale ciaśniej: wcześniej wykres siedział w środku bloku
+        // z własnym marginesem, więc dane zajmowały ledwie połowę zieleni.
+        // Teraz blok to dokładnie płótno, a jedyny odstęp to margines na
+        // grubość kreski, bez którego kropka wychodzi obcięta.
+        .background(Palette.panel, in: RoundedRectangle(cornerRadius: 10))
     }
 }
 
