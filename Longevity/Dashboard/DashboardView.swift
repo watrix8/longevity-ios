@@ -168,11 +168,16 @@ struct DashboardView: View {
                 .background(Palette.pineSoft, in: Capsule())
                 .contentTransition(.numericText())
         } else {
-            // Ten sam komunikat obsługuje świeże konto i powrót po przerwie:
-            // w obu przypadkach w oknie brakuje dni, a nie „pierwszego dnia".
-            Text("trend pojawi się po \(DashboardViewModel.trendMinDays) dniach z pomiarami")
-                .font(AtlasFont.mono(11))
-                .foregroundStyle(Palette.tick)
+            // Licznik mówi, ile dni DOŁOŻYĆ, a nie ile trzeba mieć łącznie —
+            // dzisiejszy pomiar już się liczy i wejdzie do jutrzejszego okna.
+            // Inaczej przy trzech dniach z rzędu ekran kazał czekać na trzy dni.
+            Text(
+                data.trendMissingDays == 0
+                    ? "trend pojawi się jutro"
+                    : "jeszcze \(data.trendMissingDays) dni z pomiarami i pojawi się trend"
+            )
+            .font(AtlasFont.mono(11))
+            .foregroundStyle(Palette.tick)
         }
     }
 

@@ -32,6 +32,10 @@ struct DashboardData: Sendable {
     let trendDays: Int
     /// Dziś minus trend. `nil` razem z `trend`.
     let trendDelta: Int?
+    /// Ilu dni z pomiarami brakuje, żeby trend się pojawił. Liczone razem
+    /// z dzisiejszym, bo on wejdzie do jutrzejszego okna — przy zerze trend
+    /// zapala się jutro, bez dokładania czegokolwiek.
+    let trendMissingDays: Int
 
     let points: [DayPoint]
     let breakdown: [ScoreComponentRow]
@@ -120,6 +124,12 @@ extension DashboardData {
             trend: todayTrend?.value.map { Int($0.rounded()) },
             trendDays: todayTrend?.days ?? 0,
             trendDelta: todayTrend?.value.map { Int((Double(headline) - $0).rounded()) },
+            trendMissingDays: max(
+                0,
+                DashboardViewModel.trendMinDays - (CalendarDays.date(fromISO: end).map {
+                    DashboardViewModel.measuredDays(upTo: $0, scores: scores)
+                } ?? 0)
+            ),
             points: points,
             breakdown: [
                 // Podwagi i kolejność jak w `sleepParts`/`bodyParts` z
@@ -245,6 +255,16 @@ final class DashboardViewModel {
         return (values.reduce(0, +) / Double(values.count), values.count)
     }
 
+    /// Ile z ostatnich 7 dni kalendarza RAZEM z `day` ma pomiar — dokładnie
+    /// tyle wejdzie do jutrzejszego okna trendu.
+    nonisolated static func measuredDays(upTo day: Date, scores: [String: Double]) -> Int {
+        (0..<trendWindow).count { offset in
+            guard let earlier = CalendarDays.calendar.date(byAdding: .day, value: -offset, to: day)
+            else { return false }
+            return scores[CalendarDays.isoString(earlier)] != nil
+        }
+    }
+
     /// Internal, nie private — to jedyna nietrywialna logika w tym pliku
     /// i chcemy ją mieć pod testami bez dotykania sieci.
     static func build(from rows: [ScoreSnapshot], current: ScoreSnapshot) -> DashboardData {
@@ -264,6 +284,10 @@ final class DashboardViewModel {
             trend: todayTrend?.value.map { Int($0.rounded()) },
             trendDays: todayTrend?.days ?? 0,
             trendDelta: todayTrend?.value.map { Int((Double(current.scoreTotal) - $0).rounded()) },
+            trendMissingDays: max(
+                0,
+                trendMinDays - (today.map { measuredDays(upTo: $0, scores: scores) } ?? 0)
+            ),
             points: points,
             breakdown: current.components.breakdown,
             coverageDays: rows.count,

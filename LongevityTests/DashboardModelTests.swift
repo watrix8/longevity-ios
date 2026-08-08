@@ -111,6 +111,30 @@ struct DashboardModelTests {
         #expect(data.coverageDays == 2)
     }
 
+    /// Ekran mówił „trend pojawi się po 3 dniach z pomiarami" komuś, kto miał
+    /// dokładnie trzy dni z rzędu — bo próg dotyczy dni PRZED dzisiejszym,
+    /// a licznik pokazywał sumę. Teraz liczy braki razem z dzisiejszym.
+    @Test("Licznik braków wie, że dzisiejszy dzień wejdzie do jutrzejszego okna")
+    func missingDaysCountsToday() throws {
+        // Trzy dni z rzędu, ostatni dzisiaj: w oknie są dwa, ale jutro będą trzy.
+        let rows = try (6...8).reversed().map {
+            try makeSnapshot(String(format: "2026-08-%02d", $0), 89)
+        }
+        let data = DashboardViewModel.build(from: rows, current: rows[0])
+
+        #expect(data.trend == nil)
+        #expect(data.trendDays == 2)
+        #expect(data.trendMissingDays == 0)
+    }
+
+    @Test("Przy jednym dniu brakuje jeszcze dwóch")
+    func missingDaysOnFirstDay() throws {
+        let rows = [try makeSnapshot("2026-08-08", 89)]
+        let data = DashboardViewModel.build(from: rows, current: rows[0])
+
+        #expect(data.trendMissingDays == 2)
+    }
+
     @Test("Próg trendu: trzy dni w oknie wystarczą, dwa nie")
     func trendMinimumDays() throws {
         func trend(days: [Int]) throws -> DashboardData {

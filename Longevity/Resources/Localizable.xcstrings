@@ -27,7 +27,6 @@
       "shouldTranslate": false
     },
     "%lld dni z pomiarami z ostatnich 30": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -77,7 +76,8 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "%lld min": {
       "localizations": {
@@ -112,7 +112,6 @@
       }
     },
     "%lld z 30 dni z pomiarami": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -162,7 +161,8 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "%lld%%": {
       "shouldTranslate": false
@@ -315,7 +315,6 @@
       }
     },
     "Brak danych w Apple Health z ostatnich %lld dni": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -365,7 +364,8 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "Brak połączenia z internetem": {
       "localizations": {
@@ -608,7 +608,6 @@
       }
     },
     "Dzień %lld z %lld": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -658,7 +657,8 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "Długowieczność": {
       "localizations": {
@@ -864,6 +864,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "How many of the last 30 days have measurements. A day without them gets no score, and the fewer days you collect, the more the trend hangs on any single one. Just wear the watch."
+          }
+        }
+      }
+    },
+    "Imię": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imię"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First name"
           }
         }
       }
@@ -2373,7 +2389,6 @@
       }
     },
     "Wykres i trend włączą się po %lld dniach z pomiarami.": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -2423,10 +2438,10 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "Wykres ostatnich %lld dni": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -2476,7 +2491,8 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "Wylogować z aplikacji?": {
       "localizations": {
@@ -2751,7 +2767,6 @@
       }
     },
     "Zapisano %lld dni": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -2801,7 +2816,8 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "Zapisuje się na dzisiaj i nadpisuje wcześniejszy wpis.": {
       "localizations": {
@@ -3155,6 +3171,59 @@
         }
       }
     },
+    "jeszcze %lld dni z pomiarami i pojawi się trend": {
+      "localizations": {
+        "pl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "jeszcze %lld dzień z pomiarami i pojawi się trend"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "jeszcze %lld dni z pomiarami i pojawi się trend"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "jeszcze %lld dni z pomiarami i pojawi się trend"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "jeszcze %lld dni z pomiarami i pojawi się trend"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld more day with measurements and the trend appears"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld more days with measurements and the trend appears"
+                }
+              }
+            }
+          }
+        }
+      },
+      "extractionState": "manual"
+    },
     "kg": {
       "localizations": {
         "pl": {
@@ -3236,7 +3305,6 @@
       }
     },
     "ostatnie %lld dni": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -3286,7 +3354,8 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "talia %@ cm": {
       "localizations": {
@@ -3320,61 +3389,23 @@
         }
       }
     },
-    "trend pojawi się po %lld dniach z pomiarami": {
-      "extractionState": "manual",
+    "trend pojawi się jutro": {
       "localizations": {
         "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "trend pojawi się po %lld dniu z pomiarami"
-                }
-              },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "trend pojawi się po %lld dniach z pomiarami"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "trend pojawi się po %lld dniach z pomiarami"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "trend pojawi się po %lld dniach z pomiarami"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "trend pojawi się jutro"
           }
         },
         "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "the trend appears after %lld day with measurements"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "the trend appears after %lld days with measurements"
-                }
-              }
-            }
+          "stringUnit": {
+            "state": "translated",
+            "value": "the trend shows up tomorrow"
           }
         }
       }
     },
     "trend z %lld dni": {
-      "extractionState": "manual",
       "localizations": {
         "pl": {
           "variations": {
@@ -3424,7 +3455,8 @@
             }
           }
         }
-      }
+      },
+      "extractionState": "manual"
     },
     "trend — za mało dni": {
       "localizations": {
