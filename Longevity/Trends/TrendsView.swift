@@ -11,7 +11,7 @@ struct TrendsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 header
-                rangePicker
+                periodStepper
 
                 switch model.state {
                 case .loading:
@@ -59,26 +59,18 @@ struct TrendsView: View {
         group.weight == nil ? Palette.tick : Palette.pine
     }
 
-    /// Szerokość okna plus przesuwanie go w przeszłość. Okno jest wąskie
-    /// celowo — przy szerszym punkty robią się gęstsze niż piksele.
-    private var rangePicker: some View {
-        VStack(spacing: 8) {
-            Picker("Okno", selection: $model.window) {
-                ForEach(TrendWindow.allCases) { Text($0.label).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .onChange(of: model.window) { Task { await model.load() } }
-
-            HStack {
-                stepButton("chevron.left", enabled: true) { model.shift(by: 1) }
-                Spacer()
-                Text(model.periodLabel)
-                    .font(AtlasFont.mono(11))
-                    .foregroundStyle(Palette.ink)
-                    .contentTransition(.numericText())
-                Spacer()
-                stepButton("chevron.right", enabled: model.canGoForward) { model.shift(by: -1) }
-            }
+    /// Przesuwanie okna w przeszłość. Samą szerokość okna wybiera pigułka
+    /// przy tytule — tu zostaje to, co zmienia się przy każdym tapnięciu.
+    private var periodStepper: some View {
+        HStack {
+            stepButton("chevron.left", enabled: true) { model.shift(by: 1) }
+            Spacer()
+            Text(model.periodLabel)
+                .font(AtlasFont.mono(11))
+                .foregroundStyle(Palette.ink)
+                .contentTransition(.numericText())
+            Spacer()
+            stepButton("chevron.right", enabled: model.canGoForward) { model.shift(by: -1) }
         }
     }
 
@@ -104,12 +96,41 @@ struct TrendsView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
-            ScreenTitle(text: "Trendy")
+            HStack {
+                ScreenTitle(text: "Trendy")
+                Spacer()
+                windowPill
+            }
             Text("W tym samym podziale co rozbicie na dashboardzie.\nStrzałkami cofasz się w czasie, przeciągnięciem odczytujesz dzień.")
                 .font(AtlasFont.body(13))
                 .foregroundStyle(Palette.muted)
         }
         .padding(.bottom, 4)
+    }
+
+    /// Szerokość okna siedzi tam, gdzie na Dashboardzie data — ten sam róg
+    /// i ta sama pigułka. Segmentowany kontroler zabierał na to cały wiersz,
+    /// choć wybór pada raz i zostaje na długo.
+    private var windowPill: some View {
+        Menu {
+            Picker("Okno", selection: $model.window) {
+                ForEach(TrendWindow.allCases) { Text($0.label).tag($0) }
+            }
+        } label: {
+            HStack(spacing: 5) {
+                Text(model.window.label)
+                    .font(AtlasFont.mono(11))
+                    .foregroundStyle(Palette.ink)
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(Palette.tick)
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .background(Palette.panel, in: Capsule())
+            .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
+        }
+        .onChange(of: model.window) { Task { await model.load() } }
     }
 }
 
