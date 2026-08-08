@@ -168,7 +168,9 @@ struct DashboardView: View {
                 .background(Palette.pineSoft, in: Capsule())
                 .contentTransition(.numericText())
         } else {
-            Text("pierwszy dzień — trend pojawi się jutro")
+            // Ten sam komunikat obsługuje świeże konto i powrót po przerwie:
+            // w obu przypadkach w oknie brakuje dni, a nie „pierwszego dnia".
+            Text("trend pojawi się po \(DashboardViewModel.trendMinDays) dniach z pomiarami")
                 .font(AtlasFont.mono(11))
                 .foregroundStyle(Palette.tick)
         }
@@ -208,7 +210,15 @@ struct DashboardView: View {
 
             HStack(spacing: 16) {
                 legend(color: Palette.ochre, isLine: false, text: "wynik dnia")
-                legend(color: Palette.pine, isLine: true, text: "trend z \(data.trendDays) dni")
+                // Licznik mówi, ile dni z ostatnich siedmiu miało pomiar —
+                // przy dziurach „trend z 7 dni" byłoby nieprawdą.
+                legend(
+                    color: Palette.pine,
+                    isLine: true,
+                    text: data.trend == nil
+                        ? "trend — za mało dni"
+                        : "trend z \(data.trendDays) dni"
+                )
             }
             .padding(.top, 2)
 
@@ -254,14 +264,18 @@ struct DashboardView: View {
                 .lineSpacing(3)
                 .padding(.top, 12)
 
-            if data.points.count > 1 {
+            // Same dni z pomiarem — puste sloty kalendarza nie mają tu czego
+            // pokazać, a licznik „Dzień 3 z 7" i tak mówi, ile ich jest.
+            let measured = data.points.compactMap(\.total)
+
+            if measured.count > 1 {
                 Kicker(text: "zebrane wyniki", size: 9)
                     .padding(.top, 16)
 
                 HStack(spacing: 6) {
-                    ForEach(Array(data.points.enumerated()), id: \.offset) { index, point in
-                        let isToday = index == data.points.count - 1
-                        Text("\(Int(point.total))")
+                    ForEach(Array(measured.enumerated()), id: \.offset) { index, total in
+                        let isToday = index == measured.count - 1
+                        Text("\(Int(total))")
                             .font(AtlasFont.mono(11, .bold))
                             .monospacedDigit()
                             .foregroundStyle(isToday ? Palette.ochreInk : Palette.muted)
@@ -503,6 +517,10 @@ struct ScoreExplainerSheet: View {
 
 #Preview("Rozgrzewka") {
     DashboardView(model: DashboardViewModel(state: .loaded(.warmingUp)))
+}
+
+#Preview("Z przerwą w pomiarach") {
+    DashboardView(model: DashboardViewModel(state: .loaded(.withGap)))
 }
 
 #Preview("Pusty") {

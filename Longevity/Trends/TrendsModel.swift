@@ -94,7 +94,15 @@ struct Metric: Identifiable, Sendable {
 
     var last: Double? { points.last?.value }
     var previous: Double? { points.dropLast().last?.value }
-    var avg7: Double? { Self.average(points.suffix(7).map(\.value)) }
+    /// Średnia z ostatnich 7 DNI KALENDARZA, nie z siedmiu ostatnich pomiarów.
+    /// Przy wadze mierzonej raz w tygodniu to drugie sięgało dwa miesiące
+    /// wstecz i podpisywało wynik jako „Śr. 7 dni".
+    var avg7: Double? {
+        guard let last = points.last?.date,
+              let from = CalendarDays.shifted(last, by: -6)
+        else { return nil }
+        return Self.average(points.filter { $0.date >= from }.map(\.value))
+    }
     /// Średnia CAŁEGO szeregu, nie trzydziestu dni — przy dłuższym zakresie
     /// obejmuje wszystko, co widać na wykresie.
     var avgAll: Double? { Self.average(points.map(\.value)) }

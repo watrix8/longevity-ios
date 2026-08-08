@@ -73,12 +73,14 @@ struct TrendStrip: View {
     /// Do skali wchodzą i wyniki, i trend — inaczej linia potrafi wyjechać
     /// poza kadr w dniu z mocnym odchyleniem.
     private var values: [Double] {
-        points.map(\.total) + points.compactMap(\.trend)
+        points.compactMap(\.total) + points.compactMap(\.trend)
     }
 
+    /// Domyślnie ostatni dzień Z POMIAREM, a nie ostatni slot: przy dziurze
+    /// na końcu wielka liczba nie miałaby czego pokazać.
     private var shownIndex: Int? {
         if let selection, points.indices.contains(selection) { return selection }
-        return points.indices.last
+        return points.lastIndex { $0.total != nil }
     }
 
     var body: some View {
@@ -88,6 +90,7 @@ struct TrendStrip: View {
 
             drawSelectionRule(context, g, canvasSize)
             drawTrendLine(context, g)
+            drawLoneTrendMarks(context, g)
             drawStems(context, g)
             drawDots(context, g)
             drawTrendLabel(context, g, width: canvasSize.width)
@@ -133,7 +136,12 @@ struct TrendStrip: View {
         var line = Path()
         var started = false
         for (i, p) in points.enumerated() {
-            guard let trend = p.trend else { continue }
+            // Brak trendu przerywa linię zamiast ją przeciągać nad dziurą —
+            // domknięty odcinek sugerowałby ciągłość, której nie ma.
+            guard let trend = p.trend else {
+                started = false
+                continue
+            }
             let pt = CGPoint(x: g.x(i), y: g.y(trend))
             if started { line.addLine(to: pt) } else { line.move(to: pt); started = true }
         }
@@ -144,19 +152,43 @@ struct TrendStrip: View {
         )
     }
 
-    private func drawStems(_ context: GraphicsContext, _ g: StripGeometry) {
+    /// Trend bez sąsiada nie narysuje się jako linia — zostaje po nim krótka
+    /// kreska. Bez niej podpis „trend 66" wisiał w powietrzu, bo dzień po
+    /// przerwie bywa jedynym, który ma pełne okno.
+    private func drawLoneTrendMarks(_ context: GraphicsContext, _ g: StripGeometry) {
         for (i, p) in points.enumerated() {
             guard let trend = p.trend else { continue }
+            let hasNeighbour = (i > 0 && points[i - 1].trend != nil)
+                || (i + 1 < points.count && points[i + 1].trend != nil)
+            guard !hasNeighbour else { continue }
+
+            var dash = Path()
+            dash.move(to: CGPoint(x: g.x(i) - 7, y: g.y(trend)))
+            dash.addLine(to: CGPoint(x: g.x(i) + 7, y: g.y(trend)))
+            context.stroke(
+                dash,
+                with: .color(Palette.pine),
+                style: StrokeStyle(lineWidth: 2.6, lineCap: .round)
+            )
+        }
+    }
+
+    private func drawStems(_ context: GraphicsContext, _ g: StripGeometry) {
+        for (i, p) in points.enumerated() {
+            guard let trend = p.trend, let total = p.total else { continue }
             var stem = Path()
             stem.move(to: CGPoint(x: g.x(i), y: g.y(trend)))
-            stem.addLine(to: CGPoint(x: g.x(i), y: g.y(p.total)))
+            stem.addLine(to: CGPoint(x: g.x(i), y: g.y(total)))
             context.stroke(stem, with: .color(Palette.stem), lineWidth: 1.4)
         }
     }
 
+    /// Dzień bez pomiaru nie dostaje kropki — puste miejsce mówi wprost,
+    /// że tego dnia nic nie zmierzono.
     private func drawDots(_ context: GraphicsContext, _ g: StripGeometry) {
         for (i, p) in points.enumerated() {
-            let center = CGPoint(x: g.x(i), y: g.y(p.total))
+            guard let total = p.total else { continue }
+            let center = CGPoint(x: g.x(i), y: g.y(total))
             let isShown = i == shownIndex
             let r: CGFloat = isShown ? 6 : 3.4
 
@@ -174,7 +206,7 @@ struct TrendStrip: View {
                 // Obwódka w kolorze tła odcina kropkę od łodyżki pod nią.
                 context.stroke(dot, with: .color(Palette.card), lineWidth: 1.6)
                 context.draw(
-                    Text(verbatim: "\(Int(p.total))")
+                    Text(verbatim: "\(Int(total))")
                         .font(AtlasFont.mono(11, .bold))
                         .foregroundStyle(Palette.ochreInk),
                     at: CGPoint(x: center.x, y: center.y - 15),
@@ -189,7 +221,9 @@ struct TrendStrip: View {
     /// kropka, żeby się z nią nie zlepiał.
     private func drawTrendLabel(_ context: GraphicsContext, _ g: StripGeometry, width: CGFloat) {
         guard let last = points.last, let trend = last.trend else { return }
-        let below = last.total >= trend
+        // Bez pomiaru w ostatnim dniu nie ma z czym kolidować, więc podpis
+        // idzie pod linię — tak samo jak przy wyniku powyżej trendu.
+        let below = (last.total ?? trend) >= trend
         context.draw(
             Text("trend \(Int(trend.rounded()))")
                 .font(AtlasFont.mono(9.5, .bold))

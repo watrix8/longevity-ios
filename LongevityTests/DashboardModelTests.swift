@@ -18,7 +18,7 @@ struct DashboardModelTests {
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
         #expect(data.points.map(\.date) == ["2026-08-04", "2026-08-05", "2026-08-06"])
-        #expect(data.points.map(\.total) == [60, 70, 80])
+        #expect(data.points.compactMap(\.total) == [60, 70, 80])
     }
 
     @Test("Headline bierze się z bieżącego snapshotu")
@@ -58,6 +58,70 @@ struct DashboardModelTests {
         #expect(data.points[7].trend == 40)
         // Ostatni (100): średnia z 30...90.
         #expect(data.points.last?.trend == 60)
+    }
+
+    /// Sedno przejścia na kalendarz: przerwa w noszeniu zegarka ma wypchnąć
+    /// stare wyniki z okna, a nie dokleić je do dzisiejszego trendu.
+    @Test("Przerwa wypycha stare dni z okna trendu")
+    func gapPushesOldDaysOut() throws {
+        // Trzy dni po 100 na początku sierpnia, tydzień przerwy, potem 10-12.
+        let older = try (1...3).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 100) }
+        let newer = try (10...12).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 40) }
+        let rows = (older + newer).reversed().map { $0 }
+        let data = DashboardViewModel.build(from: rows, current: rows[0])
+
+        // Okno 08-05...08-11 obejmuje tylko dwa dni z pomiarem (10 i 11),
+        // a setki sprzed przerwy są już poza nim. Poniżej progu — brak trendu.
+        #expect(data.trendDays == 2)
+        #expect(data.trend == nil)
+        #expect(data.trendDelta == nil)
+    }
+
+    /// Poprzednia, pozycyjna wersja liczyła „siedem ostatnich pomiarów", więc
+    /// przy dziurach sięgała wiele tygodni wstecz.
+    @Test("Trend uśrednia tylko dni z okna, nie ostatnie pomiary")
+    func trendIgnoresMeasurementsOutsideWindow() throws {
+        // 100 dawno temu, potem trzy świeże dni po 40 tuż przed dzisiejszym.
+        let old = try makeSnapshot("2026-07-20", 100)
+        let recent = try (5...7).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 40) }
+        let today = try makeSnapshot("2026-08-08", 70)
+        let rows = ([old] + recent + [today]).reversed().map { $0 }
+        let data = DashboardViewModel.build(from: rows, current: rows[0])
+
+        // Średnia z 05, 06 i 07 — lipcowa setka jest poza oknem.
+        #expect(data.trend == 40)
+        #expect(data.trendDays == 3)
+        #expect(data.trendDelta == 30)
+    }
+
+    /// Dzień bez pomiaru zostaje w szeregu jako pusty slot — dzięki temu oś
+    /// czasu na wykresie jest równa, a dziura widoczna.
+    @Test("Dni bez pomiaru zostają w szeregu jako puste")
+    func seriesKeepsEmptyDays() throws {
+        let rows = [
+            try makeSnapshot("2026-08-08", 70),
+            try makeSnapshot("2026-08-05", 50),
+        ]
+        let data = DashboardViewModel.build(from: rows, current: rows[0])
+
+        #expect(data.points.map(\.date) == [
+            "2026-08-05", "2026-08-06", "2026-08-07", "2026-08-08",
+        ])
+        #expect(data.points.map(\.total) == [50, nil, nil, 70])
+        #expect(data.coverageDays == 2)
+    }
+
+    @Test("Próg trendu: trzy dni w oknie wystarczą, dwa nie")
+    func trendMinimumDays() throws {
+        func trend(days: [Int]) throws -> DashboardData {
+            let older = try days.map { try makeSnapshot(String(format: "2026-08-%02d", $0), 60) }
+            let today = try makeSnapshot("2026-08-08", 90)
+            let rows = (older + [today]).reversed().map { $0 }
+            return DashboardViewModel.build(from: rows, current: rows[0])
+        }
+
+        #expect(try trend(days: [5, 7]).trend == nil)
+        #expect(try trend(days: [3, 5, 7]).trend == 60)
     }
 
     /// Sedno zmiany: gdyby dzisiejszy wynik wchodził do własnego trendu,

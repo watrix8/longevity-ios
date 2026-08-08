@@ -2,13 +2,20 @@ import Foundation
 import Observation
 
 /// Widok pojedynczego dnia na pasku 14 dni.
+///
+/// Jeden punkt to jeden dzień KALENDARZA, także taki bez pomiarów. Wcześniej
+/// szereg szedł po kolejnych snapshotach, więc tydzień przerwy zwijał się do
+/// zera pikseli i zmiana z trzech tygodni rysowała się tak stromo jak zmiana
+/// z trzech dni.
 struct DayPoint: Sendable {
     let date: String
-    let total: Double
-    /// Trend dnia — średnia z maks. 7 dni POPRZEDZAJĄCYCH ten dzień.
+    /// `nil` = dzień bez pomiarów. Pasek zostawia w tym miejscu dziurę,
+    /// zamiast udawać, że tego dnia nie było.
+    let total: Double?
+    /// Trend dnia — średnia wyników z 7 DNI KALENDARZA przed tym dniem.
     ///
-    /// `nil` w pierwszym dniu szeregu: nie ma jeszcze z czym porównywać,
-    /// a linia sklejona z wynikiem dnia udawałaby trend, którego nie ma.
+    /// `nil`, gdy w oknie jest mniej niż `trendMinDays` dni z pomiarami:
+    /// średnia z jednego dnia to nie trend, tylko wynik wczorajszy.
     let trend: Double?
 }
 
@@ -35,6 +42,9 @@ struct DashboardData: Sendable {
 
     /// Dni, po których wykres zaczyna cokolwiek znaczyć.
     static let warmupDays = 7
+
+    /// Szerokość paska — dni kalendarza, nie pomiarów.
+    static let stripDays = 14
 
     /// Poniżej progu wykres wprowadza w błąd: dwa punkty odległe o 1 pkt
     /// rysują się jak stromy podjazd, cokolwiek zrobić ze skalą.
@@ -67,37 +77,50 @@ extension DashboardData {
         return String(localized: "Score policzony z \(65)% wag. Brakuje: \(missing).")
     }
 
+    /// Tydzień noszenia, tydzień przerwy, powrót — pasek ma pokazać dziurę,
+    /// a linia trendu urwać się tam, gdzie zabrakło dni.
+    static var withGap: DashboardData {
+        preview(
+            totals: [72, 75, 71, 78, 74, nil, nil, nil, nil, nil, 61, 66, 70, 73],
+            stateText: DashboardViewModel.stateText(for: 73),
+            note: nil
+        )
+    }
+
     /// Liczy to samo co `build`, tylko z gołych wartości — dzięki temu podgląd
     /// nie może rozjechać się z produkcyjną definicją trendu.
-    private static func preview(totals: [Double], stateText: String, note: String?) -> DashboardData {
-        let trends = DashboardViewModel.trends(for: totals)
-        let dayFormatter = DateFormatter()
-        dayFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dayFormatter.dateFormat = "yyyy-MM-dd"
+    ///
+    /// `nil` w `totals` to dzień bez pomiarów, dokładnie jak brakujący
+    /// snapshot z Supabase.
+    private static func preview(totals: [Double?], stateText: String, note: String?) -> DashboardData {
+        // Kolejne dni kalendarza wstecz od dziś — ta sama droga co w `build`,
+        // żeby podgląd nie miał własnej definicji trendu.
+        let today = Date()
+        let scores = Dictionary(
+            uniqueKeysWithValues: totals.indices.compactMap { i -> (String, Double)? in
+                guard let total = totals[i] else { return nil }
+                let day = CalendarDays.calendar.date(
+                    byAdding: .day, value: i - totals.count + 1, to: today
+                ) ?? today
+                return (CalendarDays.isoString(day), total)
+            }
+        )
 
-        let points = totals.indices.map { i in
-            DayPoint(
-                date: dayFormatter.string(
-                    from: Calendar.current.date(
-                        byAdding: .day, value: i - totals.count + 1, to: Date()
-                    ) ?? Date()
-                ),
-                total: totals[i],
-                trend: trends[i]
-            )
+        let end = CalendarDays.isoString(today)
+        let points = DashboardViewModel.series(scores: scores, endingAt: end)
+        let headline = Int(totals.compactMap { $0 }.last ?? 0)
+        let todayTrend = CalendarDays.date(fromISO: end).map {
+            DashboardViewModel.trend(before: $0, scores: scores)
         }
-
-        let headline = Int(totals.last ?? 0)
-        let todayTrend = trends.last.flatMap { $0 }
 
         return DashboardData(
             dateLabel: DashboardViewModel.displayDate("2026-08-06"),
             headline: headline,
             stateText: stateText,
-            trend: todayTrend.map { Int($0.rounded()) },
-            trendDays: min(max(0, totals.count - 1), DashboardViewModel.trendWindow),
-            trendDelta: todayTrend.map { Int((Double(headline) - $0).rounded()) },
-            points: Array(points.suffix(14)),
+            trend: todayTrend?.value.map { Int($0.rounded()) },
+            trendDays: todayTrend?.days ?? 0,
+            trendDelta: todayTrend?.value.map { Int((Double(headline) - $0).rounded()) },
+            points: points,
             breakdown: [
                 // Podwagi i kolejność jak w `sleepParts`/`bodyParts` z
                 // `lib/scoring-v3.ts` — podgląd ma pokazywać kształt, który
@@ -127,7 +150,7 @@ extension DashboardData {
                     ]
                 ),
             ],
-            coverageDays: totals.count,
+            coverageDays: scores.count,
             note: note
         )
     }
@@ -188,52 +211,89 @@ final class DashboardViewModel {
 
     // MARK: - Wyliczenia
 
-    /// Ile dni wstecz uśrednia trend.
+    /// Ile DNI KALENDARZA wstecz sięga okno trendu.
     nonisolated static let trendWindow = 7
 
-    /// Trend dnia liczony WYŁĄCZNIE z dni wcześniejszych.
+    /// Ile z tych dni musi mieć pomiar, żeby średnia zasłużyła na nazwę trendu.
+    /// Przy jednym czy dwóch to jeszcze pojedyncze dni, nie kierunek.
+    nonisolated static let trendMinDays = 3
+
+    /// Trend dnia liczony z SIEDMIU DNI KALENDARZA przed nim.
     ///
-    /// Gdyby do okna wchodził dzisiejszy wynik, porównanie „dziś vs trend"
-    /// byłoby po części porównaniem liczby z samą sobą i tłumiło odchylenie
-    /// o 1/7. Pierwszy dzień szeregu nie ma trendu — stąd opcjonalność.
+    /// Dzień bez pomiaru nie wchodzi do średniej, ale zajmuje miejsce w oknie.
+    /// Dzięki temu tydzień przerwy przesuwa okno w czasie, zamiast po cichu
+    /// dokleić do trendu wyniki sprzed przerwy — wcześniej okno liczyło
+    /// „siedem ostatnich pomiarów", więc przy dziurach sięgało trzy tygodnie
+    /// wstecz i pokazywało formę, której już nie ma.
+    ///
+    /// Sam dzień do okna nie wchodzi: inaczej porównanie „dziś vs trend"
+    /// byłoby po części porównaniem liczby z samą sobą.
     ///
     /// `nonisolated`, bo to czysta matematyka — podgląd składa z niej dane
     /// bez wchodzenia na main actora.
-    nonisolated static func trends(for totals: [Double]) -> [Double?] {
-        totals.indices.map { i in
-            let window = totals[max(0, i - trendWindow)..<i]
-            guard !window.isEmpty else { return nil }
-            return window.reduce(0, +) / Double(window.count)
+    nonisolated static func trend(
+        before day: Date,
+        scores: [String: Double]
+    ) -> (value: Double?, days: Int) {
+        let values = (1...trendWindow).compactMap { offset -> Double? in
+            guard let earlier = CalendarDays.calendar.date(byAdding: .day, value: -offset, to: day)
+            else { return nil }
+            return scores[CalendarDays.isoString(earlier)]
         }
+
+        guard values.count >= trendMinDays else { return (nil, values.count) }
+        return (values.reduce(0, +) / Double(values.count), values.count)
     }
 
     /// Internal, nie private — to jedyna nietrywialna logika w tym pliku
     /// i chcemy ją mieć pod testami bez dotykania sieci.
     static func build(from rows: [ScoreSnapshot], current: ScoreSnapshot) -> DashboardData {
-        // rows przychodzą malejąco po dacie; do wykresu chcemy rosnąco.
-        let ascending = rows.reversed().map { $0 }
-        let totals = ascending.map { Double($0.scoreTotal) }
+        let scores = Dictionary(
+            rows.map { ($0.scoreDate, Double($0.scoreTotal)) },
+            uniquingKeysWith: { first, _ in first }
+        )
 
-        let points = zip(ascending, trends(for: totals)).map { snap, trend in
-            DayPoint(date: snap.scoreDate, total: Double(snap.scoreTotal), trend: trend)
-        }
-
-        // Trend dzisiejszy = trend ostatniego punktu szeregu. Ta sama liczba
-        // ląduje pod dużą cyfrą i na końcu zielonej linii wykresu.
-        let todayTrend = points.last?.trend
+        let points = series(scores: scores, endingAt: current.scoreDate)
+        let today = CalendarDays.date(fromISO: current.scoreDate)
+        let todayTrend = today.map { trend(before: $0, scores: scores) }
 
         return DashboardData(
             dateLabel: displayDate(current.scoreDate),
             headline: current.scoreTotal,
             stateText: stateText(for: current.scoreTotal),
-            trend: todayTrend.map { Int($0.rounded()) },
-            trendDays: min(max(0, totals.count - 1), trendWindow),
-            trendDelta: todayTrend.map { Int((Double(current.scoreTotal) - $0).rounded()) },
-            points: Array(points.suffix(14)),
+            trend: todayTrend?.value.map { Int($0.rounded()) },
+            trendDays: todayTrend?.days ?? 0,
+            trendDelta: todayTrend?.value.map { Int((Double(current.scoreTotal) - $0).rounded()) },
+            points: points,
             breakdown: current.components.breakdown,
             coverageDays: rows.count,
             note: Self.missingNote(current.components)
         )
+    }
+
+    /// Ostatnie `stripDays` dni kalendarza zakończone dniem `end`, ale nie
+    /// wcześniej niż pierwszy pomiar — puste sloty sprzed założenia konta
+    /// byłyby dziurą, której nikt nie zawinił.
+    nonisolated static func series(
+        scores: [String: Double],
+        endingAt end: String,
+        stripDays: Int = DashboardData.stripDays
+    ) -> [DayPoint] {
+        guard let endDate = CalendarDays.date(fromISO: end) else { return [] }
+
+        let firstMeasured = scores.keys.min().flatMap { CalendarDays.date(fromISO: $0) } ?? endDate
+        let span = CalendarDays.days(from: firstMeasured, to: endDate)
+        let length = min(stripDays, max(1, span + 1))
+
+        return (0..<length).reversed().compactMap { offset in
+            guard let day = CalendarDays.calendar.date(byAdding: .day, value: -offset, to: endDate)
+            else { return nil }
+            return DayPoint(
+                date: CalendarDays.isoString(day),
+                total: scores[CalendarDays.isoString(day)],
+                trend: trend(before: day, scores: scores).value
+            )
+        }
     }
 
     /// Score v3 pomija komponenty bez danych i przenormowuje wagi, więc liczba
