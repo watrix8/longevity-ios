@@ -45,6 +45,40 @@ enum AtlasFont {
     }
 }
 
+extension View {
+    /// Zasłania obszar statusu: zegarek, wifi i baterię.
+    ///
+    /// Ekrany nie mają paska nawigacji, więc iOS nie rysuje tam z automatu
+    /// niczego, a przewijana treść przejeżdża wprost pod cyframi zegara.
+    /// `scrollEdgeEffectStyle` z iOS 26 tego nie łapie — efekt krawędzi
+    /// potrzebuje paska, do którego mógłby się przykleić. Zamiast tego pas
+    /// w kolorze tła plus krótki gradient pod nim: tekst wygasza się,
+    /// zamiast urywać w połowie wiersza.
+    func statusBarCover(fade: CGFloat = 16) -> some View {
+        overlay(alignment: .top) {
+            GeometryReader { proxy in
+                // Wysokość paska statusu bierzemy z pomiaru, bo różni się
+                // między modelami. Nakładka mieszka wewnątrz bezpiecznego
+                // obszaru, więc dopiero `offset` wypycha ją nad jego krawędź —
+                // samo `ignoresSafeArea` na tym poziomie nic nie rozciąga.
+                let inset = proxy.safeAreaInsets.top
+                VStack(spacing: 0) {
+                    Palette.card.frame(height: inset)
+                    LinearGradient(
+                        colors: [Palette.card, Palette.card.opacity(0)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: fade)
+                }
+                .frame(maxWidth: .infinity)
+                .offset(y: -inset)
+            }
+            .allowsHitTesting(false)
+        }
+    }
+}
+
 /// Nagłówek zakładki: wersaliki, szeroki tracking, ochrowa kropka.
 ///
 /// Jeden typ dla wszystkich czterech ekranów — wcześniej Dashboard i Asystent

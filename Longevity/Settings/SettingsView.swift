@@ -32,6 +32,7 @@ struct SettingsView: View {
             .padding(.bottom, 24)
         }
         .background(Palette.card)
+        .statusBarCover()
         .task { await model.load() }
         .task { await health.refreshConnection() }
         // Zmiany lecą same; sygnatury pilnują, żeby wczytanie nie zapisywało zwrotnie.

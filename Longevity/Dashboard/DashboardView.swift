@@ -61,6 +61,7 @@ struct DashboardView: View {
             .padding(.bottom, 24)
         }
         .background(Palette.card)
+        .statusBarCover()
         .refreshable { await model.load() }
         .onAppear { Task { await model.refresh() } }
         .sheet(isPresented: $showsExplainer) {
