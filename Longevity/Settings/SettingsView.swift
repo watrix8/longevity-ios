@@ -91,7 +91,7 @@ struct SettingsView: View {
 
     private var healthCard: some View {
         section(kicker: "zdrowie i dane") {
-            row("Imię i nazwisko") {
+            row("Imię") {
                 TextField("—", text: $model.fullName)
                     .font(AtlasFont.body(14))
                     .foregroundStyle(Palette.ink)

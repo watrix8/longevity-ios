@@ -7,6 +7,7 @@ struct AuthView: View {
         case info(String)
     }
 
+    @State private var fullName = ""
     @State private var email = ""
     @State private var password = ""
     @State private var isSignUp = false
@@ -15,10 +16,13 @@ struct AuthView: View {
     @State private var needsConfirmation = false
     @FocusState private var focused: Field?
 
-    private enum Field { case email, password }
+    private enum Field { case name, email, password }
 
     private var hasInput: Bool {
-        !email.isEmpty && !password.isEmpty
+        guard !email.isEmpty, !password.isEmpty else { return false }
+        // Imię zbieramy już tutaj, tak jak `app/sign-up/page.tsx`. Reszta profilu
+        // idzie osobnym ekranem, bo bez sesji nie ma do czego jej zapisać.
+        return !isSignUp || !fullName.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     private var canSubmit: Bool {
@@ -65,6 +69,16 @@ struct AuthView: View {
 
     private var fields: some View {
         VStack(spacing: 12) {
+            if isSignUp {
+                field {
+                    TextField("Imię", text: $fullName)
+                        .textContentType(.givenName)
+                        .submitLabel(.next)
+                        .focused($focused, equals: .name)
+                        .onSubmit { focused = .email }
+                }
+            }
+
             field {
                 TextField("Email", text: $email)
                     .textContentType(.emailAddress)
@@ -144,6 +158,9 @@ struct AuthView: View {
             }
 
             Button {
+                // Pole imienia znika przy przełączeniu na logowanie — fokus musi
+                // zejść razem z nim, inaczej klawiatura zostaje bez kursora.
+                focused = nil
                 isSignUp.toggle()
                 status = nil
                 needsConfirmation = false
@@ -178,9 +195,13 @@ struct AuthView: View {
 
         do {
             if isSignUp {
+                // Imię ląduje w `user_metadata`, nie od razu w `profiles` — przy
+                // włączonym potwierdzaniu maila nie ma jeszcze sesji, a więc i
+                // uprawnień do zapisu. Onboarding wyciąga je stamtąd, tak jak web.
                 let response = try await AppSupabase.client.auth.signUp(
                     email: email,
-                    password: password
+                    password: password,
+                    data: ["full_name": .string(fullName.trimmingCharacters(in: .whitespaces))]
                 )
                 // Gdy w Supabase włączone jest "Confirm email", signUp nie tworzy sesji —
                 // zwraca samego użytkownika, a zalogowanie wymaga kliknięcia linku z maila.

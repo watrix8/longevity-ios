@@ -2340,18 +2340,34 @@
         }
       }
     },
-    "Wiek, płeć i wzrost wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników.": {
+    "Waga musi mieścić się w zakresie 25–400 kg": {
       "localizations": {
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wiek, płeć i wzrost wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników."
+            "value": "Waga musi mieścić się w zakresie 25–400 kg"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Age, sex and height feed straight into your score. Without them we compute it from half the inputs."
+            "value": "Weight must be between 25 and 400 kg"
+          }
+        }
+      }
+    },
+    "Wiek, płeć, wzrost i waga wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiek, płeć, wzrost i waga wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Age, sex, height and weight feed straight into your score. Without them we compute it from half the inputs."
           }
         }
       }
