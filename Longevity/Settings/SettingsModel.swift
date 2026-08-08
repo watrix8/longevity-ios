@@ -4,25 +4,32 @@ import Supabase
 
 /// Słowniki 1:1 z `app/settings/page.tsx`.
 enum SettingsOptions {
-    static let goals = [
-        ("energy", "Więcej energii"),
-        ("sleep", "Lepszy sen"),
-        ("stress", "Mniej stresu"),
-        ("performance", "Lepsza forma sportowa"),
-        ("longevity", "Długowieczność"),
-    ]
-    static let sexes = [
-        ("male", "Mężczyzna"),
-        ("female", "Kobieta"),
-        ("other", "Inna"),
-        ("prefer_not_to_say", "Wolę nie podawać"),
-    ]
-    static let bodyTypes = [
-        ("athletic", "Wysportowana"),
-        ("standard", "Standardowa"),
-        ("overweight", "Nadwaga"),
-        ("obese", "Otyłość"),
-    ]
+    /// Klucze lecą do bazy i są stałe; etykiety idą przez String Catalog.
+    static var goals: [(String, String)] {
+        [
+            ("energy", String(localized: "Więcej energii")),
+            ("sleep", String(localized: "Lepszy sen")),
+            ("stress", String(localized: "Mniej stresu")),
+            ("performance", String(localized: "Lepsza forma sportowa")),
+            ("longevity", String(localized: "Długowieczność")),
+        ]
+    }
+    static var sexes: [(String, String)] {
+        [
+            ("male", String(localized: "Mężczyzna")),
+            ("female", String(localized: "Kobieta")),
+            ("other", String(localized: "Inna")),
+            ("prefer_not_to_say", String(localized: "Wolę nie podawać")),
+        ]
+    }
+    static var bodyTypes: [(String, String)] {
+        [
+            ("athletic", String(localized: "Wysportowana")),
+            ("standard", String(localized: "Standardowa")),
+            ("overweight", String(localized: "Nadwaga")),
+            ("obese", String(localized: "Otyłość")),
+        ]
+    }
 }
 
 private struct ProfileRow: Decodable {
@@ -206,7 +213,7 @@ final class SettingsViewModel {
                 redirectTo: AppSupabase.webBaseURL.appending(path: "update-password")
             )
             passwordIsError = false
-            passwordStatus = "Wysłaliśmy link na \(email)"
+            passwordStatus = String(localized: "Wysłaliśmy link na \(email)")
         } catch {
             passwordIsError = true
             passwordStatus = error.localizedDescription

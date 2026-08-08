@@ -29,23 +29,23 @@ struct DashboardModelTests {
         #expect(data.headline == 38)
     }
 
-    /// Przy jednym dniu nie ma z czym porównywać — norma musi być pusta,
-    /// a nie równa dzisiejszemu wynikowi. Sklejona udawałaby, że istnieje.
-    @Test("Pojedynczy snapshot nie ma normy")
+    /// Przy jednym dniu nie ma z czym porównywać — trend musi być pusty,
+    /// a nie równy dzisiejszemu wynikowi. Sklejony udawałby, że istnieje.
+    @Test("Pojedynczy snapshot nie ma trendu")
     func singleSnapshot() throws {
         let rows = [try makeSnapshot("2026-08-06", 38)]
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
         #expect(data.coverageDays == 1)
-        #expect(data.norm == nil)
-        #expect(data.normDelta == nil)
-        #expect(data.normDays == 0)
+        #expect(data.trend == nil)
+        #expect(data.trendDelta == nil)
+        #expect(data.trendDays == 0)
         #expect(data.points.count == 1)
-        #expect(data.points.first?.norm == nil)
+        #expect(data.points.first?.trend == nil)
     }
 
-    @Test("Norma liczy się z okna 7 dni poprzedzających")
-    func rollingNorm() throws {
+    @Test("Trend liczy się z okna 7 dni poprzedzających")
+    func rollingTrend() throws {
         // 10 dni po 10, 20, ... 100 — malejąco, jak z Supabase.
         let rows = try (1...10).reversed().map {
             try makeSnapshot(String(format: "2026-08-%02d", $0), $0 * 10)
@@ -53,40 +53,40 @@ struct DashboardModelTests {
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
         // Pierwszy punkt nie ma dnia przed sobą.
-        #expect(data.points.first?.norm == nil)
+        #expect(data.points.first?.trend == nil)
         // Ósmy punkt (wartość 80): średnia z siedmiu poprzednich, 10...70.
-        #expect(data.points[7].norm == 40)
+        #expect(data.points[7].trend == 40)
         // Ostatni (100): średnia z 30...90.
-        #expect(data.points.last?.norm == 60)
+        #expect(data.points.last?.trend == 60)
     }
 
-    /// Sedno zmiany: gdyby dzisiejszy wynik wchodził do własnej normy,
-    /// odchylenie byłoby tłumione o 1/7 i „dziś vs norma" porównywałoby
+    /// Sedno zmiany: gdyby dzisiejszy wynik wchodził do własnego trendu,
+    /// odchylenie byłoby tłumione o 1/7 i „dziś vs trend" porównywałoby
     /// liczbę częściowo z samą sobą.
-    @Test("Dzisiejszy wynik nie wchodzi do własnej normy")
-    func normExcludesToday() throws {
-        // Siedem dni po 50 i dzisiaj 100. Norma to czyste 50, delta 50.
+    @Test("Dzisiejszy wynik nie wchodzi do własnego trendu")
+    func trendExcludesToday() throws {
+        // Siedem dni po 50 i dzisiaj 100. Trend to czyste 50, delta 50.
         let older = try (1...7).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 50) }
         let today = try makeSnapshot("2026-08-08", 100)
         let rows = (older + [today]).reversed().map { $0 }
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
-        #expect(data.norm == 50)
-        #expect(data.normDelta == 50)
-        #expect(data.normDays == 7)
+        #expect(data.trend == 50)
+        #expect(data.trendDelta == 50)
+        #expect(data.trendDays == 7)
     }
 
-    @Test("Okno normy zatrzymuje się na siedmiu dniach")
-    func normWindowCaps() throws {
-        // 20 dni: dziesięć po 100 (starsze) i dziesięć po 0 — norma ostatniego
+    @Test("Okno trendu zatrzymuje się na siedmiu dniach")
+    func trendWindowCaps() throws {
+        // 20 dni: dziesięć po 100 (starsze) i dziesięć po 0 — trend ostatniego
         // dnia widzi wyłącznie zera, bo setki wypadły z okna.
         let older = try (1...10).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 100) }
         let newer = try (11...20).map { try makeSnapshot(String(format: "2026-08-%02d", $0), 0) }
         let rows = (older + newer).reversed().map { $0 }
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
-        #expect(data.norm == 0)
-        #expect(data.normDays == 7)
+        #expect(data.trend == 0)
+        #expect(data.trendDays == 7)
     }
 
     @Test("Rozgrzewka trwa do siódmego dnia z danymi")
@@ -116,15 +116,15 @@ struct DashboardModelTests {
         #expect(data.points.last?.date == "2026-08-20")
     }
 
-    @Test("Pewność to pokrycie danymi w 30 dniach")
-    func confidence() throws {
+    @Test("Pokrycie liczy dni ze snapshotem, nie punkty wykresu")
+    func coverageCountsSnapshots() throws {
         let rows = try (1...15).reversed().map {
             try makeSnapshot(String(format: "2026-08-%02d", $0), 50)
         }
         let data = DashboardViewModel.build(from: rows, current: rows[0])
 
         #expect(data.coverageDays == 15)
-        #expect(data.confidence == 50)
+        #expect(data.points.count == 14)
     }
 
     @Test("Notka pojawia się przy niepełnym pokryciu komponentów")
@@ -152,38 +152,67 @@ struct DashboardModelTests {
         #expect(data.breakdown.map(\.label) == ["Sen", "Regeneracja"])
     }
 
+    /// Porównanie do przetłumaczonego zdania, a nie do polskiego prefiksu —
+    /// po lokalizacji test sprawdza próg, a nie język, w którym akurat
+    /// uruchomiono symulator.
     @Test("Progi opisu stanu", arguments: [
-        (95, "Świetna"), (80, "Świetna"), (79, "Solidnie"), (60, "Solidnie"),
-        (59, "Przeciętnie"), (40, "Przeciętnie"), (39, "Lekki"), (0, "Lekki"),
+        (95, 80), (80, 80), (79, 60), (60, 60),
+        (59, 40), (40, 40), (39, 0), (0, 0),
     ])
-    func stateTextThresholds(total: Int, expectedPrefix: String) throws {
+    func stateTextThresholds(total: Int, band: Int) throws {
         let snapshot = try makeSnapshot("2026-08-06", total)
         let data = DashboardViewModel.build(from: [snapshot], current: snapshot)
 
-        #expect(data.stateText.hasPrefix(expectedPrefix))
+        #expect(data.stateText == DashboardViewModel.stateText(for: band))
     }
 
-    @Test("Data formatuje się po polsku")
-    func polishDateLabel() throws {
+    /// Cztery progi to cztery różne zdania — gdyby któreś się powtórzyło,
+    /// test wyżej przechodziłby mimo sklejonych przedziałów.
+    @Test("Każdy próg ma własne zdanie")
+    func stateTextsDiffer() {
+        let texts = [0, 40, 60, 80].map { DashboardViewModel.stateText(for: $0) }
+        #expect(Set(texts).count == 4)
+    }
+
+    /// Data ma nieść dzień tygodnia i miesiąc słownie, w języku użytkownika.
+    /// Sam napis zależy od lokalizacji, więc test pilnuje kształtu: dwie części
+    /// rozdzielone kropką i miesiąc słowem, a nie cyfrą.
+    @Test("Data jest opisowa i rozdzielona kropką")
+    func dateLabelShape() throws {
         let snapshot = try makeSnapshot("2026-08-06", 38)
         let data = DashboardViewModel.build(from: [snapshot], current: snapshot)
 
-        #expect(data.dateLabel == "czwartek · 6 sierpnia")
+        let parts = data.dateLabel.components(separatedBy: " · ")
+        #expect(parts.count == 2)
+        #expect(parts.first?.contains(where: \.isLetter) == true)
+        #expect(parts.last?.contains(where: \.isLetter) == true)
     }
 }
 
-@Suite("Odmiana liczebników")
-struct PolishPluralTests {
-    /// Po przyimku "z" potrzebny dopełniacz — "średnia z 1 dnia", nie "z 1 dzień".
-    @Test("Dopełniacz", arguments: [(1, "dnia"), (2, "dni"), (5, "dni"), (22, "dni")])
-    func genitive(count: Int, expected: String) {
-        #expect(PL.daysGenitive(count) == expected)
+@Suite("String Catalog")
+struct LocalizationTests {
+    /// Polska odmiana „dzień/dni" siedzi teraz w katalogu jako warianty
+    /// mnogości. Bez tego testu literówka w kategorii `few` przeszłaby cicho.
+    @Test("Warianty mnogości po polsku")
+    func polishPlurals() {
+        #expect(localized("ostatnie \(1) dni", "pl") == "ostatni dzień")
+        #expect(localized("ostatnie \(2) dni", "pl") == "ostatnie 2 dni")
+        #expect(localized("ostatnie \(14) dni", "pl") == "ostatnie 14 dni")
+        #expect(localized("trend z \(1) dni", "pl") == "trend z 1 dnia")
+        #expect(localized("trend z \(7) dni", "pl") == "trend z 7 dni")
     }
 
-    @Test("Nagłówek zakresu")
-    func lastDaysHeader() {
-        #expect(PL.lastDays(1) == "ostatni dzień")
-        #expect(PL.lastDays(2) == "ostatnie 2 dni")
-        #expect(PL.lastDays(14) == "ostatnie 14 dni")
+    @Test("Angielski wchodzi z katalogu")
+    func englishTranslations() {
+        #expect(localized("ostatnie \(1) dni", "en") == "last day")
+        #expect(localized("ostatnie \(14) dni", "en") == "last 14 days")
+        #expect(localized("wynik dnia", "en") == "today's score")
+        #expect(localized("Sen", "en") == "Sleep")
+    }
+
+    private func localized(_ resource: LocalizedStringResource, _ language: String) -> String {
+        var resource = resource
+        resource.locale = Locale(identifier: language)
+        return String(localized: resource)
     }
 }

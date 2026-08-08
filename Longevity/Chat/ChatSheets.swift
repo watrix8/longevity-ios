@@ -185,7 +185,7 @@ struct MarkersSheet: View {
 
     // MARK: - Klocki
 
-    private func group<C: View>(_ kicker: String, @ViewBuilder _ content: () -> C) -> some View {
+    private func group<C: View>(_ kicker: LocalizedStringResource, @ViewBuilder _ content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Kicker(text: kicker)
                 .padding(.bottom, 10)
@@ -198,7 +198,7 @@ struct MarkersSheet: View {
         .padding(.bottom, 20)
     }
 
-    private func field(_ label: String, _ value: Binding<String>, _ unit: String) -> some View {
+    private func field(_ label: LocalizedStringResource, _ value: Binding<String>, _ unit: LocalizedStringResource) -> some View {
         HStack(spacing: 12) {
             Text(label)
                 .font(AtlasFont.body(14))
@@ -279,7 +279,7 @@ struct CheckinSheet: View {
         .presentationDetents([.large])
     }
 
-    private func scale(_ title: String, subtitle: String, value: Binding<Int>) -> some View {
+    private func scale(_ title: LocalizedStringResource, subtitle: LocalizedStringResource, value: Binding<Int>) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(AtlasFont.body(15, .medium))
@@ -294,7 +294,7 @@ struct CheckinSheet: View {
                     Button {
                         withAnimation(.easeOut(duration: 0.15)) { value.wrappedValue = step }
                     } label: {
-                        Text("\(step)")
+                        Text(verbatim: "\(step)")
                             .font(AtlasFont.display(17))
                             .monospacedDigit()
                             .foregroundStyle(value.wrappedValue == step ? .white : Palette.ink)

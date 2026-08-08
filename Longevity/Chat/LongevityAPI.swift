@@ -34,11 +34,20 @@ enum LongevityAPI {
 
     // MARK: - Wywołania
 
+    /// Język, w którym ma odpowiadać asystent — kod ISO („pl", „en").
+    ///
+    /// Interfejs tłumaczy String Catalog, ale treść od modelu układa serwer
+    /// i sam z siebie nie wie, na jaki język przełączony jest telefon.
+    /// Serwer, który tego pola nie obsługuje, po prostu je zignoruje.
+    static var language: String {
+        Locale.autoupdatingCurrent.language.languageCode?.identifier ?? "pl"
+    }
+
     static func ask(question: String) async throws -> String {
         let response: AssistantReply = try await send(
             "/api/v1/assistant",
             method: "POST",
-            body: ["question": question, "source": "ios"]
+            body: ["question": question, "source": "ios", "language": language]
         )
         return response.reply
     }
@@ -47,6 +56,7 @@ enum LongevityAPI {
         let question: String
         let source = "ios"
         let stream = true
+        let language = LongevityAPI.language
     }
 
     /// Zdarzenie SSE z `/api/v1/assistant`. Serwer emituje własny format,
@@ -127,12 +137,13 @@ enum LongevityAPI {
         }
 
         let parsed = try? JSONDecoder().decode(ServerError.self, from: body)
-        return parsed?.error ?? "Serwer odpowiedział błędem (\(status))."
+        return parsed?.error ?? String(localized: "Serwer odpowiedział błędem (\(status)).")
     }
 
     private struct MealAdviceBody: Encodable {
         let description: String?
         let image_base64: String?
+        let language = LongevityAPI.language
     }
 
     /// Opinia o posiłku, nie wpis do dziennika.
@@ -230,7 +241,7 @@ enum LongevityAPI {
 
         guard (200..<300).contains(status) else {
             let parsed = try? JSONDecoder().decode(ServerError.self, from: data)
-            throw Failure(message: parsed?.error ?? "Serwer odpowiedział błędem (\(status)).")
+            throw Failure(message: parsed?.error ?? String(localized: "Serwer odpowiedział błędem (\(status))."))
         }
 
         // Część wywołań interesuje nas tylko efektem ubocznym — pusta odpowiedź
@@ -240,7 +251,7 @@ enum LongevityAPI {
         do {
             return try JSONDecoder().decode(Response.self, from: data)
         } catch {
-            throw Failure(message: "Nie udało się odczytać odpowiedzi serwera.")
+            throw Failure(message: String(localized: "Nie udało się odczytać odpowiedzi serwera."))
         }
     }
 }

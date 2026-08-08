@@ -42,14 +42,16 @@ final class ChatViewModel {
     var isComposingMeal: Bool { awaitingMealDescription || attachedPhoto != nil }
 
     var placeholder: String {
-        if attachedPhoto != nil { return "Dodaj komentarz albo wyślij samo zdjęcie…" }
-        return awaitingMealDescription ? "Co jesz? Opisz krótko…" : "Zapytaj o cokolwiek…"
+        if attachedPhoto != nil { return String(localized: "Dodaj komentarz albo wyślij samo zdjęcie…") }
+        return awaitingMealDescription
+            ? String(localized: "Co jesz? Opisz krótko…")
+            : String(localized: "Zapytaj o cokolwiek…")
     }
 
     /// Zdjęcie z aparatu albo galerii — tylko podpięcie, bez wysyłki.
     func attach(photo: Data) {
         guard MealPhoto.base64(from: photo) != nil else {
-            append(.failure("Nie udało się przygotować zdjęcia. Spróbuj innego."))
+            append(.failure(String(localized: "Nie udało się przygotować zdjęcia. Spróbuj innego.")))
             return
         }
 
@@ -133,7 +135,7 @@ final class ChatViewModel {
     }
 
     private func ask(_ question: String) async {
-        await consume(LongevityAPI.askStream(question: question), whenEmpty: "Asystent nie odpowiedział. Spróbuj ponownie.")
+        await consume(LongevityAPI.askStream(question: question), whenEmpty: String(localized: "Asystent nie odpowiedział. Spróbuj ponownie."))
     }
 
     // MARK: - Posiłki
@@ -146,7 +148,7 @@ final class ChatViewModel {
     private func streamMealAdvice(description: String?, imageBase64: String?) async {
         await consume(
             LongevityAPI.mealAdviceStream(description: description, imageBase64: imageBase64),
-            whenEmpty: "Nie udało się ocenić tego posiłku. Spróbuj ponownie."
+            whenEmpty: String(localized: "Nie udało się ocenić tego posiłku. Spróbuj ponownie.")
         )
     }
 
@@ -185,7 +187,7 @@ final class ChatViewModel {
             append(.failure(
                 bubble == nil
                     ? error.localizedDescription
-                    : "Połączenie przerwane — odpowiedź może być niepełna."
+                    : String(localized: "Połączenie przerwane — odpowiedź może być niepełna.")
             ))
         }
     }
@@ -213,7 +215,7 @@ final class ChatViewModel {
                 .upsert(payload, onConflict: "user_id,logged_date")
                 .execute()
 
-            append(.confirmation("🏃 Aktywność zapisana: \(minutes) min"))
+            append(.confirmation(String(localized: "🏃 Aktywność zapisana: \(minutes) min")))
             await LongevityAPI.refreshScore()
         } catch {
             append(.failure(error.localizedDescription))
@@ -248,7 +250,7 @@ final class ChatViewModel {
 
         do {
             try await LongevityAPI.saveCheckin(stress: stress, mood: mood)
-            append(.confirmation("✅ Check-in zapisany — stres \(stress)/5 • nastrój \(mood)/5"))
+            append(.confirmation(String(localized: "✅ Check-in zapisany — stres \(stress)/5 • nastrój \(mood)/5")))
             await LongevityAPI.refreshScore()
         } catch {
             append(.failure(error.localizedDescription))

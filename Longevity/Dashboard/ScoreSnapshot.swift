@@ -73,11 +73,11 @@ struct ScoreComponents: Decodable, Sendable {
     /// Kolejność wg wag z formuły v3. Komponenty bez danych są pomijane —
     /// pasek na zerze czytałby się jak „zawaliłeś", a nie „nie zmierzono".
     var breakdown: [ScoreComponentRow] {
-        Self.order.compactMap { key, label in
+        Self.order.compactMap { key in
             guard let value = self[key] else { return nil }
             return ScoreComponentRow(
                 id: key,
-                label: label,
+                label: Self.label(forComponent: key),
                 weight: weights?[key],
                 value: value,
                 parts: partRows(for: key)
@@ -88,7 +88,7 @@ struct ScoreComponents: Decodable, Sendable {
     /// Etykiety komponentów, których nie dało się policzyć — dashboard mówi
     /// wprost, czego brakuje, zamiast udawać komplet.
     var missing: [String] {
-        Self.order.compactMap { key, label in self[key] == nil ? label : nil }
+        Self.order.compactMap { key in self[key] == nil ? Self.label(forComponent: key) : nil }
     }
 
     /// Ile procent wag score faktycznie objął. `nil` dla starych snapshotów.
@@ -98,34 +98,44 @@ struct ScoreComponents: Decodable, Sendable {
 
     // MARK: - Słowniki
 
-    private static let order: [(key: String, label: String)] = [
-        ("sleep", "Sen"),
-        ("vo2max", "VO₂max"),
-        ("body", "Ciało"),
-        ("regeneration", "Regeneracja"),
-        ("metabolic", "Metabolizm"),
-    ]
+    private static let order = ["sleep", "vo2max", "body", "regeneration", "metabolic"]
 
-    /// Etykiety składowych. Klucze przychodzą z serwera, nazwy zostają tutaj —
-    /// baza nie jest miejscem na polskie napisy.
-    private static let partLabels: [String: String] = [
-        "duration": "Długość snu",
-        "deep": "Sen głęboki",
+    /// Nazwa komponentu w języku użytkownika. Klucze przychodzą z serwera,
+    /// nazwy zostają tutaj — baza nie jest miejscem na napisy dla ludzi.
+    static func label(forComponent key: String) -> String {
+        switch key {
+        case "sleep": String(localized: "Sen")
+        case "vo2max": String(localized: "VO₂max")
+        case "body": String(localized: "Ciało")
+        case "regeneration": String(localized: "Regeneracja")
+        case "metabolic": String(localized: "Metabolizm")
+        default: key
+        }
+    }
+
+    /// Nazwy składowych. Nieznany klucz wraca surowy — nowy element policzony
+    /// przez serwer ma się pokazać, a nie zniknąć z rozbicia.
+    static func label(forPart key: String) -> String {
+        switch key {
+        case "duration": String(localized: "Długość snu")
+        case "deep": String(localized: "Sen głęboki")
         // Dwa różne wymiary rytmu i oba wchodzą do wyniku: `consistency` to
         // rozrzut DŁUGOŚCI snu, `regularity` to stałość PORY zasypiania.
         // Można spać co noc osiem godzin, kładąc się o losowych porach.
-        "consistency": "Równa długość snu",
-        "regularity": "Regularność pory snu",
-        "bmi": "BMI",
-        "whr": "Talia/biodra",
-        "body_fat": "Tkanka tłuszczowa",
-        "resting_heart_rate": "Tętno spoczynkowe",
-        "hrv_trend": "Trend HRV",
-        "glucose_fasting": "Glukoza na czczo",
-        "hba1c": "HbA1c",
-        "crp": "CRP",
-        "lipids": "Lipidy",
-    ]
+        case "consistency": String(localized: "Równa długość snu")
+        case "regularity": String(localized: "Regularność pory snu")
+        case "bmi": String(localized: "BMI")
+        case "whr": String(localized: "Talia/biodra")
+        case "body_fat": String(localized: "Tkanka tłuszczowa")
+        case "resting_heart_rate": String(localized: "Tętno spoczynkowe")
+        case "hrv_trend": String(localized: "Trend HRV")
+        case "glucose_fasting": String(localized: "Glukoza na czczo")
+        case "hba1c": String(localized: "HbA1c")
+        case "crp": String(localized: "CRP")
+        case "lipids": String(localized: "Lipidy")
+        default: key
+        }
+    }
 
     private subscript(key: String) -> Double? {
         switch key {
@@ -142,7 +152,7 @@ struct ScoreComponents: Decodable, Sendable {
         (parts?[key] ?? []).map { part in
             ScorePartRow(
                 id: part.key,
-                label: Self.partLabels[part.key] ?? part.key,
+                label: Self.label(forPart: part.key),
                 weight: part.weight,
                 value: part.value
             )

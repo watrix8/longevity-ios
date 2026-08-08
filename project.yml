@@ -1,6 +1,9 @@
 name: Longevity
 options:
   bundleIdPrefix: pl.tippin
+  # Polski jest językiem źródłowym: teksty w kodzie są po polsku i to one są
+  # kluczami w String Catalogu. Angielski dochodzi jako tłumaczenie.
+  developmentLanguage: pl
   deploymentTarget:
     iOS: "26.0"
     watchOS: "26.0"
@@ -38,6 +41,8 @@ targets:
         # jednej kolumnie, więc na iPadzie wyglądałby jak rozciągnięta apka.
         TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Ekstrakcja tekstów z kodu do Localizable.xcstrings przy buildzie w Xcode.
+        SWIFT_EMIT_LOC_STRINGS: YES
         SWIFT_VERSION: "6.0"
         SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
         CODE_SIGN_STYLE: Automatic

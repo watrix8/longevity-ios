@@ -39,14 +39,18 @@ struct HealthMarkers: Encodable, Sendable, Equatable {
     /// serwera, bo serwer odsyła nazwy kolumn — użytkownik ma zobaczyć wartości.
     var summary: String {
         var parts: [String] = []
-        if let vo2max { parts.append("VO₂max \(Self.format(vo2max))") }
-        if let hrvSdnnMs { parts.append("HRV \(Self.format(hrvSdnnMs)) ms") }
-        if let restingHeartRate { parts.append("tętno \(Self.format(restingHeartRate)) bpm") }
-        if let weightKg { parts.append("waga \(Self.format(weightKg)) kg") }
-        if let bodyFatPct { parts.append("tłuszcz \(Self.format(bodyFatPct))%") }
-        if let leanBodyMassKg { parts.append("masa beztł. \(Self.format(leanBodyMassKg)) kg") }
-        if let waistCm { parts.append("talia \(Self.format(waistCm)) cm") }
-        if let hipCm { parts.append("biodra \(Self.format(hipCm)) cm") }
+        if let vo2max { parts.append(String(localized: "VO₂max \(Self.format(vo2max))")) }
+        if let hrvSdnnMs { parts.append(String(localized: "HRV \(Self.format(hrvSdnnMs)) ms")) }
+        if let restingHeartRate {
+            parts.append(String(localized: "tętno \(Self.format(restingHeartRate)) bpm"))
+        }
+        if let weightKg { parts.append(String(localized: "waga \(Self.format(weightKg)) kg")) }
+        if let bodyFatPct { parts.append(String(localized: "tłuszcz \(Self.format(bodyFatPct))%")) }
+        if let leanBodyMassKg {
+            parts.append(String(localized: "masa beztł. \(Self.format(leanBodyMassKg)) kg"))
+        }
+        if let waistCm { parts.append(String(localized: "talia \(Self.format(waistCm)) cm")) }
+        if let hipCm { parts.append(String(localized: "biodra \(Self.format(hipCm)) cm")) }
         return parts.joined(separator: " · ")
     }
 

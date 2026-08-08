@@ -186,7 +186,7 @@ struct AuthView: View {
                 if response.session == nil {
                     needsConfirmation = true
                     status = .info(
-                        "Konto utworzone. Wysłaliśmy link potwierdzający na \(email) — kliknij go, a potem zaloguj się."
+                        String(localized: "Konto utworzone. Wysłaliśmy link potwierdzający na \(email) — kliknij go, a potem zaloguj się.")
                     )
                 }
             } else {
@@ -210,7 +210,7 @@ struct AuthView: View {
 
         do {
             try await AppSupabase.client.auth.resend(email: email, type: .signup)
-            status = .info("Wysłaliśmy link ponownie na \(email).")
+            status = .info(String(localized: "Wysłaliśmy link ponownie na \(email)."))
         } catch {
             status = .error(localizedError(error))
         }
@@ -220,28 +220,30 @@ struct AuthView: View {
         guard let authError = error as? AuthError else {
             let message = error.localizedDescription.lowercased()
             if message.contains("network") || message.contains("connection") || message.contains("offline") {
-                return "Brak połączenia z internetem"
+                return String(localized: "Brak połączenia z internetem")
             }
-            return "Wystąpił błąd: \(error.localizedDescription)"
+            let detail = error.localizedDescription
+            return String(localized: "Wystąpił błąd: \(detail)")
         }
 
         switch authError.errorCode {
         case .invalidCredentials:
-            return "Nieprawidłowy email lub hasło"
+            return String(localized: "Nieprawidłowy email lub hasło")
         case .emailNotConfirmed:
-            return "Email nie został potwierdzony — sprawdź skrzynkę i kliknij link."
+            return String(localized: "Email nie został potwierdzony — sprawdź skrzynkę i kliknij link.")
         case .userAlreadyExists, .emailExists:
-            return "Ten email jest już zarejestrowany"
+            return String(localized: "Ten email jest już zarejestrowany")
         case .weakPassword:
-            return "Hasło jest za słabe (min. 6 znaków)"
+            return String(localized: "Hasło jest za słabe (min. 6 znaków)")
         case .validationFailed:
-            return "Nieprawidłowy adres email"
+            return String(localized: "Nieprawidłowy adres email")
         case .overEmailSendRateLimit, .overRequestRateLimit:
-            return "Za dużo prób. Odczekaj chwilę i spróbuj ponownie."
+            return String(localized: "Za dużo prób. Odczekaj chwilę i spróbuj ponownie.")
         case .signupDisabled:
-            return "Rejestracja jest wyłączona"
+            return String(localized: "Rejestracja jest wyłączona")
         default:
-            return "Wystąpił błąd: \(authError.localizedDescription)"
+            let detail = authError.localizedDescription
+            return String(localized: "Wystąpił błąd: \(detail)")
         }
     }
 }

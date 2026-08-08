@@ -51,30 +51,45 @@ enum AtlasFont {
 /// niosły ten kształt inline, a Trendy i Opcje dryfowały we własny stopień
 /// pisma bez kropki.
 struct ScreenTitle: View {
-    let text: String
+    /// `LocalizedStringResource`, nie `String` — dzięki temu wywołanie z gołym
+    /// tekstem trafia do String Catalogu, a wartość policzona w kodzie nie da
+    /// się tu wstawić przez pomyłkę (nie skompiluje się).
+    let text: LocalizedStringResource
 
     var body: some View {
         HStack(spacing: 0) {
-            Text(text.uppercased())
-            Text(".").foregroundStyle(Palette.ochre)
+            Text(String(localized: text).uppercased())
+            Text(verbatim: ".").foregroundStyle(Palette.ochre)
         }
         .font(AtlasFont.display(15, .heavy))
         .tracking(2.1)
         .foregroundStyle(Palette.ink)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel(text)
+        .accessibilityLabel(Text(text))
         .accessibilityAddTraits(.isHeader)
     }
 }
 
 /// Nagłówek sekcji: mono, wersaliki, szeroki tracking.
 struct Kicker: View {
-    let text: String
-    var color: Color = Palette.muted
-    var size: CGFloat = 10
+    private let text: String
+    private let color: Color
+    private let size: CGFloat
+
+    init(text: LocalizedStringResource, color: Color = Palette.muted, size: CGFloat = 10) {
+        self.init(verbatim: String(localized: text), color: color, size: size)
+    }
+
+    /// Dla nagłówków składanych w kodzie — są już w języku użytkownika
+    /// i nie ma czego szukać w String Catalogu.
+    init(verbatim text: String, color: Color = Palette.muted, size: CGFloat = 10) {
+        self.text = text
+        self.color = color
+        self.size = size
+    }
 
     var body: some View {
-        Text(text.uppercased())
+        Text(verbatim: text.uppercased())
             .font(AtlasFont.mono(size))
             .tracking(size * 0.16)
             .foregroundStyle(color)

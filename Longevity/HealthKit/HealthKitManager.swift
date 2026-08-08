@@ -426,7 +426,7 @@ enum HealthKitError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unavailable: "HealthKit jest niedostępny na tym urządzeniu."
+        case .unavailable: String(localized: "HealthKit jest niedostępny na tym urządzeniu.")
         }
     }
 }

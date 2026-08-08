@@ -62,7 +62,7 @@ struct StripGeometry: Equatable {
     }
 }
 
-/// Główny wykres dashboardu: spokojna linia normy (pine) i skaczące punkty
+/// Główny wykres dashboardu: spokojna linia trendu (pine) i skaczące punkty
 /// dziennych wyników (ochre). Przeciągnięcie po nim wybiera dzień.
 struct TrendStrip: View {
     let points: [DayPoint]
@@ -70,10 +70,10 @@ struct TrendStrip: View {
 
     @State private var size: CGSize = .zero
 
-    /// Do skali wchodzą i wyniki, i normy — inaczej linia potrafi wyjechać
+    /// Do skali wchodzą i wyniki, i trend — inaczej linia potrafi wyjechać
     /// poza kadr w dniu z mocnym odchyleniem.
     private var values: [Double] {
-        points.map(\.total) + points.compactMap(\.norm)
+        points.map(\.total) + points.compactMap(\.trend)
     }
 
     private var shownIndex: Int? {
@@ -87,10 +87,10 @@ struct TrendStrip: View {
             let g = StripGeometry(values: values, size: canvasSize)
 
             drawSelectionRule(context, g, canvasSize)
-            drawNormLine(context, g)
+            drawTrendLine(context, g)
             drawStems(context, g)
             drawDots(context, g)
-            drawNormLabel(context, g, width: canvasSize.width)
+            drawTrendLabel(context, g, width: canvasSize.width)
             drawAxis(context, size: canvasSize)
         }
         .frame(height: 150)
@@ -127,14 +127,14 @@ struct TrendStrip: View {
         context.stroke(rule, with: .color(Palette.tick), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
     }
 
-    /// Linia normy zaczyna się dopiero tam, gdzie norma istnieje — w pierwszym
-    /// dniu szeregu nie ma jej z czego policzyć.
-    private func drawNormLine(_ context: GraphicsContext, _ g: StripGeometry) {
+    /// Linia trendu zaczyna się dopiero tam, gdzie trend istnieje — w pierwszym
+    /// dniu szeregu nie ma go z czego policzyć.
+    private func drawTrendLine(_ context: GraphicsContext, _ g: StripGeometry) {
         var line = Path()
         var started = false
         for (i, p) in points.enumerated() {
-            guard let norm = p.norm else { continue }
-            let pt = CGPoint(x: g.x(i), y: g.y(norm))
+            guard let trend = p.trend else { continue }
+            let pt = CGPoint(x: g.x(i), y: g.y(trend))
             if started { line.addLine(to: pt) } else { line.move(to: pt); started = true }
         }
         context.stroke(
@@ -146,9 +146,9 @@ struct TrendStrip: View {
 
     private func drawStems(_ context: GraphicsContext, _ g: StripGeometry) {
         for (i, p) in points.enumerated() {
-            guard let norm = p.norm else { continue }
+            guard let trend = p.trend else { continue }
             var stem = Path()
-            stem.move(to: CGPoint(x: g.x(i), y: g.y(norm)))
+            stem.move(to: CGPoint(x: g.x(i), y: g.y(trend)))
             stem.addLine(to: CGPoint(x: g.x(i), y: g.y(p.total)))
             context.stroke(stem, with: .color(Palette.stem), lineWidth: 1.4)
         }
@@ -174,7 +174,7 @@ struct TrendStrip: View {
                 // Obwódka w kolorze tła odcina kropkę od łodyżki pod nią.
                 context.stroke(dot, with: .color(Palette.card), lineWidth: 1.6)
                 context.draw(
-                    Text("\(Int(p.total))")
+                    Text(verbatim: "\(Int(p.total))")
                         .font(AtlasFont.mono(11, .bold))
                         .foregroundStyle(Palette.ochreInk),
                     at: CGPoint(x: center.x, y: center.y - 15),
@@ -184,17 +184,17 @@ struct TrendStrip: View {
         }
     }
 
-    /// Wartość normy podpisana na końcu linii — to ona zastąpiła osobną kartę
+    /// Wartość trendu podpisana na końcu linii — to ona zastąpiła osobną kartę
     /// „Podstawa”. Podpis ląduje po przeciwnej stronie linii niż ostatnia
     /// kropka, żeby się z nią nie zlepiał.
-    private func drawNormLabel(_ context: GraphicsContext, _ g: StripGeometry, width: CGFloat) {
-        guard let last = points.last, let norm = last.norm else { return }
-        let below = last.total >= norm
+    private func drawTrendLabel(_ context: GraphicsContext, _ g: StripGeometry, width: CGFloat) {
+        guard let last = points.last, let trend = last.trend else { return }
+        let below = last.total >= trend
         context.draw(
-            Text("norma \(Int(norm.rounded()))")
+            Text("trend \(Int(trend.rounded()))")
                 .font(AtlasFont.mono(9.5, .bold))
                 .foregroundStyle(Palette.pine),
-            at: CGPoint(x: width - 2, y: g.y(norm) + (below ? 8 : -8)),
+            at: CGPoint(x: width - 2, y: g.y(trend) + (below ? 8 : -8)),
             anchor: below ? .topTrailing : .bottomTrailing
         )
     }
@@ -206,11 +206,16 @@ struct TrendStrip: View {
         if let first = points.first {
             context.draw(tick(Self.shortDay(first.date)), at: CGPoint(x: 2, y: baseY), anchor: .bottomLeading)
         }
-        context.draw(tick("dziś"), at: CGPoint(x: size.width - 2, y: baseY), anchor: .bottomTrailing)
+        context.draw(
+            tick(String(localized: "dziś")),
+            at: CGPoint(x: size.width - 2, y: baseY),
+            anchor: .bottomTrailing
+        )
     }
 
+    /// Wprost `verbatim` — pod spodem lecą sformatowane daty, nie klucze.
     private func tick(_ s: String) -> Text {
-        Text(s)
+        Text(verbatim: s)
             .font(AtlasFont.mono(9.5))
             .foregroundStyle(Palette.tick)
     }
@@ -220,7 +225,7 @@ struct TrendStrip: View {
     static func shortDay(_ iso: String) -> String {
         guard let date = try? Date("\(iso)T12:00:00Z", strategy: .iso8601) else { return iso }
         return date.formatted(
-            .dateTime.locale(Locale(identifier: "pl_PL")).day().month(.abbreviated)
+            .dateTime.locale(Locale.autoupdatingCurrent).day().month(.abbreviated)
         )
     }
 
@@ -228,7 +233,7 @@ struct TrendStrip: View {
     static func longDay(_ iso: String) -> String {
         guard let date = try? Date("\(iso)T12:00:00Z", strategy: .iso8601) else { return iso }
         return date.formatted(
-            .dateTime.locale(Locale(identifier: "pl_PL")).day().month(.wide)
+            .dateTime.locale(Locale.autoupdatingCurrent).day().month(.wide)
         )
     }
 }

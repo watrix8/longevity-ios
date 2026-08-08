@@ -1,25 +1,15 @@
 import Foundation
 import Observation
 
-enum PL {
-    /// Dopełniacz po przyimku "z": z 1 dnia, z 14 dni.
-    static func daysGenitive(_ n: Int) -> String { n == 1 ? "dnia" : "dni" }
-
-    /// Nagłówek zakresu: ostatni dzień / ostatnie 14 dni.
-    static func lastDays(_ n: Int) -> String {
-        n == 1 ? "ostatni dzień" : "ostatnie \(n) dni"
-    }
-}
-
 /// Widok pojedynczego dnia na pasku 14 dni.
 struct DayPoint: Sendable {
     let date: String
     let total: Double
-    /// Norma dnia — średnia z maks. 7 dni POPRZEDZAJĄCYCH ten dzień.
+    /// Trend dnia — średnia z maks. 7 dni POPRZEDZAJĄCYCH ten dzień.
     ///
     /// `nil` w pierwszym dniu szeregu: nie ma jeszcze z czym porównywać,
-    /// a linia sklejona z wynikiem dnia udawałaby normę, której nie ma.
-    let norm: Double?
+    /// a linia sklejona z wynikiem dnia udawałaby trend, którego nie ma.
+    let trend: Double?
 }
 
 /// Wszystko, co ekran renderuje, policzone raz przy wczytaniu.
@@ -28,13 +18,13 @@ struct DashboardData: Sendable {
     let headline: Int
     let stateText: String
 
-    /// Norma dzisiejszego dnia — dokładnie ta sama liczba, którą rysuje
+    /// Trend na dzisiejszy dzień — dokładnie ta sama liczba, którą rysuje
     /// zielona linia na wykresie. Jedna definicja, jedno źródło.
-    let norm: Int?
-    /// Ile dni faktycznie weszło do normy (maks. 7).
-    let normDays: Int
-    /// Dziś minus norma. `nil` razem z `norm`.
-    let normDelta: Int?
+    let trend: Int?
+    /// Ile dni faktycznie weszło do trendu (maks. 7).
+    let trendDays: Int
+    /// Dziś minus trend. `nil` razem z `trend`.
+    let trendDelta: Int?
 
     let points: [DayPoint]
     let breakdown: [ScoreComponentRow]
@@ -49,8 +39,6 @@ struct DashboardData: Sendable {
     /// Poniżej progu wykres wprowadza w błąd: dwa punkty odległe o 1 pkt
     /// rysują się jak stromy podjazd, cokolwiek zrobić ze skalą.
     var isWarmingUp: Bool { coverageDays < Self.warmupDays }
-
-    var confidence: Int { Int((Double(coverageDays) / 30.0 * 100).rounded()) }
 }
 
 extension DashboardData {
@@ -58,8 +46,8 @@ extension DashboardData {
     static var sample: DashboardData {
         preview(
             totals: [61, 58, 66, 70, 63, 72, 68, 74, 59, 71, 77, 65, 80, 73],
-            stateText: "Solidnie. Trzymaj tempo — nic nie musisz zmieniać.",
-            note: "Score policzony z 65% wag. Brakuje: VO₂max, Metabolizm."
+            stateText: DashboardViewModel.stateText(for: 73),
+            note: previewNote
         )
     }
 
@@ -67,15 +55,22 @@ extension DashboardData {
     static var warmingUp: DashboardData {
         preview(
             totals: [90, 91, 89],
-            stateText: "Świetna forma. Dziś możesz spokojnie docisnąć trening.",
-            note: "Score policzony z 65% wag. Brakuje: VO₂max, Metabolizm."
+            stateText: DashboardViewModel.stateText(for: 89),
+            note: previewNote
         )
     }
 
+    /// Ta sama składanka co w `missingNote` — podgląd nie dorabia własnego
+    /// zdania, tylko przechodzi przez ten sam klucz tłumaczenia.
+    private static var previewNote: String {
+        let missing = ["VO₂max", String(localized: "Metabolizm")].joined(separator: ", ")
+        return String(localized: "Score policzony z \(65)% wag. Brakuje: \(missing).")
+    }
+
     /// Liczy to samo co `build`, tylko z gołych wartości — dzięki temu podgląd
-    /// nie może rozjechać się z produkcyjną definicją normy.
+    /// nie może rozjechać się z produkcyjną definicją trendu.
     private static func preview(totals: [Double], stateText: String, note: String?) -> DashboardData {
-        let norms = DashboardViewModel.norms(for: totals)
+        let trends = DashboardViewModel.trends(for: totals)
         let dayFormatter = DateFormatter()
         dayFormatter.locale = Locale(identifier: "en_US_POSIX")
         dayFormatter.dateFormat = "yyyy-MM-dd"
@@ -88,47 +83,47 @@ extension DashboardData {
                     ) ?? Date()
                 ),
                 total: totals[i],
-                norm: norms[i]
+                trend: trends[i]
             )
         }
 
         let headline = Int(totals.last ?? 0)
-        let todayNorm = norms.last.flatMap { $0 }
+        let todayTrend = trends.last.flatMap { $0 }
 
         return DashboardData(
-            dateLabel: "czwartek · 6 sierpnia",
+            dateLabel: DashboardViewModel.displayDate("2026-08-06"),
             headline: headline,
             stateText: stateText,
-            norm: todayNorm.map { Int($0.rounded()) },
-            normDays: min(max(0, totals.count - 1), DashboardViewModel.normWindow),
-            normDelta: todayNorm.map { Int((Double(headline) - $0).rounded()) },
+            trend: todayTrend.map { Int($0.rounded()) },
+            trendDays: min(max(0, totals.count - 1), DashboardViewModel.trendWindow),
+            trendDelta: todayTrend.map { Int((Double(headline) - $0).rounded()) },
             points: Array(points.suffix(14)),
             breakdown: [
                 // Podwagi i kolejność jak w `sleepParts`/`bodyParts` z
                 // `lib/scoring-v3.ts` — podgląd ma pokazywać kształt, który
                 // naprawdę przychodzi w snapshocie.
                 ScoreComponentRow(
-                    id: "sleep", label: "Sen", weight: 0.30, value: 84,
+                    id: "sleep", label: ScoreComponents.label(forComponent: "sleep"), weight: 0.30, value: 84,
                     parts: [
-                        ScorePartRow(id: "duration", label: "Długość snu", weight: 0.5, value: 94),
-                        ScorePartRow(id: "deep", label: "Sen głęboki", weight: 0.2, value: 71),
-                        ScorePartRow(id: "regularity", label: "Regularność pory snu", weight: 0.2, value: 78),
-                        ScorePartRow(id: "consistency", label: "Równa długość snu", weight: 0.1, value: 62),
+                        ScorePartRow(id: "duration", label: ScoreComponents.label(forPart: "duration"), weight: 0.5, value: 94),
+                        ScorePartRow(id: "deep", label: ScoreComponents.label(forPart: "deep"), weight: 0.2, value: 71),
+                        ScorePartRow(id: "regularity", label: ScoreComponents.label(forPart: "regularity"), weight: 0.2, value: 78),
+                        ScorePartRow(id: "consistency", label: ScoreComponents.label(forPart: "consistency"), weight: 0.1, value: 62),
                     ]
                 ),
                 ScoreComponentRow(
-                    id: "body", label: "Ciało", weight: 0.20, value: 72,
+                    id: "body", label: ScoreComponents.label(forComponent: "body"), weight: 0.20, value: 72,
                     parts: [
-                        ScorePartRow(id: "whr", label: "Talia/biodra", weight: 0.5, value: nil),
-                        ScorePartRow(id: "body_fat", label: "Tkanka tłuszczowa", weight: 0.3, value: 68),
-                        ScorePartRow(id: "bmi", label: "BMI", weight: 0.2, value: 72),
+                        ScorePartRow(id: "whr", label: ScoreComponents.label(forPart: "whr"), weight: 0.5, value: nil),
+                        ScorePartRow(id: "body_fat", label: ScoreComponents.label(forPart: "body_fat"), weight: 0.3, value: 68),
+                        ScorePartRow(id: "bmi", label: ScoreComponents.label(forPart: "bmi"), weight: 0.2, value: 72),
                     ]
                 ),
                 ScoreComponentRow(
-                    id: "regeneration", label: "Regeneracja", weight: 0.15, value: 75,
+                    id: "regeneration", label: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15, value: 75,
                     parts: [
-                        ScorePartRow(id: "resting_heart_rate", label: "Tętno spoczynkowe", weight: 0.4, value: 100),
-                        ScorePartRow(id: "hrv_trend", label: "Trend HRV", weight: 0.6, value: nil),
+                        ScorePartRow(id: "resting_heart_rate", label: ScoreComponents.label(forPart: "resting_heart_rate"), weight: 0.4, value: 100),
+                        ScorePartRow(id: "hrv_trend", label: ScoreComponents.label(forPart: "hrv_trend"), weight: 0.6, value: nil),
                     ]
                 ),
             ],
@@ -193,20 +188,20 @@ final class DashboardViewModel {
 
     // MARK: - Wyliczenia
 
-    /// Ile dni wstecz uśrednia norma.
-    nonisolated static let normWindow = 7
+    /// Ile dni wstecz uśrednia trend.
+    nonisolated static let trendWindow = 7
 
-    /// Norma dnia liczona WYŁĄCZNIE z dni wcześniejszych.
+    /// Trend dnia liczony WYŁĄCZNIE z dni wcześniejszych.
     ///
-    /// Gdyby do okna wchodził dzisiejszy wynik, porównanie „dziś vs norma"
+    /// Gdyby do okna wchodził dzisiejszy wynik, porównanie „dziś vs trend"
     /// byłoby po części porównaniem liczby z samą sobą i tłumiło odchylenie
-    /// o 1/7. Pierwszy dzień szeregu nie ma normy — stąd opcjonalność.
+    /// o 1/7. Pierwszy dzień szeregu nie ma trendu — stąd opcjonalność.
     ///
     /// `nonisolated`, bo to czysta matematyka — podgląd składa z niej dane
     /// bez wchodzenia na main actora.
-    nonisolated static func norms(for totals: [Double]) -> [Double?] {
+    nonisolated static func trends(for totals: [Double]) -> [Double?] {
         totals.indices.map { i in
-            let window = totals[max(0, i - normWindow)..<i]
+            let window = totals[max(0, i - trendWindow)..<i]
             guard !window.isEmpty else { return nil }
             return window.reduce(0, +) / Double(window.count)
         }
@@ -219,21 +214,21 @@ final class DashboardViewModel {
         let ascending = rows.reversed().map { $0 }
         let totals = ascending.map { Double($0.scoreTotal) }
 
-        let points = zip(ascending, norms(for: totals)).map { snap, norm in
-            DayPoint(date: snap.scoreDate, total: Double(snap.scoreTotal), norm: norm)
+        let points = zip(ascending, trends(for: totals)).map { snap, trend in
+            DayPoint(date: snap.scoreDate, total: Double(snap.scoreTotal), trend: trend)
         }
 
-        // Norma dzisiejsza = norma ostatniego punktu szeregu. Ta sama liczba
+        // Trend dzisiejszy = trend ostatniego punktu szeregu. Ta sama liczba
         // ląduje pod dużą cyfrą i na końcu zielonej linii wykresu.
-        let todayNorm = points.last?.norm
+        let todayTrend = points.last?.trend
 
         return DashboardData(
-            dateLabel: polishDate(current.scoreDate),
+            dateLabel: displayDate(current.scoreDate),
             headline: current.scoreTotal,
             stateText: stateText(for: current.scoreTotal),
-            norm: todayNorm.map { Int($0.rounded()) },
-            normDays: min(max(0, totals.count - 1), normWindow),
-            normDelta: todayNorm.map { Int((Double(current.scoreTotal) - $0).rounded()) },
+            trend: todayTrend.map { Int($0.rounded()) },
+            trendDays: min(max(0, totals.count - 1), trendWindow),
+            trendDelta: todayTrend.map { Int((Double(current.scoreTotal) - $0).rounded()) },
             points: Array(points.suffix(14)),
             breakdown: current.components.breakdown,
             coverageDays: rows.count,
@@ -248,19 +243,23 @@ final class DashboardViewModel {
         let missing = components.missing
         guard !missing.isEmpty else { return nil }
 
+        let list = missing.joined(separator: ", ")
         guard let coverage = components.coveragePercent else {
-            return "Brakuje danych: \(missing.joined(separator: ", "))."
+            return String(localized: "Brakuje danych: \(list).")
         }
-        return "Score policzony z \(coverage)% wag. Brakuje: \(missing.joined(separator: ", "))."
+        return String(localized: "Score policzony z \(coverage)% wag. Brakuje: \(list).")
     }
 
     /// Progi zgodne z `scoreLabel()` z lib/scoring.ts w repo webowym.
-    private static func stateText(for total: Int) -> String {
+    ///
+    /// Zdanie schodzi z modelu przetłumaczone, a nie jako klucz — `DashboardData`
+    /// jest gotowym materiałem dla widoku i nie ma powodu, żeby ekran znał progi.
+    nonisolated static func stateText(for total: Int) -> String {
         switch total {
-        case 80...: "Świetna forma. Dziś możesz spokojnie docisnąć trening."
-        case 60..<80: "Solidnie. Trzymaj tempo — nic nie musisz zmieniać."
-        case 40..<60: "Przeciętnie. Jeden spokojny dzień zrobi różnicę."
-        default: "Lekki dzień. Twój organizm prosi o odpoczynek."
+        case 80...: String(localized: "Świetna forma. Dziś możesz spokojnie docisnąć trening.")
+        case 60..<80: String(localized: "Solidnie. Trzymaj tempo — nic nie musisz zmieniać.")
+        case 40..<60: String(localized: "Przeciętnie. Jeden spokojny dzień zrobi różnicę.")
+        default: String(localized: "Lekki dzień. Twój organizm prosi o odpoczynek.")
         }
     }
 
@@ -272,15 +271,20 @@ final class DashboardViewModel {
         return f.string(from: date)
     }
 
-    private static func polishDate(_ iso: String) -> String {
+    /// „czwartek · 6 sierpnia", a po angielsku „Thursday · August 6".
+    ///
+    /// Kolejność dnia i miesiąca różni się między językami, więc obie części
+    /// formatuje `FormatStyle` osobno — sztywne „d MMMM" dałoby po angielsku
+    /// „6 August".
+    nonisolated static func displayDate(_ iso: String) -> String {
         let parser = DateFormatter()
         parser.locale = Locale(identifier: "en_US_POSIX")
         parser.dateFormat = "yyyy-MM-dd"
         guard let date = parser.date(from: iso) else { return iso }
 
-        let out = DateFormatter()
-        out.locale = Locale(identifier: "pl_PL")
-        out.dateFormat = "EEEE · d MMMM"
-        return out.string(from: date)
+        let locale = Locale.autoupdatingCurrent
+        let weekday = date.formatted(.dateTime.locale(locale).weekday(.wide))
+        let day = date.formatted(.dateTime.locale(locale).day().month(.wide))
+        return "\(weekday) · \(day)"
     }
 }

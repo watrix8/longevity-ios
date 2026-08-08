@@ -26,8 +26,8 @@ enum TrendWindow: String, CaseIterable, Identifiable, Sendable {
 
     var label: String {
         switch self {
-        case .month: "30 dni"
-        case .quarter: "3 miesiące"
+        case .month: String(localized: "30 dni")
+        case .quarter: String(localized: "3 miesiące")
         }
     }
 }
@@ -55,8 +55,8 @@ enum MetricRole: Sendable, Equatable {
     var groupTitle: String {
         switch self {
         case .feeds(let component, _): component
-        case .informational: "Poza wynikiem"
-        case .total: "Wynik"
+        case .informational: String(localized: "Poza wynikiem")
+        case .total: String(localized: "Wynik")
         }
     }
 
@@ -114,7 +114,7 @@ struct Metric: Identifiable, Sendable {
     func pointLabel(_ iso: String, now: Date = Date(), calendar: Calendar = .current) -> String {
         guard let date = try? Date("\(iso)T12:00:00Z", strategy: .iso8601) else { return iso }
 
-        let polish = Locale(identifier: "pl_PL")
+        let polish = Locale.autoupdatingCurrent
         let sameYear = calendar.component(.year, from: date) == calendar.component(.year, from: now)
 
         var text = date.formatted(.dateTime.locale(polish).day().month(.wide))
@@ -255,7 +255,7 @@ final class TrendsViewModel {
 
     var periodLabel: String {
         let (from, to) = visibleRange()
-        let polish = Locale(identifier: "pl_PL")
+        let polish = Locale.autoupdatingCurrent
         return from.formatted(.dateTime.locale(polish).day().month(.abbreviated))
             + " – "
             + to.formatted(.dateTime.locale(polish).day().month(.abbreviated).year())
@@ -339,49 +339,49 @@ final class TrendsViewModel {
         }
 
         return grouped([
-            Metric(id: "score", title: "Longevity Score", unit: "/100", positiveHigher: true, role: .total,
+            Metric(id: "score", title: String(localized: "Longevity Score"), unit: "/100", positiveHigher: true, role: .total,
                    points: scores.map { SeriesPoint(date: $0.scoreDate, value: $0.scoreTotal) }),
 
             // Sen — 30% w v3
-            Metric(id: "sleep_hours", title: "Sen", unit: "h", positiveHigher: true, role: .feeds(component: "Sen", weight: 0.30),
+            Metric(id: "sleep_hours", title: String(localized: "Sen"), unit: "h", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
                    points: series(health) { $0.sleepAsleepMinutes.map { round1(Double($0) / 60) } }),
-            Metric(id: "sleep_deep", title: "Sen głęboki", unit: "%", positiveHigher: true, role: .feeds(component: "Sen", weight: 0.30),
+            Metric(id: "sleep_deep", title: String(localized: "Sen głęboki"), unit: "%", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
                    points: series(health) {
                        deepSleepShare(deep: $0.sleepDeepMinutes, asleep: $0.sleepAsleepMinutes)
                    }),
-            Metric(id: "sleep_regularity", title: "Regularność pory snu (SRI)", unit: "", positiveHigher: true,
-                   role: .feeds(component: "Sen", weight: 0.30),
+            Metric(id: "sleep_regularity", title: String(localized: "Regularność pory snu (SRI)"), unit: "", positiveHigher: true,
+                   role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
                    points: series(health) { $0.sleepRegularityIndex }),
-            Metric(id: "sleep_consistency", title: "Równa długość snu", unit: "/100", positiveHigher: true,
-                   role: .feeds(component: "Sen", weight: 0.30), points: consistencyPoints),
+            Metric(id: "sleep_consistency", title: String(localized: "Równa długość snu"), unit: "/100", positiveHigher: true,
+                   role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30), points: consistencyPoints),
 
             // Wydolność — 25%
-            Metric(id: "vo2max", title: "VO₂max", unit: "ml/kg/min", positiveHigher: true, role: .feeds(component: "VO₂max", weight: 0.25),
+            Metric(id: "vo2max", title: String(localized: "VO₂max"), unit: "ml/kg/min", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "vo2max"), weight: 0.25),
                    points: series(health) { $0.vo2max }),
 
             // Skład ciała — 20%
-            Metric(id: "weight", title: "Waga", unit: "kg", positiveHigher: false, role: .feeds(component: "Ciało", weight: 0.20),
+            Metric(id: "weight", title: String(localized: "Waga"), unit: "kg", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.20),
                    points: weights.map { SeriesPoint(date: $0.measuredAt, value: $0.weightKg) }),
-            Metric(id: "whr", title: "WHR (talia/biodra)", unit: "", positiveHigher: false, role: .feeds(component: "Ciało", weight: 0.20),
+            Metric(id: "whr", title: String(localized: "WHR (talia/biodra)"), unit: "", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.20),
                    points: series(health) { waistToHipRatio(waist: $0.waistCm, hip: $0.hipCm) }),
-            Metric(id: "body_fat", title: "Tkanka tłuszczowa", unit: "%", positiveHigher: false,
-                   role: .feeds(component: "Ciało", weight: 0.20), points: series(health) { $0.bodyFatPct }),
+            Metric(id: "body_fat", title: String(localized: "Tkanka tłuszczowa"), unit: "%", positiveHigher: false,
+                   role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.20), points: series(health) { $0.bodyFatPct }),
 
             // Regeneracja — 15%
-            Metric(id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm", positiveHigher: false, role: .feeds(component: "Regeneracja", weight: 0.15),
+            Metric(id: "resting_hr", title: String(localized: "Tętno spoczynkowe"), unit: "bpm", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15),
                    points: series(health) { $0.restingHeartRate }),
-            Metric(id: "hrv", title: "HRV (SDNN)", unit: "ms", positiveHigher: true, role: .feeds(component: "Regeneracja", weight: 0.15),
+            Metric(id: "hrv", title: String(localized: "HRV (SDNN)"), unit: "ms", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15),
                    points: series(health) { $0.hrvSdnnMs }),
 
             // Poza wynikiem — v3 tego nie punktuje, ale opisuje dzień.
             // Z HealthKit `appleExerciseTime`. Ta sama kolumna przyjmie kiedyś
             // minuty intensywności z Garmina — to ten sam pomiar pod inną nazwą
             // handlową, więc nie zakładamy dla niego osobnego miejsca.
-            Metric(id: "exercise_minutes", title: "Minuty ćwiczeń", unit: "min", positiveHigher: true,
+            Metric(id: "exercise_minutes", title: String(localized: "Minuty ćwiczeń"), unit: "min", positiveHigher: true,
                    role: .informational, points: series(health) { $0.exerciseMinutes.map(Double.init) }),
-            Metric(id: "steps", title: "Kroki", unit: "", positiveHigher: true, role: .informational,
+            Metric(id: "steps", title: String(localized: "Kroki"), unit: "", positiveHigher: true, role: .informational,
                    points: series(health) { $0.steps.map(Double.init) }),
-            Metric(id: "activity", title: "Ruch (wpisany)", unit: "min", positiveHigher: true, role: .informational,
+            Metric(id: "activity", title: String(localized: "Ruch (wpisany)"), unit: "min", positiveHigher: true, role: .informational,
                    points: activity.map { SeriesPoint(date: $0.loggedDate, value: $0.activityMinutes) }),
         ]
         .filter { !$0.points.isEmpty })

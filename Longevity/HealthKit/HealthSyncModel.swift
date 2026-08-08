@@ -234,7 +234,7 @@ final class HealthSyncModel {
                 segmentsWithinDays: HealthSyncPlan.sleepSegmentsWithinDays
             )
             guard !metrics.isEmpty else {
-                state = .done("Brak danych w Apple Health z ostatnich \(days) dni")
+                state = .done(String(localized: "Brak danych w Apple Health z ostatnich \(days) dni"))
                 return
             }
 
@@ -246,7 +246,9 @@ final class HealthSyncModel {
             var weight = 0
 
             for (index, batch) in batches.enumerated() {
-                if batches.count > 1 { progress = "Wysyłam \(index + 1)/\(batches.count)…" }
+                if batches.count > 1 {
+                    progress = String(localized: "Wysyłam \(index + 1)/\(batches.count)…")
+                }
                 let result = try await LongevityAPI.syncHealth(days: batch)
                 saved += result.saved
                 activity += result.activitySynced
@@ -289,18 +291,18 @@ final class HealthSyncModel {
         }
     }
 
+    /// Odmiana „dzień/dni" i jej odpowiedniki w innych językach siedzą
+    /// w String Catalogu jako warianty mnogości, nie w kodzie.
     private static func summary(saved: Int, activity: Int, weight: Int) -> String {
-        var parts = ["Zapisano \(saved) \(dayWord(saved))"]
-        if activity > 0 { parts.append("aktywność \(activity)") }
-        if weight > 0 { parts.append("waga \(weight)") }
+        var parts = [String(localized: "Zapisano \(saved) dni")]
+        if activity > 0 { parts.append(String(localized: "aktywność \(activity)")) }
+        if weight > 0 { parts.append(String(localized: "waga \(weight)")) }
         return parts.joined(separator: " · ")
     }
 
-    private static func dayWord(_ count: Int) -> String { count == 1 ? "dzień" : "dni" }
-
     private static let relativeFormatter: RelativeDateTimeFormatter = {
         let f = RelativeDateTimeFormatter()
-        f.locale = Locale(identifier: "pl_PL")
+        f.locale = Locale.autoupdatingCurrent
         f.unitsStyle = .full
         return f
     }()

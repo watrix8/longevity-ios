@@ -74,7 +74,7 @@ struct SettingsView: View {
         }
     }
 
-    private func chip(_ text: String, systemImage: String, color: Color) -> some View {
+    private func chip(_ text: LocalizedStringResource, systemImage: String, color: Color) -> some View {
         HStack(spacing: 5) {
             Image(systemName: systemImage).font(.system(size: 9, weight: .bold))
             Text(text).font(AtlasFont.mono(10.5))
@@ -279,8 +279,8 @@ struct SettingsView: View {
     // MARK: - Klocki
 
     private func section<C: View>(
-        kicker: String,
-        footer: String? = nil,
+        kicker: LocalizedStringResource,
+        footer: LocalizedStringResource? = nil,
         @ViewBuilder _ content: () -> C
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -304,7 +304,7 @@ struct SettingsView: View {
         .padding(.bottom, 22)
     }
 
-    private func row<C: View>(_ label: String, @ViewBuilder _ content: () -> C) -> some View {
+    private func row<C: View>(_ label: LocalizedStringResource, @ViewBuilder _ content: () -> C) -> some View {
         HStack(spacing: 12) {
             // Etykieta ustępuje wartości: przy długich opcjach ("Lepsza forma
             // sportowa") to ona ma się skrócić, a nie zawijać wybrana wartość.
@@ -322,7 +322,7 @@ struct SettingsView: View {
         .padding(.vertical, 11)
     }
 
-    private func actionRow(_ label: String, color: Color, action: @escaping () -> Void) -> some View {
+    private func actionRow(_ label: LocalizedStringResource, color: Color, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {
                 Text(label)
@@ -344,7 +344,7 @@ struct SettingsView: View {
             .padding(.leading, 15)
     }
 
-    private func numberField(_ value: Binding<String>, suffix: String) -> some View {
+    private func numberField(_ value: Binding<String>, suffix: LocalizedStringResource) -> some View {
         HStack(spacing: 4) {
             TextField("—", text: value)
                 .font(AtlasFont.body(14))

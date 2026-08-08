@@ -77,11 +77,6 @@ struct DashboardView: View {
     private func content(_ data: DashboardData) -> some View {
         topbar(data)
 
-        Text(data.dateLabel)
-            .font(AtlasFont.mono(12))
-            .foregroundStyle(Palette.muted)
-            .padding(.top, 18)
-
         hero(data)
 
         chartSection(data)
@@ -95,38 +90,27 @@ struct DashboardView: View {
         explainerButton
     }
 
+    /// Data w pigułce przy tytule, a nie osobną linią pod nim: mówi tyle samo,
+    /// a nie zabiera całego wiersza tuż nad wielką cyfrą.
     private func topbar(_ data: DashboardData) -> some View {
         HStack {
             ScreenTitle(text: "Longevity")
 
             Spacer()
 
-            HStack(spacing: 7) {
-                ZStack {
-                    Circle().stroke(Palette.line, lineWidth: 3)
-                    Circle()
-                        .trim(from: 0, to: CGFloat(data.confidence) / 100)
-                        .stroke(Palette.pine, lineWidth: 3)
-                        .rotationEffect(.degrees(-90))
-                }
-                .frame(width: 9, height: 9)
-
-                // Dni zamiast procenta: „pewność 7%" brzmi jak ocena
-                // użytkownika, a to tylko licznik dni z pomiarami.
-                Text("\(data.coverageDays) z 30 dni")
-                    .font(AtlasFont.mono(11))
-                    .foregroundStyle(Palette.muted)
-            }
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
-            .background(Palette.panel, in: Capsule())
-            .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(data.coverageDays) dni z danymi z ostatnich 30")
+            Text(data.dateLabel)
+                .font(AtlasFont.mono(11))
+                .foregroundStyle(Palette.muted)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .padding(.horizontal, 9)
+                .padding(.vertical, 5)
+                .background(Palette.panel, in: Capsule())
+                .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
         }
     }
 
-    /// Jedna wielka liczba — dzisiejszy wynik. Norma nie dostaje własnej cyfry,
+    /// Jedna wielka liczba — dzisiejszy wynik. Trend nie dostaje własnej cyfry,
     /// tylko wchodzi tu jako relacja, żeby ekran nie miał dwóch konkurujących
     /// liczb do porównania.
     private func hero(_ data: DashboardData) -> some View {
@@ -145,7 +129,7 @@ struct DashboardView: View {
             Kicker(text: "wynik dnia", size: 11)
                 .padding(.top, 8)
 
-            normPill(data)
+            trendPill(data)
                 .padding(.top, 12)
 
             Text(data.stateText)
@@ -157,19 +141,22 @@ struct DashboardView: View {
                 .padding(.top, 12)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 6)
+        .padding(.top, 22)
     }
 
     /// Pigułka jest neutralna kolorystycznie w obie strony — kierunek niesie
     /// strzałka. Czerwień przy spadku kłóciłaby się z tym, co mówi appka:
     /// pojedynczy dzień nie jest powodem do paniki.
     @ViewBuilder
-    private func normPill(_ data: DashboardData) -> some View {
-        if let norm = data.norm, let delta = data.normDelta {
+    private func trendPill(_ data: DashboardData) -> some View {
+        if let trend = data.trend, let delta = data.trendDelta {
+            // `String(localized:)`, bo zdanie powstaje w `switch`, a nie wprost
+            // w `Text` — sam literał przypisany do zmiennej nie trafiłby do
+            // String Catalogu i został po polsku.
             let label = switch delta {
-            case 1...: "↗ \(delta) ponad normę (\(norm))"
-            case ..<0: "↘ \(abs(delta)) poniżej normy (\(norm))"
-            default: "→ równo z normą (\(norm))"
+            case 1...: String(localized: "↗ \(delta) ponad trend (\(trend))")
+            case ..<0: String(localized: "↘ \(abs(delta)) poniżej trendu (\(trend))")
+            default: String(localized: "→ równo z trendem (\(trend))")
             }
 
             Text(label)
@@ -180,7 +167,7 @@ struct DashboardView: View {
                 .background(Palette.pineSoft, in: Capsule())
                 .contentTransition(.numericText())
         } else {
-            Text("pierwszy dzień — norma pojawi się jutro")
+            Text("pierwszy dzień — trend pojawi się jutro")
                 .font(AtlasFont.mono(11))
                 .foregroundStyle(Palette.tick)
         }
@@ -198,14 +185,21 @@ struct DashboardView: View {
     private func stripCard(_ data: DashboardData) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Kicker(text: PL.lastDays(data.points.count))
+                Kicker(text: "ostatnie \(data.points.count) dni")
                 Spacer()
                 // Data pojawia się dopiero pod palcem — bez niej nie wiadomo,
-                // którą kropkę czyta wielka liczba nad wykresem.
+                // którą kropkę czyta wielka liczba nad wykresem. Poza
+                // przeciąganiem slot zajmuje licznik pokrycia: stoi przy
+                // wykresie, który opisuje, zamiast przy nazwie appki.
                 if let index = selectedDay, data.points.indices.contains(index) {
                     Text(TrendStrip.longDay(data.points[index].date))
                         .font(AtlasFont.mono(10.5))
                         .foregroundStyle(Palette.ochreInk)
+                } else {
+                    Text("\(data.coverageDays) z 30 dni z pomiarami")
+                        .font(AtlasFont.mono(10.5))
+                        .foregroundStyle(Palette.tick)
+                        .accessibilityLabel("\(data.coverageDays) dni z pomiarami z ostatnich 30")
                 }
             }
 
@@ -213,11 +207,7 @@ struct DashboardView: View {
 
             HStack(spacing: 16) {
                 legend(color: Palette.ochre, isLine: false, text: "wynik dnia")
-                legend(
-                    color: Palette.pine,
-                    isLine: true,
-                    text: "norma z \(data.normDays) \(PL.daysGenitive(data.normDays))"
-                )
+                legend(color: Palette.pine, isLine: true, text: "trend z \(data.trendDays) dni")
             }
             .padding(.top, 2)
 
@@ -257,7 +247,7 @@ struct DashboardView: View {
             )
             .padding(.top, 12)
 
-            Text("Wykres i norma włączą się po \(target) dniach z pomiarami. Wcześniej dwa punkty rysowałyby się jak trend, którym nie są.")
+            Text("Wykres i trend włączą się po \(target) dniach z pomiarami.")
                 .font(AtlasFont.body(12))
                 .foregroundStyle(Palette.muted)
                 .lineSpacing(3)
@@ -291,7 +281,7 @@ struct DashboardView: View {
         .padding(.top, 22)
     }
 
-    private func legend(color: Color, isLine: Bool, text: String) -> some View {
+    private func legend(color: Color, isLine: Bool, text: LocalizedStringResource) -> some View {
         HStack(spacing: 6) {
             if isLine {
                 RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 14, height: 3)
@@ -329,13 +319,6 @@ struct DashboardView: View {
 
             ForEach(data.breakdown) { row in
                 componentRow(row)
-            }
-
-            if data.breakdown.contains(where: \.hasParts) {
-                Text("Dotknij komponentu, żeby zobaczyć, z czego się składa.")
-                    .font(AtlasFont.mono(9.5))
-                    .foregroundStyle(Palette.tick)
-                    .padding(.top, 2)
             }
         }
         .padding(.top, 22)
@@ -472,22 +455,22 @@ struct ScoreExplainerSheet: View {
                     entry(
                         "Wynik dnia",
                         Palette.ochreInk,
-                        "Liczy się od nowa każdego dnia, z dzisiejszych pomiarów. To on rusza wynikiem — i dlatego potrafi skakać z dnia na dzień."
+                        "Twoja dzisiejsza forma w jednej liczbie. Liczymy ją od nowa każdego dnia z pomiarów zegarka i tego, co dopisujesz w czacie. Dlatego potrafi skakać — jedną kiepską noc widać od razu."
                     )
                     entry(
-                        "Norma",
+                        "Trend",
                         Palette.pine,
-                        "Średnia z maksymalnie 7 dni poprzedzających dzisiejszy. Zmienia się powoli i nie reaguje na jeden dzień. Dzisiejszy wynik do niej nie wchodzi, więc porównanie „dziś vs norma” jest uczciwe."
+                        "Twój zwykły poziom z ostatniego tygodnia. Rusza się wolno, więc mówi, w którą stronę naprawdę idziesz — a nie czy akurat dziś było lepiej. Dzisiejszy wynik go nie podbija, więc porównanie z nim jest uczciwe."
                     )
                     entry(
                         "Zebrane dni",
                         Palette.muted,
-                        "Licznik u góry mówi, ile z ostatnich 30 dni ma pomiary. Dzień bez żadnego pomiaru nie dostaje wyniku — im mniej dni, tym mocniej norma zależy od pojedynczego z nich."
+                        "Ile z ostatnich 30 dni ma pomiary. Dzień bez pomiarów nie dostaje wyniku, a im mniej dni uzbierasz, tym bardziej trend wisi na pojedynczym z nich. Wystarczy nosić zegarek."
                     )
                     entry(
                         "Skąd bierze się liczba",
                         Palette.muted,
-                        "Wynik v3 — średnia ważona pomiarów: sen, VO₂max, ciało, regeneracja, markery z krwi. Komponenty bez danych są pomijane, a wagi pozostałych przenormowane."
+                        "Składają się na nią sen, wydolność, skład ciała, regeneracja i badania krwi. Każde waży inaczej — sen najmocniej. Czego nie zmierzysz, tego nie zgadujemy: brakujące obszary wypadają z rachunku, a udział biorą na siebie pozostałe."
                     )
                 }
                 .padding(20)
@@ -502,7 +485,7 @@ struct ScoreExplainerSheet: View {
         }
     }
 
-    private func entry(_ title: String, _ color: Color, _ body: String) -> some View {
+    private func entry(_ title: LocalizedStringResource, _ color: Color, _ body: LocalizedStringResource) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Kicker(text: title, color: color, size: 10.5)
             Text(body)

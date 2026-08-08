@@ -195,9 +195,9 @@ struct ChatView: View {
         .padding(.top, 30)
     }
 
-    private func welcomeRow(_ icon: String, _ text: String) -> some View {
+    private func welcomeRow(_ icon: String, _ text: LocalizedStringResource) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Text(icon).font(.system(size: 14))
+            Text(verbatim: icon).font(.system(size: 14))
             Text(text)
                 .font(AtlasFont.body(13.5))
                 .foregroundStyle(Palette.muted)
@@ -300,10 +300,10 @@ struct ChatView: View {
         .opacity(model.isBusy ? 0.5 : 1)
     }
 
-    private func chip(_ icon: String, _ label: String, action: @escaping () -> Void) -> some View {
+    private func chip(_ icon: String, _ label: LocalizedStringResource, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                Text(icon).font(.system(size: 13))
+                Text(verbatim: icon).font(.system(size: 13))
                 Text(label)
                     .font(AtlasFont.body(13, .medium))
                     .foregroundStyle(Palette.ink)

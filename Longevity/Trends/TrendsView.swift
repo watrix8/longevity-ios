@@ -38,7 +38,7 @@ struct TrendsView: View {
                     ForEach(groups) { group in
                         // Nagłówek niesie komponent i wagę, więc kafelki nie
                         // powtarzają tego u siebie.
-                        Kicker(text: group.header, color: groupColor(group))
+                        Kicker(verbatim: group.header, color: groupColor(group))
                             .padding(.top, group.id == "total" ? 0 : 8)
                         ForEach(group.metrics) { MetricCardView(metric: $0) }
                     }
@@ -351,15 +351,15 @@ struct MetricChart: View {
         VStack(spacing: 14) {
             MetricCardView(
                 metric: Metric(
-                    id: "sleep_hours", title: "Sen", unit: "h", positiveHigher: true,
-                    role: .feeds(component: "Sen", weight: 0.30), points: points
+                    id: "sleep_hours", title: String(localized: "Sen"), unit: "h", positiveHigher: true,
+                    role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30), points: points
                 )
             )
             MetricCardView(
                 metric: Metric(
-                    id: "resting_hr", title: "Tętno spoczynkowe", unit: "bpm",
+                    id: "resting_hr", title: String(localized: "Tętno spoczynkowe"), unit: "bpm",
                     positiveHigher: false,
-                    role: .feeds(component: "Regeneracja", weight: 0.15),
+                    role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15),
                     points: points.map { SeriesPoint(date: $0.date, value: $0.value * 6.4) }
                 )
             )
