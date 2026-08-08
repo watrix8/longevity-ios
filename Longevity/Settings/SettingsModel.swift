@@ -87,6 +87,10 @@ final class SettingsViewModel {
     var primaryGoal = ""
     var bodyType = ""
 
+    /// Konto założone przez Apple nie ma tożsamości hasłowej, więc nie ma też
+    /// czego resetować — link nigdy by nie przyszedł.
+    private(set) var hasPassword = true
+
     // Hasła nie zmienia się w formularzu ustawień — wysyłamy link na maila.
     var passwordStatus: String?
     var passwordIsError = false
@@ -223,6 +227,7 @@ final class SettingsViewModel {
     func signOut() async {
         await flushPendingSaves()
         HealthSyncModel.shared.reset()
+        ChatHistoryCache.clear()
         try? await AppSupabase.client.auth.signOut()
     }
 

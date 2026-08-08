@@ -15,14 +15,26 @@ struct ChatMessage: Identifiable, Sendable {
         case failure(String)
     }
 
-    let id = UUID()
+    /// Tura z historii dostaje tożsamość wyprowadzoną z roli i znacznika czasu,
+    /// nie losową. Ta sama rozmowa wczytana z dysku i z serwera musi być dla
+    /// widoku tym samym zestawem wierszy — inaczej podmiana `messages` wygląda
+    /// jak wymiana całej listy i leniwy stos zostaje z pustym ekranem.
+    let id: String
     /// Zmienny, bo dymek asystenta rośnie w trakcie strumienia.
     var kind: Kind
     let at: Date
 
-    init(kind: Kind, at: Date = Date()) {
+    init(kind: Kind, at: Date = Date(), id: String = UUID().uuidString) {
         self.kind = kind
         self.at = at
+        self.id = id
+    }
+
+    /// Identyfikator tury z `assistant_messages`. Para rola + znacznik czasu
+    /// jest w praktyce unikalna: dwie tury tej samej roli nie zapisują się
+    /// w tej samej mikrosekundzie.
+    static func historyID(role: String, at: Date) -> String {
+        "\(role)@\(at.timeIntervalSince1970)"
     }
 }
 

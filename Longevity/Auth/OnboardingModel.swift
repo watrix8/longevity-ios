@@ -197,6 +197,7 @@ final class OnboardingViewModel {
 
     func signOut() async {
         HealthSyncModel.shared.reset()
+        ChatHistoryCache.clear()
         try? await AppSupabase.client.auth.signOut()
     }
 

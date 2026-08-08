@@ -75,10 +75,26 @@ final class ChatViewModel {
     // MARK: - Historia
 
     func load() async {
-        isLoadingHistory = true
         defer { isLoadingHistory = false }
 
-        messages = await loadConversation()
+        // `currentUser` jest synchroniczne — cache staje na ekranie, zanim
+        // cokolwiek poleci w sieć.
+        let userId = AppSupabase.client.auth.currentUser?.id.uuidString
+        let cached = ChatHistoryCache.load(userId: userId)
+
+        if !cached.isEmpty {
+            messages = cached
+            isLoadingHistory = false
+        }
+
+        let fresh = await loadConversation()
+
+        // Pusta odpowiedź to najczęściej błąd sieci, a nie skasowana historia.
+        // Podmiana na nic zabrałaby użytkownikowi rozmowę, którą właśnie czyta.
+        guard !fresh.isEmpty else { return }
+
+        messages = fresh
+        ChatHistoryCache.save(fresh, userId: userId)
     }
 
     private func loadConversation() async -> [ChatMessage] {
@@ -92,9 +108,11 @@ final class ChatViewModel {
                 .value
 
             return rows.reversed().map { row in
-                ChatMessage(
+                let at = ChatDates.parseTimestamp(row.createdAt)
+                return ChatMessage(
                     kind: row.role == "user" ? .user(row.content) : .assistant(row.content),
-                    at: ChatDates.parseTimestamp(row.createdAt)
+                    at: at,
+                    id: ChatMessage.historyID(role: row.role, at: at)
                 )
             }
         } catch {
