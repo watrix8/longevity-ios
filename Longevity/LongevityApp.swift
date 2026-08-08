@@ -48,7 +48,7 @@ struct RootView: View {
 struct SplashView: View {
     var body: some View {
         ZStack {
-            Palette.card.ignoresSafeArea()
+            Palette.paper.ignoresSafeArea()
             HStack(spacing: 0) {
                 Text("LONGEVITY")
                 Text(".").foregroundStyle(Palette.ochre)

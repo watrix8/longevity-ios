@@ -31,7 +31,7 @@ struct SettingsView: View {
             .padding(.top, 22)
             .padding(.bottom, 24)
         }
-        .background(Palette.card)
+        .background(Palette.paper)
         .statusBarCover()
         .task { await model.load() }
         .task { await health.refreshConnection() }
@@ -83,7 +83,8 @@ struct SettingsView: View {
         .foregroundStyle(color)
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
-        .background(Palette.panel, in: Capsule())
+        // Biel, nie `panel` — pigułka stoi w nagłówku, wprost na tle strony.
+        .background(Palette.card, in: Capsule())
         .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
     }
 
@@ -96,7 +97,7 @@ struct SettingsView: View {
                     .font(AtlasFont.body(14))
                     .foregroundStyle(Palette.ink)
                     .multilineTextAlignment(.trailing)
-                    .tint(Palette.ochre)
+                    .tint(Palette.pine)
                     .submitLabel(.done)
             }
             divider
@@ -111,7 +112,7 @@ struct SettingsView: View {
                     displayedComponents: .date
                 )
                 .labelsHidden()
-                .tint(Palette.ochre)
+                .tint(Palette.pine)
             }
             divider
             row("Płeć") { menu($model.sex, SettingsOptions.sexes) }
@@ -146,7 +147,7 @@ struct SettingsView: View {
                 } else {
                     Button("Połącz") { Task { await health.connect() } }
                         .font(AtlasFont.body(14, .semibold))
-                        .tint(Palette.ochreInk)
+                        .tint(Palette.pine)
                         .disabled(health.isSyncing)
                 }
             }
@@ -170,7 +171,7 @@ struct SettingsView: View {
 
             if health.isConnected {
                 divider
-                actionRow("Synchronizuj teraz", color: Palette.ochreInk) {
+                actionRow("Synchronizuj teraz", color: Palette.pine) {
                     Task { await health.syncNow() }
                 }
                 .disabled(health.isSyncing)
@@ -179,21 +180,40 @@ struct SettingsView: View {
             if let sources = health.sources {
                 divider
                 row("Źródła danych") {
+                    // Zawsze `muted`: to lista nazw urządzeń, czyli dane, a nie
+                    // akcja ani ostrzeżenie. Wcześniej przy konflikcie robiła
+                    // się ochrowa i wyglądała identycznie jak „Synchronizuj
+                    // teraz" obok — czyli jak coś, w co można dotknąć.
+                    // Konflikt zgłasza blok niżej, jednym sygnałem.
                     Text(sources.names.joined(separator: ", "))
                         .font(AtlasFont.body(13))
-                        .foregroundStyle(sources.hasConflict ? Palette.ochreInk : Palette.muted)
+                        .foregroundStyle(Palette.muted)
                         .multilineTextAlignment(.trailing)
                 }
                 if sources.hasConflict {
-                    divider
                     // Dwa urządzenia opisujące tę samą metrykę to nie ciekawostka:
                     // kroki i kalorie mogą się zsumować, a tętno uśrednić między
                     // różnymi metodami pomiaru.
-                    Text("Więcej niż jedno źródło dla: \(sources.conflicting.joined(separator: ", ")). Wartości mogą się dublować.")
-                        .font(AtlasFont.body(12))
-                        .foregroundStyle(Palette.ochreInk)
-                        .padding(.horizontal, 15)
-                        .padding(.vertical, 12)
+                    //
+                    // Ciepły tekst siedzi na ciepłym tle, tak jak błąd w czacie.
+                    // Dzięki temu ochra w treści zawsze znaczy „popatrz", nigdy
+                    // „dotknij" — a wcięty prostokąt nie wystaje poza zaokrąglony
+                    // róg karty, jak zrobiłby to pas na całą szerokość.
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 10, weight: .bold))
+                            .accessibilityHidden(true)
+                        Text("Więcej niż jedno źródło dla: \(sources.conflicting.joined(separator: ", ")). Wartości mogą się dublować.")
+                            .font(AtlasFont.body(12))
+                            .lineSpacing(2)
+                    }
+                    .foregroundStyle(Palette.ochreInk)
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Palette.ochreSoft, in: RoundedRectangle(cornerRadius: 10))
+                    .padding(.horizontal, 15)
+                    .padding(.bottom, 12)
                 }
             }
 
@@ -211,38 +231,47 @@ struct SettingsView: View {
     // MARK: - Bezpieczeństwo
 
     private var securityCard: some View {
-        section(
-            kicker: "bezpieczeństwo",
-            footer: "Nowe hasło ustawisz przez link, który wyślemy na Twój adres."
-        ) {
+        section(kicker: "bezpieczeństwo", footer: securityFooter) {
             row("Email") {
                 Text(model.email)
                     .font(AtlasFont.body(14))
                     .foregroundStyle(Palette.muted)
             }
-            divider
-            // Hasła nie ustawia się w formularzu ustawień — standardowy wzorzec
-            // to link wysłany na maila, obsłużony przez stronę `/update-password`.
-            actionRow("Zmień hasło", color: Palette.ochreInk) {
-                showPasswordResetConfirm = true
-            }
-            .disabled(model.isSendingReset || model.email.isEmpty)
-            .confirmationDialog(
-                "Wysłać link do zmiany hasła na \(model.email)?",
-                isPresented: $showPasswordResetConfirm,
-                titleVisibility: .visible
-            ) {
-                Button("Wyślij link") { Task { await model.sendPasswordReset() } }
-                Button("Anuluj", role: .cancel) {}
-            }
 
-            if let status = model.passwordStatus {
+            // Konto Apple nie ma tożsamości hasłowej — link do resetu nigdy by
+            // nie dotarł, więc zamiast martwej akcji pokazujemy sposób logowania.
+            if model.hasPassword {
                 divider
-                Text(status)
-                    .font(AtlasFont.body(12))
-                    .foregroundStyle(model.passwordIsError ? .red : Palette.pine)
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 12)
+                // Hasła nie ustawia się w formularzu ustawień — standardowy wzorzec
+                // to link wysłany na maila, obsłużony przez stronę `/update-password`.
+                actionRow("Zmień hasło", color: Palette.pine) {
+                    showPasswordResetConfirm = true
+                }
+                .disabled(model.isSendingReset || model.email.isEmpty)
+                .confirmationDialog(
+                    "Wysłać link do zmiany hasła na \(model.email)?",
+                    isPresented: $showPasswordResetConfirm,
+                    titleVisibility: .visible
+                ) {
+                    Button("Wyślij link") { Task { await model.sendPasswordReset() } }
+                    Button("Anuluj", role: .cancel) {}
+                }
+
+                if let status = model.passwordStatus {
+                    divider
+                    Text(status)
+                        .font(AtlasFont.body(12))
+                        .foregroundStyle(model.passwordIsError ? .red : Palette.pine)
+                        .padding(.horizontal, 15)
+                        .padding(.vertical, 12)
+                }
+            } else {
+                divider
+                row("Logowanie") {
+                    Text("Konto Apple")
+                        .font(AtlasFont.body(14))
+                        .foregroundStyle(Palette.muted)
+                }
             }
 
             divider
@@ -258,6 +287,16 @@ struct SettingsView: View {
                     Button("Anuluj", role: .cancel) {}
                 }
         }
+    }
+
+    /// Rozgałęzienie stoi tu, a nie w wywołaniu `section` — wyrażenie
+    /// trójargumentowe w argumencie `LocalizedStringResource` wyciąga do
+    /// katalogu tylko pierwszą gałąź, więc druga zostawała nieprzetłumaczona.
+    private var securityFooter: LocalizedStringResource {
+        if model.hasPassword {
+            return "Nowe hasło ustawisz przez link, który wyślemy na Twój adres."
+        }
+        return "Tym kontem logujesz się przez Apple, więc nie ma tu hasła do zmiany."
     }
 
     private func loadFailure(_ message: String) -> some View {
@@ -352,7 +391,7 @@ struct SettingsView: View {
                 .foregroundStyle(Palette.ink)
                 .multilineTextAlignment(.trailing)
                 .keyboardType(.decimalPad)
-                .tint(Palette.ochre)
+                .tint(Palette.pine)
                 .fixedSize(horizontal: true, vertical: false)
                 .frame(minWidth: 40, alignment: .trailing)
             Text(suffix)
@@ -370,7 +409,7 @@ struct SettingsView: View {
         }
         .pickerStyle(.menu)
         .labelsHidden()
-        .tint(Palette.ochre)
+        .tint(Palette.pine)
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
     }

@@ -60,7 +60,7 @@ struct DashboardView: View {
             .padding(.top, 22)
             .padding(.bottom, 24)
         }
-        .background(Palette.card)
+        .background(Palette.paper)
         .statusBarCover()
         .refreshable { await model.load() }
         .onAppear { Task { await model.refresh() } }
@@ -106,7 +106,9 @@ struct DashboardView: View {
                 .minimumScaleFactor(0.8)
                 .padding(.horizontal, 9)
                 .padding(.vertical, 5)
-                .background(Palette.panel, in: Capsule())
+                // Biel, nie `panel`: pigułka stoi wprost na tle strony,
+                // a `panel` na `paper` to 1,07:1, czyli nic.
+                .background(Palette.card, in: Capsule())
                 .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
         }
     }
@@ -319,9 +321,13 @@ struct DashboardView: View {
 
     private func noteCard(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Text("↳")
-                .font(AtlasFont.body(13, .bold))
+            // Symbol SF, nie znak „↳": tego glifu nie ma żaden z trzech krojów
+            // ATLAS-a, więc szedłby z podmiany systemowej. Ukryty przed
+            // VoiceOverem, bo to ozdoba — treść niesie tekst obok.
+            Image(systemName: "arrow.turn.down.right")
+                .font(.system(size: 11, weight: .bold))
                 .foregroundStyle(Palette.pine)
+                .accessibilityHidden(true)
             Text(text)
                 .font(AtlasFont.body(13))
                 .foregroundStyle(Palette.ink)
@@ -330,19 +336,28 @@ struct DashboardView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.panel, in: RoundedRectangle(cornerRadius: 14))
+        .background(Palette.card, in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.line, lineWidth: 1))
         .padding(.top, 14)
     }
 
     private func breakdown(_ data: DashboardData) -> some View {
-        VStack(alignment: .leading, spacing: 11) {
+        VStack(alignment: .leading, spacing: 0) {
             Kicker(text: "co składa się na wynik")
-                .padding(.bottom, 1)
+                .padding(.bottom, 10)
 
-            ForEach(data.breakdown) { row in
-                componentRow(row)
+            // Rzędy siedzą w karcie, tak jak sekcje w Opcjach. Nie z upodobania
+            // do ramek: bieżnie pasków mają kolor `panel`, który czyta się
+            // wyłącznie na bieli — położone wprost na tle strony znikają.
+            VStack(alignment: .leading, spacing: 11) {
+                ForEach(data.breakdown) { row in
+                    componentRow(row)
+                }
             }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Palette.card, in: RoundedRectangle(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Palette.line, lineWidth: 1))
         }
         .padding(.top, 22)
     }
@@ -390,7 +405,12 @@ struct DashboardView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!row.hasParts)
+            // `allowsHitTesting`, nie `disabled`: wyłączony przycisk SwiftUI
+            // przygasza całą swoją etykietę, więc rząd bez składowych (VO₂max)
+            // blakł razem z paskiem i wartością — i tracił kontrast, choć jego
+            // liczba znaczy dokładnie tyle samo co w rzędach rozwijalnych.
+            // Tu chodzi wyłącznie o to, żeby nie reagował na dotyk.
+            .allowsHitTesting(row.hasParts)
             .accessibilityElement(children: .combine)
             .accessibilityHint(row.hasParts ? "Dotknij, żeby rozwinąć składowe" : "")
 
@@ -499,7 +519,7 @@ struct ScoreExplainerSheet: View {
                 .padding(20)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .background(Palette.card)
+            .background(Palette.paper)
             // Bez przycisku zamykania — arkusz zbija się gestem albo
             // dotknięciem tła, a „Gotowe" sugerowałoby, że jest tu coś
             // do zatwierdzenia.

@@ -48,7 +48,7 @@ struct TrendsView: View {
             .padding(.top, 22)
             .padding(.bottom, 24)
         }
-        .background(Palette.card)
+        .background(Palette.paper)
         .statusBarCover()
         .refreshable { await model.load() }
         .onAppear { Task { await model.refresh() } }
@@ -88,7 +88,8 @@ struct TrendsView: View {
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(enabled ? Palette.pine : Palette.tick)
                 .frame(width: 34, height: 28)
-                .background(Palette.panel, in: RoundedRectangle(cornerRadius: 9))
+                // Biel, nie `panel` — przycisk stoi wprost na tle strony.
+                .background(Palette.card, in: RoundedRectangle(cornerRadius: 9))
                 .overlay(RoundedRectangle(cornerRadius: 9).stroke(Palette.line, lineWidth: 1))
         }
         .buttonStyle(.plain)
@@ -123,7 +124,7 @@ struct TrendsView: View {
             }
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
-            .background(Palette.panel, in: Capsule())
+            .background(Palette.card, in: Capsule())
             .overlay(Capsule().stroke(Palette.line, lineWidth: 1))
         }
         .onChange(of: model.window) { Task { await model.load() } }
@@ -184,8 +185,12 @@ struct MetricCardView: View {
                         .foregroundStyle(Palette.muted)
                 }
                 Spacer()
+                // Mono, nie body: Hanken nie ma w cmapie ↗ ani ↘, więc iOS
+                // podmieniłby je po cichu na krój systemowy i jedyny glif
+                // z obcej rodziny siedziałby tuż przy wielkiej liczbie.
+                // Space Mono ma wszystkie trzy strzałki.
                 Text(metric.arrow(at: shownIndex))
-                    .font(AtlasFont.body(20))
+                    .font(AtlasFont.mono(18))
                     .foregroundStyle(Palette.pine)
             }
             .padding(.top, 8)

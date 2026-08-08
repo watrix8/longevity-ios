@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 import Supabase
 
@@ -14,6 +15,10 @@ struct AuthView: View {
     @State private var isLoading = false
     @State private var status: Status?
     @State private var needsConfirmation = false
+    /// Surowa liczba jednorazowa bieżącej próby logowania Apple. Musi przeżyć
+    /// między złożeniem żądania a jego zamknięciem — Supabase dostaje ją
+    /// w oryginale, a Apple tylko jej skrót.
+    @State private var appleNonce: String?
     @FocusState private var focused: Field?
 
     private enum Field { case name, email, password }
@@ -31,7 +36,7 @@ struct AuthView: View {
 
     var body: some View {
         ZStack {
-            Palette.card.ignoresSafeArea()
+            Palette.paper.ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: 0) {
@@ -39,6 +44,7 @@ struct AuthView: View {
                     fields
                     statusMessage
                     primaryButton
+                    appleSection
                     secondaryActions
                 }
                 .padding(.horizontal, 28)
@@ -136,14 +142,64 @@ struct AuthView: View {
             .foregroundStyle(hasInput ? Palette.card : Palette.muted)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
+            // Pine, nie ochra: to akcja, a akcje w tej apce są zielone — tak
+            // samo wygląda przycisk wysyłania w czacie i „Spróbuj ponownie".
+            // Stan wyłączony dostaje biel z obwódką zamiast bladej ochry:
+            // `ochreSoft` na tle strony ma kontrast 1,07:1, więc przycisk
+            // po prostu przestawał być widoczny. Wcześniej blady CTA stał obok
+            // pełnoczarnego przycisku Apple i wizualnie to Apple było główną
+            // drogą, a własna rejestracja szeptem.
             .background(
-                hasInput ? Palette.ochre : Palette.ochreSoft,
+                hasInput ? Palette.pine : Palette.card,
                 in: RoundedRectangle(cornerRadius: 14)
             )
+            .overlay {
+                if !hasInput {
+                    RoundedRectangle(cornerRadius: 14).stroke(Palette.line, lineWidth: 1)
+                }
+            }
         }
         .buttonStyle(.plain)
         .disabled(!canSubmit)
         .padding(.top, 20)
+    }
+
+    /// Przycisk musi być systemowy — Apple wymaga własnego kształtu, napisu
+    /// i zachowania, a `SignInWithAppleButton` daje je razem z tłumaczeniem
+    /// napisu na język telefonu.
+    private var appleSection: some View {
+        VStack(spacing: 18) {
+            HStack(spacing: 12) {
+                separatorLine
+                Text("albo")
+                    .font(AtlasFont.body(12))
+                    .foregroundStyle(Palette.muted)
+                separatorLine
+            }
+
+            SignInWithAppleButton(isSignUp ? .signUp : .signIn) { request in
+                let nonce = AppleSignIn.randomNonce()
+                appleNonce = nonce
+                AppleSignIn.prepare(request, nonce: nonce)
+            } onCompletion: { result in
+                Task { await authenticateWithApple(result) }
+            }
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: 50)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .disabled(isLoading)
+            // Etykietę systemowy przycisk ustala przy tworzeniu i nie zmienia
+            // jej przy przerysowaniu. Bez własnej tożsamości w trybie rejestracji
+            // dalej pisałby „Zaloguj się".
+            .id(isSignUp)
+        }
+        .padding(.top, 24)
+    }
+
+    private var separatorLine: some View {
+        Rectangle()
+            .fill(Palette.line)
+            .frame(height: 1)
     }
 
     private var secondaryActions: some View {
@@ -178,10 +234,10 @@ struct AuthView: View {
     private func field<C: View>(@ViewBuilder _ content: () -> C) -> some View {
         content()
             .font(AtlasFont.body(15))
-            .tint(Palette.ochre)
+            .tint(Palette.pine)
             .padding(.horizontal, 14)
             .padding(.vertical, 14)
-            .background(Palette.panel, in: RoundedRectangle(cornerRadius: 14))
+            .background(Palette.card, in: RoundedRectangle(cornerRadius: 14))
             .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.line, lineWidth: 1))
     }
 
@@ -225,6 +281,24 @@ struct AuthView: View {
         }
     }
 
+    private func authenticateWithApple(_ result: Result<ASAuthorization, Error>) async {
+        isLoading = true
+        status = nil
+        needsConfirmation = false
+        defer {
+            isLoading = false
+            appleNonce = nil
+        }
+
+        do {
+            // Rezygnacja nie zostawia śladu na ekranie — użytkownik właśnie
+            // powiedział, że nie chce, więc komunikat byłby wyrzutem.
+            _ = try await AppleSignIn.signIn(with: result, nonce: appleNonce)
+        } catch {
+            status = .error(localizedError(error))
+        }
+    }
+
     private func resendConfirmation() async {
         isLoading = true
         status = nil
@@ -239,6 +313,12 @@ struct AuthView: View {
     }
 
     private func localizedError(_ error: Error) -> String {
+        // Błędy arkusza Apple niosą kody systemowe, nie treść dla użytkownika.
+        // Rezygnacja tu nie dociera — `AppleSignIn.signIn` zdejmuje ją wcześniej.
+        if error is ASAuthorizationError || error is AppleSignIn.Failure {
+            return String(localized: "Nie udało się zalogować kontem Apple. Spróbuj ponownie.")
+        }
+
         guard let authError = error as? AuthError else {
             let message = error.localizedDescription.lowercased()
             if message.contains("network") || message.contains("connection") || message.contains("offline") {

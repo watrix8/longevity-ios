@@ -15,7 +15,7 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            Palette.card.ignoresSafeArea()
+            Palette.paper.ignoresSafeArea()
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -66,7 +66,7 @@ struct OnboardingView: View {
                         .foregroundStyle(Palette.ink)
                         .multilineTextAlignment(.trailing)
                         .textContentType(.givenName)
-                        .tint(Palette.ochre)
+                        .tint(Palette.pine)
                         .submitLabel(.next)
                         .focused($focused, equals: .name)
                         .onSubmit { focused = .height }
@@ -83,7 +83,7 @@ struct OnboardingView: View {
                         displayedComponents: .date
                     )
                     .labelsHidden()
-                    .tint(Palette.ochre)
+                    .tint(Palette.pine)
                 }
                 divider
                 row("Płeć", isMissing: model.sex.isEmpty) {
@@ -146,10 +146,18 @@ struct OnboardingView: View {
             .foregroundStyle(isFilled ? Palette.card : Palette.muted)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 15)
+            // Zielony jak każda inna akcja; stan wyłączony biały z obwódką,
+            // bo `ochreSoft` na tle strony ma kontrast 1,07:1. Ten sam wzór
+            // co przycisk na ekranie logowania.
             .background(
-                isFilled ? Palette.ochre : Palette.ochreSoft,
+                isFilled ? Palette.pine : Palette.card,
                 in: RoundedRectangle(cornerRadius: 14)
             )
+            .overlay {
+                if !isFilled {
+                    RoundedRectangle(cornerRadius: 14).stroke(Palette.line, lineWidth: 1)
+                }
+            }
         }
         .buttonStyle(.plain)
         .disabled(!model.canSubmit)
@@ -223,7 +231,7 @@ struct OnboardingView: View {
                 .foregroundStyle(Palette.ink)
                 .multilineTextAlignment(.trailing)
                 .keyboardType(.decimalPad)
-                .tint(Palette.ochre)
+                .tint(Palette.pine)
                 .focused($focused, equals: field)
                 .fixedSize(horizontal: true, vertical: false)
                 .frame(minWidth: 40, alignment: .trailing)
@@ -249,7 +257,7 @@ struct OnboardingView: View {
         }
         .pickerStyle(.menu)
         .labelsHidden()
-        .tint(Palette.ochre)
+        .tint(Palette.pine)
         .lineLimit(1)
         .fixedSize(horizontal: true, vertical: false)
     }

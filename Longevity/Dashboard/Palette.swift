@@ -14,34 +14,119 @@ extension Color {
 
 /// Paleta z makiety ATLAS. Wartości sztywne — ekran ma wyglądać tak samo
 /// niezależnie od trybu jasny/ciemny.
+///
+/// ## Co znaczy który kolor
+///
+/// Bez tej umowy jeden kolor niósł na raz cztery rzeczy: w Opcjach ochra
+/// oznaczała jednocześnie wartość do wyboru, akcję, zwykłe dane i ostrzeżenie —
+/// czyli nie oznaczała nic, bo nie dawała się przewidzieć.
+///
+/// - `pine` — **to można dotknąć** albo *jest dobrze*: akcje, linki, wartości
+///   pod pickerem, „Połączono". Jedyny kolor, który obiecuje reakcję na dotyk.
+/// - `ochre` / `ochreInk` — **na to patrz**: Twój wynik i to, co go liczy,
+///   plus ostrzeżenia. Nigdy nie oznacza rzeczy klikalnej. Wyjątkiem jest
+///   zaznaczenie zakładki w `RootTabView`, gdzie ochra jest znakiem marki,
+///   a nie obietnicą akcji.
+/// - `ink` → `muted` → `tick` — trzy poziomy tekstu, od treści do przypisu.
+/// - `.red` — wyłącznie rzeczy nieodwracalne i błędy.
+///
+/// ## Warstwy
+///
+/// `paper` to tło strony, `card` to biel podniesionych bloków, `panel` to
+/// wypełnienie WEWNĄTRZ karty (bieżnie pasków, tła wykresów, pigułki).
+/// Wcześniej strona i karta miały ten sam biały kolor, więc karty rozpoznawało
+/// się wyłącznie po obwódce o kontraście 1,32:1 — czyli praktycznie po niczym.
+/// `panel` położony wprost na `paper` jest niewidoczny (1,07:1): co siedzi
+/// na stronie, dostaje `card`, co siedzi w karcie — `panel`.
+///
+/// ## Kontrast
+///
+/// Wartości nie są dobrane na oko — każda przechodzi WCAG AA (4,5:1) na
+/// wszystkich trzech tłach, na których faktycznie występuje. `ochre` została
+/// przy 3,54:1, więc wolno jej nieść tylko duże liczby i wypełnienia; tekst
+/// w rozmiarze zwykłym bierze `ochreInk` (5,64:1). Poprzednio `tick` miał
+/// 2,60:1 i mimo tego nosił skalę „/100", podpisy osi i wagi procentowe.
 enum Palette {
-    static let ink = Color(hex: 0x18211C)
+    /// Tło strony.
+    static let paper = Color(hex: 0xE9EFE2)
+    /// Podniesione bloki: karty, dymki, pola na stronie.
     static let card = Color(hex: 0xFFFFFF)
+    /// Wypełnienie wewnątrz karty — na `paper` znika, nie kłaść go tam.
     static let panel = Color(hex: 0xF3F6EF)
-    static let muted = Color(hex: 0x6A746C)
-    static let line = Color(hex: 0xDCE2D6)
+
+    static let ink = Color(hex: 0x18211C)
+    static let muted = Color(hex: 0x535A54)
+    static let tick = Color(hex: 0x656E66)
+    static let line = Color(hex: 0xCFD7C7)
+
     static let pine = Color(hex: 0x2F6B5E)
     static let pineSoft = Color(hex: 0xD6E6DF)
-    static let ochre = Color(hex: 0xC9781E)
-    static let ochreInk = Color(hex: 0xA85F12)
+
+    /// Tylko duże liczby i wypełnienia — na tekst zwykłej wielkości `ochreInk`.
+    static let ochre = Color(hex: 0xC5751D)
+    static let ochreInk = Color(hex: 0x995710)
+    /// Tło bloku ostrzeżenia. Działa na `card`, na `paper` jest niewidoczne.
     static let ochreSoft = Color(hex: 0xF4E4CB)
-    static let stem = Color(hex: 0xE7C79A)
-    static let tick = Color(hex: 0x9AA39B)
+    /// Pasek składowej drugiego poziomu. Jaśniejszy od `ochre` celowo —
+    /// wartość liczbowa stoi obok każdego paska, więc kolor nie musi jej nieść.
+    static let stem = Color(hex: 0xDFB579)
 }
 
-/// Odpowiedniki krojów z makiety (Bricolage Grotesque / Hanken Grotesk / Space Mono)
-/// zbudowane na fontach systemowych — bez dociągania plików TTF.
+/// Kroje z makiety ATLAS: Bricolage Grotesque na nagłówki i liczby, Hanken
+/// Grotesk na tekst, Space Mono na etykiety i dane. Pliki leżą w
+/// `Longevity/Resources/Fonts` i są wpisane do `UIAppFonts` w `project.yml` —
+/// bez tego wpisu iOS ich nie rejestruje i `Font.custom` cicho spada na
+/// systemowy krój, bez żadnego błędu.
+///
+/// Nazwy niżej to PostScript name z tabeli `name` każdego TTF-a, a nie nazwa
+/// pliku ani rodziny. To po nich szuka `Font.custom`, i tylko one są pewne:
+/// „Bricolage Grotesque ExtraBold" jest u ExtraBolda rodziną, a nie stylem.
+///
+/// `fixedSize:`, nie `size:` — `Font.custom(_:size:)` skalowałby się
+/// z Dynamic Type, a ekrany stoją dziś na stałych szerokościach kolumn
+/// (118/128/34 pt) i jednej cyfrze w 112 pt. Podmiana krojów ma nie ruszyć
+/// układu; skalowanie tekstu to osobna robota razem z tymi szerokościami.
 enum AtlasFont {
     static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font {
-        .system(size: size, weight: weight)
+        .custom(displayFace(weight), fixedSize: size)
     }
 
     static func body(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight)
+        .custom(bodyFace(weight), fixedSize: size)
     }
 
     static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .monospaced)
+        .custom(monoFace(weight), fixedSize: size)
+    }
+
+    // MARK: - Wagi
+
+    /// Bricolage nie ma statyki cięższej niż ExtraBold (800), więc `.heavy`
+    /// i `.black` schodzą do niej zamiast prosić iOS o pogrubienie syntetyczne.
+    private static func displayFace(_ weight: Font.Weight) -> String {
+        switch weight {
+        case .heavy, .black: "BricolageGrotesque-ExtraBold"
+        case .semibold: "BricolageGrotesque-SemiBold"
+        default: "BricolageGrotesque-Bold"
+        }
+    }
+
+    private static func bodyFace(_ weight: Font.Weight) -> String {
+        switch weight {
+        case .bold, .heavy, .black: "HankenGrotesk-Bold"
+        case .semibold: "HankenGrotesk-SemiBold"
+        case .medium: "HankenGrotesk-Medium"
+        default: "HankenGrotesk-Regular"
+        }
+    }
+
+    /// Space Mono ma tylko regular i bold — wszystko od semibolda w górę
+    /// dostaje bold, bo pośredniej wagi nie ma z czego wziąć.
+    private static func monoFace(_ weight: Font.Weight) -> String {
+        switch weight {
+        case .semibold, .bold, .heavy, .black: "SpaceMono-Bold"
+        default: "SpaceMono-Regular"
+        }
     }
 }
 
@@ -63,9 +148,9 @@ extension View {
                 // samo `ignoresSafeArea` na tym poziomie nic nie rozciąga.
                 let inset = proxy.safeAreaInsets.top
                 VStack(spacing: 0) {
-                    Palette.card.frame(height: inset)
+                    Palette.paper.frame(height: inset)
                     LinearGradient(
-                        colors: [Palette.card, Palette.card.opacity(0)],
+                        colors: [Palette.paper, Palette.paper.opacity(0)],
                         startPoint: .top,
                         endPoint: .bottom
                     )

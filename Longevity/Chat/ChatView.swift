@@ -29,7 +29,7 @@ struct ChatView: View {
             quickActions
             composer
         }
-        .background(Palette.panel)
+        .background(Palette.paper)
         .task {
             if model.isLoadingHistory { await model.load() }
         }
@@ -252,6 +252,11 @@ struct ChatView: View {
                 AssistantMarkdownView(markdown: markdown)
                     .equatable()
                     .textSelection(.enabled)
+                    // Linki w `AttributedString` malują się ambientowym akcentem,
+                    // a ten jest ochrowy od `TabView` — więc odnośnik do badania
+                    // wychodził w kolorze zarezerwowanym dla „popatrz", nie
+                    // „dotknij". Tint zawężony do dymka nie rusza zakładek.
+                    .tint(Palette.pine)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 12)
                     .background(Palette.card, in: RoundedRectangle(cornerRadius: 16))
@@ -265,7 +270,10 @@ struct ChatView: View {
                 .foregroundStyle(Palette.pine)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
+                // Obwódka, bo tło strony to teraz papier, a nie biel: sam
+                // `pineSoft` odcina się od niego na 1,10:1, czyli prawie wcale.
                 .background(Palette.pineSoft, in: Capsule())
+                .overlay(Capsule().stroke(Palette.pine.opacity(0.28), lineWidth: 1))
                 .frame(maxWidth: .infinity)
 
         case .failure(let text):
@@ -279,7 +287,9 @@ struct ChatView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 9)
             .frame(maxWidth: .infinity, alignment: .leading)
+            // To samo co przy potwierdzeniu: `ochreSoft` na papierze to 1,07:1.
             .background(Palette.ochreSoft, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Palette.stem, lineWidth: 1))
         }
     }
 
@@ -294,7 +304,7 @@ struct ChatView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
-        .background(Palette.panel)
+        .background(Palette.paper)
         .disabled(model.isBusy)
         .opacity(model.isBusy ? 0.5 : 1)
     }
@@ -326,7 +336,7 @@ struct ChatView: View {
         .padding(.horizontal, 16)
         .padding(.top, 4)
         .padding(.bottom, 10)
-        .background(Palette.panel)
+        .background(Palette.paper)
     }
 
     /// Miniatura zdjęcia czekającego na wysłanie. Bez tego użytkownik nie ma

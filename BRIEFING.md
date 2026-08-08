@@ -74,8 +74,22 @@ Skoro apka musi istnieć dla Watcha, naturalnie przejmuje check-in, posiłki i d
 
 - **Delegacja**: Max (Hermes) nadzoruje, Claude Code implementuje. Odpowiadaj po polsku w podsumowaniach.
 - **XcodeGen**: po zmianie project.yml → `xcodegen generate`. Nigdy nie edytuj .xcodeproj ręcznie.
-- **Build verification (MUSI przejść)**:
+- **Build verification (MUSI przejść)** — sama kompilacja, nic się nie uruchamia:
   `xcodebuild -scheme Longevity -destination "generic/platform=iOS Simulator" -derivedDataPath build CODE_SIGNING_ALLOWED=NO build`
+- **Uruchomienie na symulatorze**: NIGDY powyższą komendą. `CODE_SIGNING_ALLOWED=NO`
+  usuwa entitlementy, a bez `application-identifier` aplikacja traci dostęp do swojej
+  grupy Keychaina — startuje wylogowana i nie pobiera danych (traci też HealthKit).
+  Wygląda to na zepsuty symulator albo błąd backendu i kosztowało już kilka godzin.
+  ```
+  xcodegen generate && xcodebuild -project Longevity.xcodeproj -scheme Longevity \
+    -destination "platform=iOS Simulator,id=<UDID>" -derivedDataPath build/dd build
+  xcrun simctl install <UDID> build/dd/Build/Products/Debug-iphonesimulator/Longevity.app
+  xcrun simctl launch <UDID> pl.tippin.longevity
+  ```
+  Sprawdzenie, czy binarka jest zdrowa (`1` = ok, `0` = bez entitlementów):
+  `otool -l <ścieżka>/Longevity.app/Longevity | grep -c 'sectname __entitlements'`
+  Uwaga: `codesign -d --entitlements` na `.app` pokazuje pusty słownik dla buildów
+  symulatorowych i do tego się NIE nadaje.
 - **Build na urządzenie**: przez Xcode GUI (Run) — CLI nie widzi konta Apple (znany problem).
   Użytkownik ma iPhone 17 Pro podłączony kablem (Developer Mode ON).
 - **Sekrety**: Secrets.swift jest gitignored — nie twórz nowych sekretów, nie commituj wartości.

@@ -19,11 +19,20 @@ targets:
     type: application
     platform: iOS
     sources:
-      - Longevity
+      # Info.plist wypada z listy plików targetu, bo XcodeGen wrzuca nieznane
+      # rozszerzenia do fazy Resources — a Info.plist skopiowany do paczki
+      # jako zwykły zasób zderza się z tym, który generuje build.
+      - path: Longevity
+        excludes:
+          - Info.plist
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: pl.tippin.longevity
+        # Zostaje włączone: wygenerowane klucze doklejają się do
+        # Longevity/Info.plist, więc wszystkie INFOPLIST_KEY_* niżej działają
+        # dalej, a w pliku siedzi tylko to, czego one nie potrafią wyrazić.
         GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: Longevity/Info.plist
         # Wersje muszą tu być jawnie: przy GENERATE_INFOPLIST_FILE Xcode bierze
         # CFBundleShortVersionString i CFBundleVersion właśnie z tych dwóch pól,
         # a puste wartości App Store Connect odrzuca przy wgrywaniu paczki.
@@ -53,6 +62,10 @@ targets:
       path: Longevity/Longevity.entitlements
       properties:
         com.apple.developer.healthkit: true
+        # Wymaga zaznaczonego „Sign in with Apple" przy App ID
+        # pl.tippin.longevity w portalu deweloperskim — bez tego profil
+        # provisioning nie niesie uprawnienia i podpisywanie na telefon odbija się.
+        com.apple.developer.applesignin: [Default]
 
   LongevityTests:
     type: bundle.unit-test

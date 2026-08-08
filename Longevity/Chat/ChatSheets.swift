@@ -71,7 +71,7 @@ struct ActivitySheet: View {
                 .buttonStyle(.plain)
             }
             .padding(20)
-            .background(Palette.panel)
+            .background(Palette.paper)
             .navigationTitle("Aktywność")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -171,7 +171,7 @@ struct MarkersSheet: View {
                 .padding(20)
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(Palette.panel)
+            .background(Palette.paper)
             .navigationTitle("Pomiary")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -210,7 +210,7 @@ struct MarkersSheet: View {
                 .foregroundStyle(Palette.ink)
                 .multilineTextAlignment(.trailing)
                 .keyboardType(.decimalPad)
-                .tint(Palette.ochre)
+                .tint(Palette.pine)
                 .frame(minWidth: 52, alignment: .trailing)
                 .fixedSize(horizontal: true, vertical: false)
             Text(unit)
@@ -267,7 +267,7 @@ struct CheckinSheet: View {
             }
             .padding(20)
             .frame(maxHeight: .infinity, alignment: .top)
-            .background(Palette.panel)
+            .background(Palette.paper)
             .navigationTitle("Check-in")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

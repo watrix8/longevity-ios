@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Jedyny klucz, który musi tu być: kroje z Resources/Fonts.
+
+	     Reszta Info.plist dalej powstaje z ustawień INFOPLIST_KEY_* w
+	     project.yml (GENERATE_INFOPLIST_FILE zostaje włączone i dokleja
+	     wygenerowane klucze do tego pliku). UIAppFonts tą drogą nie
+	     przechodzi — Xcode obsługuje przez INFOPLIST_KEY_ tylko klucze,
+	     które zna, a ten do nich nie należy: ustawienie znika bez śladu
+	     w logu, fonty zostają niezarejestrowane i Font.custom po cichu
+	     wraca do kroju systemowego. Sprawdzone na zbudowanej paczce. -->
+	<key>UIAppFonts</key>
+	<array>
+		<string>BricolageGrotesque-SemiBold.ttf</string>
+		<string>BricolageGrotesque-Bold.ttf</string>
+		<string>BricolageGrotesque-ExtraBold.ttf</string>
+		<string>HankenGrotesk-Regular.ttf</string>
+		<string>HankenGrotesk-Medium.ttf</string>
+		<string>HankenGrotesk-SemiBold.ttf</string>
+		<string>HankenGrotesk-Bold.ttf</string>
+		<string>SpaceMono-Regular.ttf</string>
+		<string>SpaceMono-Bold.ttf</string>
+	</array>
+</dict>
+</plist>

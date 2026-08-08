@@ -119,6 +119,9 @@ final class SettingsViewModel {
             let session = try await AppSupabase.client.auth.session
             let userId = session.user.id.uuidString
             email = session.user.email ?? ""
+            hasPassword = Self.hasPasswordIdentity(
+                providers: session.user.identities?.map(\.provider) ?? []
+            )
 
             let profile: ProfileRow = try await AppSupabase.client
                 .from("profiles")
@@ -229,6 +232,13 @@ final class SettingsViewModel {
         HealthSyncModel.shared.reset()
         ChatHistoryCache.clear()
         try? await AppSupabase.client.auth.signOut()
+    }
+
+    /// Pusta lista znaczy „nie wiem", nie „brak hasła" — starsze sesje potrafią
+    /// nie nieść tożsamości, a ukrycie resetu komuś, kto loguje się mailem,
+    /// odcięłoby jedyną drogę do zmiany hasła. W wątpliwości pokazujemy.
+    nonisolated static func hasPasswordIdentity(providers: [String]) -> Bool {
+        providers.isEmpty || providers.contains("email")
     }
 
     /// Ustawienie daty z UI oznacza ją jako realnie podaną.

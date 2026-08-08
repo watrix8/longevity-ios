@@ -176,6 +176,22 @@
         }
       }
     },
+    "Apple nie odesłało kompletnych danych logowania": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple nie odesłało kompletnych danych logowania"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple did not return complete sign-in data"
+          }
+        }
+      }
+    },
     "Asystent": {
       "localizations": {
         "pl": {
@@ -858,6 +874,22 @@
         }
       }
     },
+    "Konto Apple": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto Apple"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple account"
+          }
+        }
+      }
+    },
     "Konto utworzone. Wysłaliśmy link potwierdzający na %@ — kliknij go, a potem zaloguj się.": {
       "localizations": {
         "pl": {
@@ -982,6 +1014,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lipids"
+          }
+        }
+      }
+    },
+    "Logowanie": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in"
           }
         }
       }
@@ -1254,6 +1302,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Couldn't load settings"
+          }
+        }
+      }
+    },
+    "Nie udało się zalogować kontem Apple. Spróbuj ponownie.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się zalogować kontem Apple. Spróbuj ponownie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't sign you in with Apple. Please try again."
           }
         }
       }
@@ -2102,6 +2166,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your usual level over the past week. It moves slowly, so it tells you which way you're actually heading — not whether today happened to be better. Today's score isn't part of it, so comparing against it is fair."
+          }
+        }
+      }
+    },
+    "Tym kontem logujesz się przez Apple, więc nie ma tu hasła do zmiany.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tym kontem logujesz się przez Apple, więc nie ma tu hasła do zmiany."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You sign in to this account with Apple, so there is no password to change here."
           }
         }
       }
@@ -2981,6 +3061,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "activity %lld"
+          }
+        }
+      }
+    },
+    "albo": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "albo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or"
           }
         }
       }
