@@ -127,10 +127,15 @@ struct ChartGeometryTests {
         ChartGeometry(points: points(values), span: span, size: size)
     }
 
-    @Test("Pierwszy punkt siedzi na lewej krawędzi, ostatni na prawej")
+    /// Skrajne punkty sięgają krawędzi, ale z marginesem na grubość kreski —
+    /// dokładnie na krawędzi kropka wychodziła obcięta w połowie.
+    @Test("Pierwszy punkt siedzi przy lewej krawędzi, ostatni przy prawej")
     func spansFullWidth() {
-        #expect(Self.geometry.point(at: 0).x == 0)
-        #expect(Self.geometry.point(at: Self.values.count - 1).x == Self.size.width)
+        #expect(Self.geometry.point(at: 0).x == ChartGeometry.inset)
+        #expect(
+            Self.geometry.point(at: Self.values.count - 1).x
+                == Self.size.width - ChartGeometry.inset
+        )
     }
 
     /// To jest test, dla którego geometria jest osobnym typem: kropka pod palcem
@@ -145,10 +150,11 @@ struct ChartGeometryTests {
 
     @Test("Wybierany jest punkt najbliższy, nie ten po lewej")
     func snapsToNearest() {
-        let step = Self.size.width / CGFloat(Self.values.count - 1)
+        let first = Self.geometry.point(at: 0).x
+        let step = Self.geometry.point(at: 1).x - first
 
-        #expect(Self.geometry.index(atX: step * 0.4) == 0)
-        #expect(Self.geometry.index(atX: step * 0.6) == 1)
+        #expect(Self.geometry.index(atX: first + step * 0.4) == 0)
+        #expect(Self.geometry.index(atX: first + step * 0.6) == 1)
     }
 
     @Test("Poza wykresem przywiera do skrajnego dnia")

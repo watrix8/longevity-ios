@@ -245,6 +245,11 @@ struct MetricCardView: View {
 /// osobno, wystarczyłaby inna kolejność zaokrągleń, żeby marker stanął obok
 /// linii zamiast na niej.
 struct ChartGeometry: Equatable {
+    /// Margines na grubość kreski i promień kropki. Bez niego punkt z pierwszego
+    /// albo ostatniego dnia stoi dokładnie na krawędzi płótna i połowa kropki
+    /// (a przy skrajnych wartościach też kawałek linii) zostaje ucięta.
+    static let inset: CGFloat = 8
+
     let size: CGSize
     let count: Int
 
@@ -272,9 +277,11 @@ struct ChartGeometry: Equatable {
     func point(at index: Int) -> CGPoint {
         guard points.indices.contains(index) else { return .zero }
         let point = points[index]
+        let width = max(1, size.width - Self.inset * 2)
+        let height = max(1, size.height - Self.inset * 2)
         return CGPoint(
-            x: CGFloat(span.fraction(of: point.date)) * size.width,
-            y: size.height - CGFloat((point.value - lo) / valueSpan) * size.height
+            x: Self.inset + CGFloat(span.fraction(of: point.date)) * width,
+            y: Self.inset + (1 - CGFloat((point.value - lo) / valueSpan)) * height
         )
     }
 
@@ -283,7 +290,8 @@ struct ChartGeometry: Equatable {
     /// odstępach dzielenie przez stały krok wskazywało nie ten dzień.
     func index(atX x: CGFloat) -> Int {
         guard count > 1, size.width > 0 else { return 0 }
-        let target = min(max(Double(x / size.width), 0), 1)
+        let width = max(1, size.width - Self.inset * 2)
+        let target = min(max(Double((x - Self.inset) / width), 0), 1)
 
         return points.indices.min { left, right in
             abs(span.fraction(of: points[left].date) - target)
@@ -380,9 +388,15 @@ struct MetricChart: View {
         .sensoryFeedback(trigger: selection) { _, new in
             new == nil ? nil : .selection
         }
-        .padding(.horizontal, 4)
-        .padding(.vertical, 8)
-        .background(Palette.panel, in: RoundedRectangle(cornerRadius: 10))
+        // Bez zielonego bloku pod spodem — linia leży wprost na karcie, tak samo
+        // jak pasek na Dashboardzie. Zamiast wypełnienia zostaje sama podstawa:
+        // cienka kreska mówi, gdzie kończy się wykres, i nie maluje tła pod
+        // danymi kolorem, który niesie znaczenie gdzie indziej.
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Palette.line)
+                .frame(height: 1)
+        }
     }
 }
 

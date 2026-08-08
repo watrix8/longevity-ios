@@ -365,9 +365,29 @@ struct ChartCalendarAxisTests {
         ]
         let geometry = ChartGeometry(points: points, span: span, size: CGSize(width: 300, height: 100))
 
-        #expect(geometry.point(at: 0).x == 0)
-        #expect(geometry.point(at: 1).x == 10)
-        #expect(geometry.point(at: 2).x == 300)
+        // Jeden dzień do trzydziestu — proporcja, nie piksele, bo szerokość
+        // zależy jeszcze od marginesu na kreskę.
+        let oneDay = geometry.point(at: 1).x - geometry.point(at: 0).x
+        let thirtyDays = geometry.point(at: 2).x - geometry.point(at: 0).x
+
+        #expect(abs(thirtyDays / oneDay - 30) < 0.001)
+    }
+
+    /// Kropka ostatniego pomiaru wystawała poza płótno i wychodziła obcięta
+    /// w połowie — skrajne dni muszą stać w środku, nie na krawędzi.
+    @Test("Skrajne dni nie stoją na krawędzi płótna")
+    func edgePointsStayInside() {
+        let points = [
+            SeriesPoint(date: "2026-08-01", value: 10),
+            SeriesPoint(date: "2026-08-31", value: 30),
+        ]
+        let size = CGSize(width: 300, height: 100)
+        let geometry = ChartGeometry(points: points, span: span, size: size)
+
+        #expect(geometry.point(at: 0).x == ChartGeometry.inset)
+        #expect(geometry.point(at: 1).x == size.width - ChartGeometry.inset)
+        // Najwyższa wartość też schodzi z górnej krawędzi.
+        #expect(geometry.point(at: 1).y == ChartGeometry.inset)
     }
 
     @Test("Palec trafia w dzień najbliższy w czasie")
@@ -379,10 +399,19 @@ struct ChartCalendarAxisTests {
         ]
         let geometry = ChartGeometry(points: points, span: span, size: CGSize(width: 300, height: 100))
 
-        #expect(geometry.index(atX: 0) == 0)
-        #expect(geometry.index(atX: 12) == 1)
-        // Środek okna: bliżej 2 sierpnia niż 31 sierpnia.
+        // Pozycje bierzemy z geometrii, nie z pikseli wpisanych na sztywno —
+        // inaczej test mierzy margines, a nie wybór dnia.
+        let first = geometry.point(at: 0).x
+        let second = geometry.point(at: 1).x
+        let third = geometry.point(at: 2).x
+
+        #expect(geometry.index(atX: first) == 0)
+        #expect(geometry.index(atX: second) == 1)
+        #expect(geometry.index(atX: third) == 2)
+        // Środek okna wypada koło 16 sierpnia: bliżej 2 sierpnia niż 31.
         #expect(geometry.index(atX: 150) == 1)
-        #expect(geometry.index(atX: 290) == 2)
+        // Tuż za drugim punktem wciąż wygrywa on, nie odległy trzeci.
+        #expect(geometry.index(atX: second + (third - second) * 0.4) == 1)
+        #expect(geometry.index(atX: -100) == 0)
     }
 }
