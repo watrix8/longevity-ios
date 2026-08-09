@@ -77,8 +77,8 @@ extension DashboardData {
     /// Ta sama składanka co w `missingNote` — podgląd nie dorabia własnego
     /// zdania, tylko przechodzi przez ten sam klucz tłumaczenia.
     private static var previewNote: String {
-        let missing = ["VO₂max", String(localized: "Metabolizm")].joined(separator: ", ")
-        return String(localized: "Score policzony z \(65)% wag. Brakuje: \(missing).")
+        let missing = ["VO₂max"].joined(separator: ", ")
+        return String(localized: "Score policzony z \(72)% wag. Brakuje: \(missing).")
     }
 
     /// Tydzień noszenia, tydzień przerwy, powrót — pasek ma pokazać dziurę,
@@ -136,7 +136,7 @@ extension DashboardData {
                 // `lib/scoring-v3.ts` — podgląd ma pokazywać kształt, który
                 // naprawdę przychodzi w snapshocie.
                 ScoreComponentRow(
-                    id: "sleep", label: ScoreComponents.label(forComponent: "sleep"), weight: 0.30, value: 84,
+                    id: "sleep", label: ScoreComponents.label(forComponent: "sleep"), weight: 0.33, value: 84,
                     parts: [
                         ScorePartRow(id: "duration", label: ScoreComponents.label(forPart: "duration"), weight: 0.5, value: 94),
                         ScorePartRow(id: "deep", label: ScoreComponents.label(forPart: "deep"), weight: 0.2, value: 71),
@@ -145,7 +145,7 @@ extension DashboardData {
                     ]
                 ),
                 ScoreComponentRow(
-                    id: "body", label: ScoreComponents.label(forComponent: "body"), weight: 0.20, value: 72,
+                    id: "body", label: ScoreComponents.label(forComponent: "body"), weight: 0.22, value: 72,
                     parts: [
                         ScorePartRow(id: "whr", label: ScoreComponents.label(forPart: "whr"), weight: 0.5, value: nil),
                         ScorePartRow(id: "body_fat", label: ScoreComponents.label(forPart: "body_fat"), weight: 0.3, value: 68),
@@ -153,7 +153,7 @@ extension DashboardData {
                     ]
                 ),
                 ScoreComponentRow(
-                    id: "regeneration", label: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15, value: 75,
+                    id: "regeneration", label: ScoreComponents.label(forComponent: "regeneration"), weight: 0.17, value: 75,
                     parts: [
                         ScorePartRow(id: "resting_heart_rate", label: ScoreComponents.label(forPart: "resting_heart_rate"), weight: 0.4, value: 100),
                         ScorePartRow(id: "hrv_trend", label: ScoreComponents.label(forPart: "hrv_trend"), weight: 0.6, value: nil),

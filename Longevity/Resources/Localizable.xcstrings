@@ -1,3859 +1,3782 @@
 {
-  "sourceLanguage": "pl",
-  "strings": {
-    "": {
-      "shouldTranslate": false
+  "sourceLanguage" : "pl",
+  "strings" : {
+    "" : {
+      "shouldTranslate" : false
     },
-    "%": {
-      "shouldTranslate": false
+    "—" : {
+      "shouldTranslate" : false
     },
-    "%@: %lld z 5": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@: %lld z 5"
+    "." : {
+      "shouldTranslate" : false
+    },
+    "%" : {
+      "shouldTranslate" : false
+    },
+    "%@: %lld z 5" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$lld of 5"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@: %2$lld of 5"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: %lld z 5"
           }
         }
       }
     },
-    "%lld": {
-      "shouldTranslate": false
+    "%lld" : {
+      "shouldTranslate" : false
     },
-    "%lld min": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld min"
+    "%lld min" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld min"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
           }
         }
       }
     },
-    "%lld na 100": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld na 100"
+    "%lld na 100" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld out of 100"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld out of 100"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld na 100"
           }
         }
       }
     },
-    "%lld pkt": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld pkt"
+    "%lld pkt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pts"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld pts"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pkt"
           }
         }
       }
     },
-    "%lld%%": {
-      "shouldTranslate": false
+    "%lld%%" : {
+      "shouldTranslate" : false
     },
-    ".": {
-      "shouldTranslate": false
-    },
-    "1 = kiepski, 5 = świetny": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 = kiepski, 5 = świetny"
+    "→ równo z trendem (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "→ level with trend (%lld)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 = poor, 5 = great"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "→ równo z trendem (%lld)"
           }
         }
       }
     },
-    "1 = spokój, 5 = bardzo wysoki": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 = spokój, 5 = bardzo wysoki"
+    "↗ %lld ponad trend (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↗ %1$lld above trend (%2$lld)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 = calm, 5 = very high"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↗ %lld ponad trend (%lld)"
           }
         }
       }
     },
-    "3 miesiące": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3 miesiące"
+    "↘ %lld poniżej trendu (%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↘ %1$lld below trend (%2$lld)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3 months"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "↘ %lld poniżej trendu (%lld)"
           }
         }
       }
     },
-    "30 dni": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 dni"
+    "⚠️" : {
+      "shouldTranslate" : false
+    },
+    "✅ Check-in zapisany — stres %lld/5 • nastrój %lld/5" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✅ Check-in saved — stress %1$lld/5 • mood %2$lld/5"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "30 days"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "✅ Check-in zapisany — stres %lld/5 • nastrój %lld/5"
           }
         }
       }
     },
-    "Aktywność": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aktywność"
+    "🏃 Aktywność zapisana: %lld min" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🏃 Activity saved: %lld min"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activity"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🏃 Aktywność zapisana: %lld min"
           }
         }
       }
     },
-    "Anuluj": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anuluj"
+    "1 = kiepski, 5 = świetny" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 = poor, 5 = great"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancel"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 = kiepski, 5 = świetny"
           }
         }
       }
     },
-    "Apple nie odesłało kompletnych danych logowania": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple nie odesłało kompletnych danych logowania"
+    "1 = spokój, 5 = bardzo wysoki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 = calm, 5 = very high"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple did not return complete sign-in data"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 = spokój, 5 = bardzo wysoki"
           }
         }
       }
     },
-    "Asystent": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Asystent"
+    "3 miesiące" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 months"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Assistant"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "3 miesiące"
           }
         }
       }
     },
-    "Asystent nie odpowiedział. Spróbuj ponownie.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Asystent nie odpowiedział. Spróbuj ponownie."
+    "30 dni" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 days"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The assistant didn't reply. Try again."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "30 dni"
           }
         }
       }
     },
-    "BMI": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "BMI"
+    "Aktywność" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "BMI"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktywność"
           }
         }
       }
     },
-    "Brak danych w Apple Health z ostatnich %lld dni": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Brak danych w Apple Health z ostatniego dnia"
+    "aktywność %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "activity %lld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "aktywność %lld"
+          }
+        }
+      }
+    },
+    "albo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "or"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "albo"
+          }
+        }
+      }
+    },
+    "Anuluj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anuluj"
+          }
+        }
+      }
+    },
+    "apple health" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "apple health"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "apple health"
+          }
+        }
+      }
+    },
+    "Apple nie odesłało kompletnych danych logowania" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple did not return complete sign-in data"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple nie odesłało kompletnych danych logowania"
+          }
+        }
+      }
+    },
+    "Asystent" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Assistant"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asystent"
+          }
+        }
+      }
+    },
+    "Asystent nie odpowiedział. Spróbuj ponownie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The assistant didn't reply. Try again."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asystent nie odpowiedział. Spróbuj ponownie."
+          }
+        }
+      }
+    },
+    "Asystent pisze odpowiedź" : {
+
+    },
+    "bezpieczeństwo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "security"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bezpieczeństwo"
+          }
+        }
+      }
+    },
+    "biodra %@ cm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "hips %@ cm"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "biodra %@ cm"
+          }
+        }
+      }
+    },
+    "BMI" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BMI"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "BMI"
+          }
+        }
+      }
+    },
+    "bpm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bpm"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "bpm"
+          }
+        }
+      }
+    },
+    "Brak danych w Apple Health z ostatnich %lld dni" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "No Apple Health data from the last day"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Brak danych w Apple Health z ostatnich %lld dni"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Brak danych w Apple Health z ostatnich %lld dni"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Brak danych w Apple Health z ostatnich %lld dni"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "No Apple Health data from the last %lld days"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "No Apple Health data from the last day"
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Brak danych w Apple Health z ostatnich %lld dni"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "No Apple Health data from the last %lld days"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Brak danych w Apple Health z ostatnich %lld dni"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Brak danych w Apple Health z ostatniego dnia"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Brak danych w Apple Health z ostatnich %lld dni"
                 }
               }
             }
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "Brak połączenia z internetem": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak połączenia z internetem"
+    "Brak połączenia z internetem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No internet connection"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No internet connection"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak połączenia z internetem"
           }
         }
       }
     },
-    "Brak wyników": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brak wyników"
+    "Brak wyników" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No results yet"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No results yet"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brak wyników"
           }
         }
       }
     },
-    "Brakuje danych: %@.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Brakuje danych: %@."
+    "Brakuje danych: %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Missing data: %@."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Missing data: %@."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Brakuje danych: %@."
           }
         }
       }
     },
-    "CRP": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CRP"
+    "Check-in" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-in"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "CRP"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check-in"
           }
         }
       }
     },
-    "Check-in": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check-in"
+    "ciało" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "body"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check-in"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ciało"
           }
         }
       }
     },
-    "Ciało": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ciało"
+    "Ciało" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Body"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ciało"
           }
         }
       }
     },
-    "Co jesz? Opisz krótko…": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Co jesz? Opisz krótko…"
+    "cm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cm"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "What are you eating? Describe it briefly…"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cm"
           }
         }
       }
     },
-    "Cześć 👋": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cześć 👋"
+    "Co jesz? Opisz krótko…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What are you eating? Describe it briefly…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hi 👋"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Co jesz? Opisz krótko…"
           }
         }
       }
     },
-    "Dashboard": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dashboard"
+    "co składa się na wynik" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "what makes up the score"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dashboard"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "co składa się na wynik"
           }
         }
       }
     },
-    "Data urodzenia": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data urodzenia"
+    "Cześć 👋" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hi 👋"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Date of birth"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cześć 👋"
           }
         }
       }
     },
-    "Dodaj komentarz albo wyślij samo zdjęcie…": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dodaj komentarz albo wyślij samo zdjęcie…"
+    "Dashboard" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dashboard"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a comment or just send the photo…"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dashboard"
           }
         }
       }
     },
-    "Dodaj posiłek": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dodaj posiłek"
+    "Data urodzenia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Date of birth"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add a meal"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data urodzenia"
           }
         }
       }
     },
-    "Dopisz aktywność jednym tapnięciem": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dopisz aktywność jednym tapnięciem"
+    "Długość snu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep duration"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Log activity with one tap"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Długość snu"
           }
         }
       }
     },
-    "Dopisz pomiary, których nie ma w Apple Health": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dopisz pomiary, których nie ma w Apple Health"
+    "Długowieczność" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Longevity"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Add measurements Apple Health doesn't have"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Długowieczność"
           }
         }
       }
     },
-    "Dotknij, żeby rozwinąć składowe": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dotknij, żeby rozwinąć składowe"
+    "Dodaj komentarz albo wyślij samo zdjęcie…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a comment or just send the photo…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tap to expand the parts"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj komentarz albo wyślij samo zdjęcie…"
           }
         }
       }
     },
-    "Dzień %lld z %lld": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Dzień %1$lld z %2$lld"
+    "Dodaj posiłek" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add a meal"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dodaj posiłek"
+          }
+        }
+      }
+    },
+    "Dopisz aktywność jednym tapnięciem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log activity with one tap"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopisz aktywność jednym tapnięciem"
+          }
+        }
+      }
+    },
+    "Dopisz pomiary, których nie ma w Apple Health" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add measurements Apple Health doesn't have"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dopisz pomiary, których nie ma w Apple Health"
+          }
+        }
+      }
+    },
+    "Dotknij, żeby rozwinąć składowe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to expand the parts"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dotknij, żeby rozwinąć składowe"
+          }
+        }
+      }
+    },
+    "Dzień %lld z %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Day %1$lld of %2$lld"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Dzień %1$lld z %2$lld"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Dzień %1$lld z %2$lld"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Dzień %1$lld z %2$lld"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Day %1$lld of %2$lld"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Day %1$lld of %2$lld"
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dzień %1$lld z %2$lld"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Day %1$lld of %2$lld"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dzień %1$lld z %2$lld"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dzień %1$lld z %2$lld"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Dzień %1$lld z %2$lld"
                 }
               }
             }
           }
         }
-      },
-      "extractionState": "manual"
-    },
-    "Długowieczność": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Długowieczność"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Longevity"
-          }
-        }
-      }
-    },
-    "Długość snu": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Długość snu"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep duration"
-          }
-        }
-      }
-    },
-    "Email": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email"
-          }
-        }
-      }
-    },
-    "Email nie został potwierdzony — sprawdź skrzynkę i kliknij link.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email nie został potwierdzony — sprawdź skrzynkę i kliknij link."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Email not confirmed — check your inbox and click the link."
-          }
-        }
-      }
-    },
-    "Glukoza na czczo": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Glukoza na czczo"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fasting glucose"
-          }
-        }
-      }
-    },
-    "Główny cel": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Główny cel"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Main goal"
-          }
-        }
-      }
-    },
-    "HRV %@ ms": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HRV %@ ms"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HRV %@ ms"
-          }
-        }
-      }
-    },
-    "HRV (SDNN)": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HRV (SDNN)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HRV (SDNN)"
-          }
-        }
-      }
-    },
-    "Hasło": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hasło"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Password"
-          }
-        }
-      }
-    },
-    "Hasło jest za słabe (min. 6 znaków)": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hasło jest za słabe (min. 6 znaków)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Password is too weak (min. 6 characters)"
-          }
-        }
-      }
-    },
-    "HbA1c": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HbA1c"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HbA1c"
-          }
-        }
-      }
-    },
-    "HealthKit jest niedostępny na tym urządzeniu.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HealthKit jest niedostępny na tym urządzeniu."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HealthKit isn't available on this device."
-          }
-        }
-      }
-    },
-    "Ile z ostatnich 30 dni ma pomiary. Dzień bez pomiarów nie dostaje wyniku, a im mniej dni uzbierasz, tym bardziej trend wisi na pojedynczym z nich. Wystarczy nosić zegarek.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ile z ostatnich 30 dni ma pomiary. Dzień bez pomiarów nie dostaje wyniku, a im mniej dni uzbierasz, tym bardziej trend wisi na pojedynczym z nich. Wystarczy nosić zegarek."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How many of the last 30 days have measurements. A day without them gets no score, and the fewer days you collect, the more the trend hangs on any single one. Just wear the watch."
-          }
-        }
-      }
-    },
-    "Imię": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Imię"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "First name"
-          }
-        }
-      }
-    },
-    "Inna": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inna"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Other"
-          }
-        }
-      }
-    },
-    "Jak liczymy wynik": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jak liczymy wynik"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How the score works"
-          }
-        }
-      }
-    },
-    "Jak liczymy wynik?": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jak liczymy wynik?"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "How is the score calculated?"
-          }
-        }
-      }
-    },
-    "Kobieta": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kobieta"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Female"
-          }
-        }
-      }
-    },
-    "Konto Apple": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Konto Apple"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Apple account"
-          }
-        }
-      }
-    },
-    "Konto utworzone. Wysłaliśmy link potwierdzający na %@ — kliknij go, a potem zaloguj się.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Konto utworzone. Wysłaliśmy link potwierdzający na %@ — kliknij go, a potem zaloguj się."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Account created. We sent a confirmation link to %@ — click it, then sign in."
-          }
-        }
-      }
-    },
-    "Kroki": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kroki"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Steps"
-          }
-        }
-      }
-    },
-    "Kropka na marginesie znaczy, że pole czeka na uzupełnienie. Wszystko zmienisz później w Opcjach.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kropka na marginesie znaczy, że pole czeka na uzupełnienie. Wszystko zmienisz później w Opcjach."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A dot in the margin means the field is still waiting. You can change all of it later in Settings."
-          }
-        }
-      }
-    },
-    "LONGEVITY": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LONGEVITY"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "LONGEVITY"
-          }
-        }
-      }
-    },
-    "Lekki dzień. Twój organizm prosi o odpoczynek.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lekki dzień. Twój organizm prosi o odpoczynek."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Take it easy. Your body is asking for rest."
-          }
-        }
-      }
-    },
-    "Lepsza forma sportowa": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lepsza forma sportowa"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Better athletic form"
-          }
-        }
-      }
-    },
-    "Lepszy sen": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lepszy sen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Better sleep"
-          }
-        }
-      }
-    },
-    "Lipidy": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lipidy"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lipids"
-          }
-        }
-      }
-    },
-    "Logowanie": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Logowanie"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign-in"
-          }
-        }
-      }
-    },
-    "Longevity": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Longevity"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Longevity"
-          }
-        }
-      }
-    },
-    "Longevity Score": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Longevity Score"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Longevity Score"
-          }
-        }
-      }
-    },
-    "Masa beztłuszczowa": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Masa beztłuszczowa"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lean body mass"
-          }
-        }
-      }
-    },
-    "Masz już konto? ": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Masz już konto? "
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Already have an account? "
-          }
-        }
-      }
-    },
-    "Metabolizm": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metabolizm"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Metabolic"
-          }
-        }
-      }
-    },
-    "Minuty ćwiczeń": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Minuty ćwiczeń"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Exercise minutes"
-          }
-        }
-      }
-    },
-    "Mniej stresu": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mniej stresu"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Less stress"
-          }
-        }
-      }
-    },
-    "Mężczyzna": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mężczyzna"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Male"
-          }
-        }
-      }
-    },
-    "Nadwaga": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nadwaga"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Overweight"
-          }
-        }
-      }
-    },
-    "Nastrój": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nastrój"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mood"
-          }
-        }
-      }
-    },
-    "Nie masz konta? ": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie masz konta? "
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No account yet? "
-          }
-        }
-      }
-    },
-    "Nie udało się ocenić tego posiłku. Spróbuj ponownie.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się ocenić tego posiłku. Spróbuj ponownie."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't assess this meal. Try again."
-          }
-        }
-      }
-    },
-    "Nie udało się odczytać odpowiedzi serwera.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się odczytać odpowiedzi serwera."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't read the server response."
-          }
-        }
-      }
-    },
-    "Nie udało się przygotować zdjęcia. Spróbuj innego.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się przygotować zdjęcia. Spróbuj innego."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't prepare that photo. Try another one."
-          }
-        }
-      }
-    },
-    "Nie udało się wczytać": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się wczytać"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load"
-          }
-        }
-      }
-    },
-    "Nie udało się wczytać trendów": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się wczytać trendów"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load trends"
-          }
-        }
-      }
-    },
-    "Nie udało się wczytać ustawień": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się wczytać ustawień"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't load settings"
-          }
-        }
-      }
-    },
-    "Nie udało się zalogować kontem Apple. Spróbuj ponownie.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie udało się zalogować kontem Apple. Spróbuj ponownie."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Couldn't sign you in with Apple. Please try again."
-          }
-        }
-      }
-    },
-    "Nie zapisano": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nie zapisano"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not saved"
-          }
-        }
-      }
-    },
-    "Nieprawidłowy adres email": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprawidłowy adres email"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Invalid email address"
-          }
-        }
-      }
-    },
-    "Nieprawidłowy email lub hasło": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nieprawidłowy email lub hasło"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wrong email or password"
-          }
-        }
-      }
-    },
-    "Nowe hasło ustawisz przez link, który wyślemy na Twój adres.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nowe hasło ustawisz przez link, który wyślemy na Twój adres."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You'll set a new password through a link we send to your address."
-          }
-        }
-      }
-    },
-    "Obwód bioder": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Obwód bioder"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hip circumference"
-          }
-        }
-      }
-    },
-    "Obwód talii": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Obwód talii"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Waist circumference"
-          }
-        }
-      }
-    },
-    "Ocenię, co widać na talerzu — bez liczenia kalorii.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ocenię, co widać na talerzu — bez liczenia kalorii."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I'll assess what's on the plate — no calorie counting."
-          }
-        }
-      }
-    },
-    "Odpowiadam na podstawie Twojego score'u, pomiarów z zegarka, wagi i badań.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Odpowiadam na podstawie Twojego score'u, pomiarów z zegarka, wagi i badań."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "I answer based on your score, watch measurements, weight and lab results."
-          }
-        }
-      }
-    },
-    "Okno": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Okno"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Window"
-          }
-        }
-      }
-    },
-    "Opcje": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opcje"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Settings"
-          }
-        }
-      }
-    },
-    "Opisz słowami": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opisz słowami"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Describe it in words"
-          }
-        }
-      }
-    },
-    "Ostatnia synchronizacja": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ostatnia synchronizacja"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Last sync"
-          }
-        }
-      }
-    },
-    "Otyłość": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Otyłość"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Obese"
-          }
-        }
-      }
-    },
-    "Pokaż posiłek — powiem, co o nim myślę": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pokaż posiłek — powiem, co o nim myślę"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Show a meal — I'll tell you what I think"
-          }
-        }
-      }
-    },
-    "Pole wymaga uzupełnienia": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pole wymaga uzupełnienia"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This field is required"
-          }
-        }
-      }
-    },
-    "Pomiary": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pomiary"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Measurements"
-          }
-        }
-      }
-    },
-    "Posiłek": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Posiłek"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Meal"
-          }
-        }
-      }
-    },
-    "Poza wynikiem": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Poza wynikiem"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Outside the score"
-          }
-        }
-      }
-    },
-    "Poziom stresu": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Poziom stresu"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stress level"
-          }
-        }
-      }
-    },
-    "Połącz": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Połącz"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connect"
-          }
-        }
-      }
-    },
-    "Połączenie": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Połączenie"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection"
-          }
-        }
-      }
-    },
-    "Połączenie przerwane — odpowiedź może być niepełna.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Połączenie przerwane — odpowiedź może być niepełna."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connection dropped — the answer may be incomplete."
-          }
-        }
-      }
-    },
-    "Połączono": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Połączono"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connected"
-          }
-        }
-      }
-    },
-    "Przeciętnie. Jeden spokojny dzień zrobi różnicę.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Przeciętnie. Jeden spokojny dzień zrobi różnicę."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Average. One easy day will make a difference."
-          }
-        }
-      }
-    },
-    "Płeć": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Płeć"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sex"
-          }
-        }
-      }
-    },
-    "Regeneracja": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Regeneracja"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recovery"
-          }
-        }
-      }
-    },
-    "Regularność pory snu": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Regularność pory snu"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bedtime regularity"
-          }
-        }
-      }
-    },
-    "Regularność pory snu (SRI)": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Regularność pory snu (SRI)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bedtime regularity (SRI)"
-          }
-        }
-      }
-    },
-    "Rejestracja jest wyłączona": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rejestracja jest wyłączona"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign-up is disabled"
-          }
-        }
-      }
-    },
-    "Ruch (wpisany)": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ruch (wpisany)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activity (logged)"
-          }
-        }
-      }
-    },
-    "Równa długość snu": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Równa długość snu"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Consistent sleep length"
-          }
-        }
-      }
-    },
-    "Score policzony z %lld%% wag. Brakuje: %@.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Score policzony z %lld%% wag. Brakuje: %@."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Score based on %1$lld%% of the weights. Missing: %2$@."
-          }
-        }
-      }
-    },
-    "Sen": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sen"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep"
-          }
-        }
-      }
-    },
-    "Sen głęboki": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sen głęboki"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deep sleep"
-          }
-        }
-      }
-    },
-    "Sen i aktywność liczą się osobno — z Apple Watcha albo z przycisku w czacie.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sen i aktywność liczą się osobno — z Apple Watcha albo z przycisku w czacie."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep and activity are counted separately — from Apple Watch or the button in chat."
-          }
-        }
-      }
-    },
-    "Sen, VO₂max, tętno spoczynkowe, HRV, ruch, skład ciała i waga. Wpis zrobiony ręcznie ma pierwszeństwo — zegarek go nie nadpisze. Wagę i pozostałe pomiary dopisujesz w czacie, a oglądasz na Trendach. Pierwsza synchronizacja ciągnie całą historię z Apple Health i trwa dłużej.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sen, VO₂max, tętno spoczynkowe, HRV, ruch, skład ciała i waga. Wpis zrobiony ręcznie ma pierwszeństwo — zegarek go nie nadpisze. Wagę i pozostałe pomiary dopisujesz w czacie, a oglądasz na Trendach. Pierwsza synchronizacja ciągnie całą historię z Apple Health i trwa dłużej."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sleep, VO₂max, resting heart rate, HRV, movement, body composition and weight. A manual entry wins — the watch won't overwrite it. You add weight and other measurements in chat and view them under Trends. The first sync pulls your whole Apple Health history and takes longer."
-          }
-        }
-      }
-    },
-    "Serwer odpowiedział błędem (%lld).": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Serwer odpowiedział błędem (%lld)."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The server returned an error (%lld)."
-          }
-        }
-      }
-    },
-    "Skąd bierze się liczba": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Skąd bierze się liczba"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Where the number comes from"
-          }
-        }
-      }
-    },
-    "Składają się na nią sen, wydolność, skład ciała, regeneracja i badania krwi. Każde waży inaczej — sen najmocniej. Czego nie zmierzysz, tego nie zgadujemy: brakujące obszary wypadają z rachunku, a udział biorą na siebie pozostałe.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Składają się na nią sen, wydolność, skład ciała, regeneracja i badania krwi. Każde waży inaczej — sen najmocniej. Czego nie zmierzysz, tego nie zgadujemy: brakujące obszary wypadają z rachunku, a udział biorą na siebie pozostałe."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "It adds up from sleep, fitness, body composition, recovery and blood work. Each one weighs differently — sleep the most. What you don't measure, we don't guess: missing areas drop out and the rest take over their share."
-          }
-        }
-      }
-    },
-    "Solidnie. Trzymaj tempo — nic nie musisz zmieniać.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solidnie. Trzymaj tempo — nic nie musisz zmieniać."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Solid. Keep the pace — nothing to change."
-          }
-        }
-      }
-    },
-    "Spróbuj ponownie": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spróbuj ponownie"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Try again"
-          }
-        }
-      }
-    },
-    "Standardowa": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Standardowa"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Standard"
-          }
-        }
-      }
-    },
-    "Sylwetka": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sylwetka"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Body type"
-          }
-        }
-      }
-    },
-    "Synchronizuj teraz": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Synchronizuj teraz"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sync now"
-          }
-        }
-      }
-    },
-    "Talia/biodra": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Talia/biodra"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Waist/hip"
-          }
-        }
-      }
-    },
-    "Ten email jest już zarejestrowany": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ten email jest już zarejestrowany"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "That email is already registered"
-          }
-        }
-      }
-    },
-    "Tkanka tłuszczowa": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tkanka tłuszczowa"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Body fat"
-          }
-        }
-      }
-    },
-    "Trend": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trend"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trend"
-          }
-        }
-      }
-    },
-    "Trend HRV": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trend HRV"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "HRV trend"
-          }
-        }
-      }
-    },
-    "Trendy": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trendy"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Trends"
-          }
-        }
-      }
-    },
-    "Tu zapisujesz dzień i pytasz o to, czego nie widać w liczbach.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu zapisujesz dzień i pytasz o to, czego nie widać w liczbach."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This is where you log your day and ask about what the numbers don't show."
-          }
-        }
-      }
-    },
-    "Twoja dzisiejsza forma w jednej liczbie. Liczymy ją od nowa każdego dnia z pomiarów zegarka i tego, co dopisujesz w czacie. Dlatego potrafi skakać — jedną kiepską noc widać od razu.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Twoja dzisiejsza forma w jednej liczbie. Liczymy ją od nowa każdego dnia z pomiarów zegarka i tego, co dopisujesz w czacie. Dlatego potrafi skakać — jedną kiepską noc widać od razu."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Today's shape in a single number. We recalculate it every day from your watch measurements and whatever you add in chat. That's why it jumps around — one bad night shows up immediately."
-          }
-        }
       }
     },
-    "Twój zwykły poziom z ostatniego tygodnia. Rusza się wolno, więc mówi, w którą stronę naprawdę idziesz — a nie czy akurat dziś było lepiej. Dzisiejszy wynik go nie podbija, więc porównanie z nim jest uczciwe.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Twój zwykły poziom z ostatniego tygodnia. Rusza się wolno, więc mówi, w którą stronę naprawdę idziesz — a nie czy akurat dziś było lepiej. Dzisiejszy wynik go nie podbija, więc porównanie z nim jest uczciwe."
+    "dziś" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "today"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your usual level over the past week. It moves slowly, so it tells you which way you're actually heading — not whether today happened to be better. Today's score isn't part of it, so comparing against it is fair."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "dziś"
           }
         }
       }
     },
-    "Tym kontem logujesz się przez Apple, więc nie ma tu hasła do zmiany.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tym kontem logujesz się przez Apple, więc nie ma tu hasła do zmiany."
+    "Email" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You sign in to this account with Apple, so there is no password to change here."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email"
           }
         }
       }
     },
-    "Tętno spoczynkowe": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tętno spoczynkowe"
+    "Email nie został potwierdzony — sprawdź skrzynkę i kliknij link." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email not confirmed — check your inbox and click the link."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Resting heart rate"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Email nie został potwierdzony — sprawdź skrzynkę i kliknij link."
           }
         }
       }
     },
-    "Usuń zdjęcie": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usuń zdjęcie"
+    "Główny cel" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Main goal"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remove photo"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Główny cel"
           }
         }
       }
     },
-    "VO₂max": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "VO₂max"
+    "Hasło" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "VO₂max"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasło"
           }
         }
       }
     },
-    "VO₂max %@": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "VO₂max %@"
+    "Hasło jest za słabe (min. 6 znaków)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Password is too weak (min. 6 characters)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "VO₂max %@"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hasło jest za słabe (min. 6 znaków)"
           }
         }
       }
     },
-    "WHR (talia/biodra)": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "WHR (talia/biodra)"
+    "HealthKit jest niedostępny na tym urządzeniu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HealthKit isn't available on this device."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "WHR (waist/hip)"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HealthKit jest niedostępny na tym urządzeniu."
           }
         }
       }
     },
-    "Waga": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Waga"
+    "HRV (SDNN)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HRV (SDNN)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weight"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HRV (SDNN)"
           }
         }
       }
     },
-    "Waga musi mieścić się w zakresie 25–400 kg": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Waga musi mieścić się w zakresie 25–400 kg"
+    "HRV %@ ms" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HRV %@ ms"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weight must be between 25 and 400 kg"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HRV %@ ms"
           }
         }
       }
     },
-    "Wiek, płeć, wzrost i waga wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wiek, płeć, wzrost i waga wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników."
+    "ile ruchu dzisiaj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "how much movement today"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Age, sex, height and weight feed the score directly. Without them we calculate it from half the components."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ile ruchu dzisiaj"
           }
         }
       }
     },
-    "Więcej energii": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Więcej energii"
+    "Ile z ostatnich 30 dni ma pomiary. Dzień bez pomiarów nie dostaje wyniku, a im mniej dni uzbierasz, tym bardziej trend wisi na pojedynczym z nich. Wystarczy nosić zegarek." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How many of the last 30 days have measurements. A day without them gets no score, and the fewer days you collect, the more the trend hangs on any single one. Just wear the watch."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "More energy"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ile z ostatnich 30 dni ma pomiary. Dzień bez pomiarów nie dostaje wyniku, a im mniej dni uzbierasz, tym bardziej trend wisi na pojedynczym z nich. Wystarczy nosić zegarek."
           }
         }
       }
     },
-    "Więcej niż jedno źródło dla: %@. Wartości mogą się dublować.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Więcej niż jedno źródło dla: %@. Wartości mogą się dublować."
+    "Imię" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First name"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "More than one source for: %@. Values may be counted twice."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imię"
           }
         }
       }
     },
-    "Wolę nie podawać": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wolę nie podawać"
+    "Inna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prefer not to say"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inna"
           }
         }
       }
     },
-    "Wpisane wartości mają pierwszeństwo — synchronizacja z Apple Health ich nie nadpisze. Obwodu bioder HealthKit nie zna w ogóle, a VO₂max liczy tylko przy marszu, biegu i wędrówce na zewnątrz.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wpisane wartości mają pierwszeństwo — synchronizacja z Apple Health ich nie nadpisze. Obwodu bioder HealthKit nie zna w ogóle, a VO₂max liczy tylko przy marszu, biegu i wędrówce na zewnątrz."
+    "Jak liczymy wynik" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How the score works"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Values you type in win — an Apple Health sync won't overwrite them. HealthKit doesn't know hip circumference at all, and it only measures VO₂max during outdoor walking, running and hiking."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jak liczymy wynik"
           }
         }
       }
     },
-    "Wybierz z galerii": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wybierz z galerii"
+    "Jak liczymy wynik?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How is the score calculated?"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Choose from library"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jak liczymy wynik?"
           }
         }
       }
     },
-    "Wykres i trend włączą się po %lld dniach z pomiarami.": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wykres i trend włączą się po %lld dniu z pomiarami."
+    "jeszcze %lld dni z pomiarami i pojawi się trend" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more day with measurements and the trend appears"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wykres i trend włączą się po %lld dniach z pomiarami."
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wykres i trend włączą się po %lld dniach z pomiarami."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wykres i trend włączą się po %lld dniach z pomiarami."
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld more days with measurements and the trend appears"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "The chart and trend switch on after %lld day with measurements."
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "jeszcze %lld dni z pomiarami i pojawi się trend"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "The chart and trend switch on after %lld days with measurements."
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "jeszcze %lld dni z pomiarami i pojawi się trend"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "jeszcze %lld dzień z pomiarami i pojawi się trend"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "jeszcze %lld dni z pomiarami i pojawi się trend"
                 }
               }
             }
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "Wykres ostatnich %lld dni": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wykres ostatniego dnia"
+    "kg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kg"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "kg"
+          }
+        }
+      }
+    },
+    "Kobieta" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Female"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kobieta"
+          }
+        }
+      }
+    },
+    "Konto Apple" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple account"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konto Apple"
+          }
+        }
+      }
+    },
+    "Konto utworzone. Wysłaliśmy link potwierdzający na %@ — kliknij go, a potem zaloguj się." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account created. We sent a confirmation link to %@ — click it, then sign in."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Konto utworzone. Wysłaliśmy link potwierdzający na %@ — kliknij go, a potem zaloguj się."
+          }
+        }
+      }
+    },
+    "Kroki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Steps"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kroki"
+          }
+        }
+      }
+    },
+    "Kropka na marginesie znaczy, że pole czeka na uzupełnienie. Wszystko zmienisz później w Opcjach." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dot in the margin means the field is still waiting. You can change all of it later in Settings."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kropka na marginesie znaczy, że pole czeka na uzupełnienie. Wszystko zmienisz później w Opcjach."
+          }
+        }
+      }
+    },
+    "Lekki dzień. Twój organizm prosi o odpoczynek." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take it easy. Your body is asking for rest."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lekki dzień. Twój organizm prosi o odpoczynek."
+          }
+        }
+      }
+    },
+    "Lepsza forma sportowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Better athletic form"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lepsza forma sportowa"
+          }
+        }
+      }
+    },
+    "Lepszy sen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Better sleep"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lepszy sen"
+          }
+        }
+      }
+    },
+    "Logowanie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-in"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Logowanie"
+          }
+        }
+      }
+    },
+    "Longevity" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Longevity"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Longevity"
+          }
+        }
+      }
+    },
+    "LONGEVITY" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LONGEVITY"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LONGEVITY"
+          }
+        }
+      }
+    },
+    "Longevity Score" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Longevity Score"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Longevity Score"
+          }
+        }
+      }
+    },
+    "masa beztł. %@ kg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "lean mass %@ kg"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "masa beztł. %@ kg"
+          }
+        }
+      }
+    },
+    "Masa beztłuszczowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lean body mass"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masa beztłuszczowa"
+          }
+        }
+      }
+    },
+    "Masz już konto? " : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Already have an account? "
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masz już konto? "
+          }
+        }
+      }
+    },
+    "Mężczyzna" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Male"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mężczyzna"
+          }
+        }
+      }
+    },
+    "Minuty ćwiczeń" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exercise minutes"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Minuty ćwiczeń"
+          }
+        }
+      }
+    },
+    "ml/kg/min" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ml/kg/min"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ml/kg/min"
+          }
+        }
+      }
+    },
+    "Mniej stresu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Less stress"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mniej stresu"
+          }
+        }
+      }
+    },
+    "ms" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ms"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ms"
+          }
+        }
+      }
+    },
+    "Nadwaga" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Overweight"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nadwaga"
+          }
+        }
+      }
+    },
+    "Nastrój" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mood"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nastrój"
+          }
+        }
+      }
+    },
+    "Nie masz konta? " : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No account yet? "
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie masz konta? "
+          }
+        }
+      }
+    },
+    "Nie udało się ocenić tego posiłku. Spróbuj ponownie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't assess this meal. Try again."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się ocenić tego posiłku. Spróbuj ponownie."
+          }
+        }
+      }
+    },
+    "Nie udało się odczytać odpowiedzi serwera." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't read the server response."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się odczytać odpowiedzi serwera."
+          }
+        }
+      }
+    },
+    "Nie udało się przygotować zdjęcia. Spróbuj innego." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't prepare that photo. Try another one."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się przygotować zdjęcia. Spróbuj innego."
+          }
+        }
+      }
+    },
+    "Nie udało się wczytać" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się wczytać"
+          }
+        }
+      }
+    },
+    "Nie udało się wczytać trendów" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load trends"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się wczytać trendów"
+          }
+        }
+      }
+    },
+    "Nie udało się wczytać ustawień" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load settings"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się wczytać ustawień"
+          }
+        }
+      }
+    },
+    "Nie udało się zalogować kontem Apple. Spróbuj ponownie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't sign you in with Apple. Please try again."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie udało się zalogować kontem Apple. Spróbuj ponownie."
+          }
+        }
+      }
+    },
+    "Nie zapisano" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not saved"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nie zapisano"
+          }
+        }
+      }
+    },
+    "nie zmierzono" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "not measured"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nie zmierzono"
+          }
+        }
+      }
+    },
+    "Nieprawidłowy adres email" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid email address"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy adres email"
+          }
+        }
+      }
+    },
+    "Nieprawidłowy email lub hasło" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wrong email or password"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nieprawidłowy email lub hasło"
+          }
+        }
+      }
+    },
+    "Nowe hasło ustawisz przez link, który wyślemy na Twój adres." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You'll set a new password through a link we send to your address."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nowe hasło ustawisz przez link, który wyślemy na Twój adres."
+          }
+        }
+      }
+    },
+    "Obwód bioder" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hip circumference"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obwód bioder"
+          }
+        }
+      }
+    },
+    "Obwód talii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waist circumference"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obwód talii"
+          }
+        }
+      }
+    },
+    "Ocenię, co widać na talerzu — bez liczenia kalorii." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I'll assess what's on the plate — no calorie counting."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocenię, co widać na talerzu — bez liczenia kalorii."
+          }
+        }
+      }
+    },
+    "Odpowiadam na podstawie Twojego score'u, pomiarów z zegarka, wagi i badań." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I answer based on your score, watch measurements, weight and lab results."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Odpowiadam na podstawie Twojego score'u, pomiarów z zegarka, wagi i badań."
+          }
+        }
+      }
+    },
+    "Okno" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Okno"
+          }
+        }
+      }
+    },
+    "Opcje" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opcje"
+          }
+        }
+      }
+    },
+    "Opisz słowami" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Describe it in words"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opisz słowami"
+          }
+        }
+      }
+    },
+    "Ostatnia synchronizacja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last sync"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ostatnia synchronizacja"
+          }
+        }
+      }
+    },
+    "ostatnie %lld dni" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "last day"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wykres ostatnich %lld dni"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wykres ostatnich %lld dni"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Wykres ostatnich %lld dni"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "last %lld days"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Chart of the last day"
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ostatnie %lld dni"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Chart of the last %lld days"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ostatnie %lld dni"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ostatni dzień"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "ostatnie %lld dni"
                 }
               }
             }
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "Wylogować z aplikacji?": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wylogować z aplikacji?"
+    "Otyłość" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obese"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign out of the app?"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otyłość"
           }
         }
       }
     },
-    "Wyloguj": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wyloguj"
+    "Płeć" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sex"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign out"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Płeć"
           }
         }
       }
     },
-    "Wynik": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wynik"
+    "Pokaż posiłek — powiem, co o nim myślę" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show a meal — I'll tell you what I think"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Score"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pokaż posiłek — powiem, co o nim myślę"
           }
         }
       }
     },
-    "Wynik dnia": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wynik dnia"
+    "Połącz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Today's score"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połącz"
           }
         }
       }
     },
-    "Wysportowana": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wysportowana"
+    "Połączenie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Athletic"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połączenie"
           }
         }
       }
     },
-    "Wystąpił błąd: %@": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wystąpił błąd: %@"
+    "Połączenie przerwane — odpowiedź może być niepełna." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connection dropped — the answer may be incomplete."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Something went wrong: %@"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połączenie przerwane — odpowiedź może być niepełna."
           }
         }
       }
     },
-    "Wysyłam %lld/%lld…": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wysyłam %lld/%lld…"
+    "Połączono" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sending %1$lld/%2$lld…"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Połączono"
           }
         }
       }
     },
-    "Wysłaliśmy link na %@": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wysłaliśmy link na %@"
+    "Pole wymaga uzupełnienia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This field is required"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "We sent a link to %@"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pole wymaga uzupełnienia"
           }
         }
       }
     },
-    "Wysłaliśmy link ponownie na %@.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wysłaliśmy link ponownie na %@."
+    "Pomiary" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Measurements"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "We sent the link to %@ again."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomiary"
           }
         }
       }
     },
-    "Wysłać link do zmiany hasła na %@?": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wysłać link do zmiany hasła na %@?"
+    "Posiłek" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meal"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Send a password reset link to %@?"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Posiłek"
           }
         }
       }
     },
-    "Wyślij link": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wyślij link"
+    "Poza wynikiem" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Outside the score"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Send link"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poza wynikiem"
           }
         }
       }
     },
-    "Wyślij link potwierdzający ponownie": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wyślij link potwierdzający ponownie"
+    "Poziom stresu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stress level"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Send the confirmation link again"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Poziom stresu"
           }
         }
       }
     },
-    "Wzrost": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wzrost"
+    "Przeciętnie. Jeden spokojny dzień zrobi różnicę." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average. One easy day will make a difference."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Height"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Przeciętnie. Jeden spokojny dzień zrobi różnicę."
           }
         }
       }
     },
-    "Wzrost musi mieścić się w zakresie 80–260 cm": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wzrost musi mieścić się w zakresie 80–260 cm"
+    "Regeneracja" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recovery"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Height must be between 80 and 260 cm"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regeneracja"
           }
         }
       }
     },
-    "Za dużo prób. Odczekaj chwilę i spróbuj ponownie.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Za dużo prób. Odczekaj chwilę i spróbuj ponownie."
+    "Regularność pory snu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedtime regularity"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Too many attempts. Wait a moment and try again."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regularność pory snu"
           }
         }
       }
     },
-    "Za mało danych na trend.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Za mało danych na trend."
+    "Regularność pory snu (SRI)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bedtime regularity (SRI)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Not enough data for a trend."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Regularność pory snu (SRI)"
           }
         }
       }
     },
-    "Zaloguj się": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zaloguj się"
+    "Rejestracja jest wyłączona" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign-up is disabled"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rejestracja jest wyłączona"
           }
         }
       }
     },
-    "Zapisano": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisano"
+    "Równa długość snu" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Consistent sleep length"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saved"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Równa długość snu"
           }
         }
       }
     },
-    "Zapisano %lld dni": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Zapisano %lld dzień"
+    "Ruch (wpisany)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activity (logged)"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruch (wpisany)"
+          }
+        }
+      }
+    },
+    "Score policzony z %lld%% wag. Brakuje: %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score based on %1$lld%% of the weights. Missing: %2$@."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score policzony z %lld%% wag. Brakuje: %@."
+          }
+        }
+      }
+    },
+    "Sen" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sen"
+          }
+        }
+      }
+    },
+    "Sen głęboki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deep sleep"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sen głęboki"
+          }
+        }
+      }
+    },
+    "Sen i aktywność liczą się osobno — z Apple Watcha albo z przycisku w czacie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep and activity are counted separately — from Apple Watch or the button in chat."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sen i aktywność liczą się osobno — z Apple Watcha albo z przycisku w czacie."
+          }
+        }
+      }
+    },
+    "Sen, VO₂max, tętno spoczynkowe, HRV, ruch, skład ciała i waga. Wpis zrobiony ręcznie ma pierwszeństwo — zegarek go nie nadpisze. Wagę i pozostałe pomiary dopisujesz w czacie, a oglądasz na Trendach. Pierwsza synchronizacja ciągnie całą historię z Apple Health i trwa dłużej." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sleep, VO₂max, resting heart rate, HRV, movement, body composition and weight. A manual entry wins — the watch won't overwrite it. You add weight and other measurements in chat and view them under Trends. The first sync pulls your whole Apple Health history and takes longer."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sen, VO₂max, tętno spoczynkowe, HRV, ruch, skład ciała i waga. Wpis zrobiony ręcznie ma pierwszeństwo — zegarek go nie nadpisze. Wagę i pozostałe pomiary dopisujesz w czacie, a oglądasz na Trendach. Pierwsza synchronizacja ciągnie całą historię z Apple Health i trwa dłużej."
+          }
+        }
+      }
+    },
+    "Serwer odpowiedział błędem (%lld)." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The server returned an error (%lld)."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Serwer odpowiedział błędem (%lld)."
+          }
+        }
+      }
+    },
+    "Skąd bierze się liczba" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where the number comes from"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skąd bierze się liczba"
+          }
+        }
+      }
+    },
+    "Składają się na nią sen, wydolność, skład ciała, regeneracja i badania krwi. Każde waży inaczej — sen najmocniej. Czego nie zmierzysz, tego nie zgadujemy: brakujące obszary wypadają z rachunku, a udział biorą na siebie pozostałe." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It adds up from sleep, fitness, body composition, recovery and blood work. Each one weighs differently — sleep the most. What you don't measure, we don't guess: missing areas drop out and the rest take over their share."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Składają się na nią sen, wydolność, skład ciała, regeneracja i badania krwi. Każde waży inaczej — sen najmocniej. Czego nie zmierzysz, tego nie zgadujemy: brakujące obszary wypadają z rachunku, a udział biorą na siebie pozostałe."
+          }
+        }
+      }
+    },
+    "Solidnie. Trzymaj tempo — nic nie musisz zmieniać." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solid. Keep the pace — nothing to change."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Solidnie. Trzymaj tempo — nic nie musisz zmieniać."
+          }
+        }
+      }
+    },
+    "Spróbuj ponownie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try again"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spróbuj ponownie"
+          }
+        }
+      }
+    },
+    "Średnia: %@%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Average: %1$@%2$@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Średnia: %@%@"
+          }
+        }
+      }
+    },
+    "Standardowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standard"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Standardowa"
+          }
+        }
+      }
+    },
+    "Świetna forma. Dziś możesz spokojnie docisnąć trening." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Great shape. You can push the training today."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Świetna forma. Dziś możesz spokojnie docisnąć trening."
+          }
+        }
+      }
+    },
+    "Sylwetka" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body type"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sylwetka"
+          }
+        }
+      }
+    },
+    "Synchronizuj teraz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync now"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronizuj teraz"
+          }
+        }
+      }
+    },
+    "talia %@ cm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "waist %@ cm"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "talia %@ cm"
+          }
+        }
+      }
+    },
+    "Talia/biodra" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waist/hip"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Talia/biodra"
+          }
+        }
+      }
+    },
+    "Ten email jest już zarejestrowany" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That email is already registered"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ten email jest już zarejestrowany"
+          }
+        }
+      }
+    },
+    "tętno %@ bpm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "heart rate %@ bpm"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tętno %@ bpm"
+          }
+        }
+      }
+    },
+    "Tętno spoczynkowe" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resting heart rate"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tętno spoczynkowe"
+          }
+        }
+      }
+    },
+    "Tkanka tłuszczowa" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Body fat"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tkanka tłuszczowa"
+          }
+        }
+      }
+    },
+    "tłuszcz %@%%" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "body fat %@%%"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tłuszcz %@%%"
+          }
+        }
+      }
+    },
+    "Trend" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trend"
+          }
+        }
+      }
+    },
+    "trend — za mało dni" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trend — too few days"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trend — za mało dni"
+          }
+        }
+      }
+    },
+    "trend %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trend %lld"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trend %lld"
+          }
+        }
+      }
+    },
+    "Trend HRV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HRV trend"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trend HRV"
+          }
+        }
+      }
+    },
+    "trend pojawi się jutro" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the trend shows up tomorrow"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "trend pojawi się jutro"
+          }
+        }
+      }
+    },
+    "trend z %lld dni" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld-day trend"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Zapisano %lld dni"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Zapisano %lld dni"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Zapisano %lld dni"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld-day trend"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Saved %lld day"
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "trend z %lld dni"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Saved %lld days"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "trend z %lld dni"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "trend z %lld dnia"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "trend z %lld dni"
                 }
               }
             }
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "Zapisuje się na dzisiaj i nadpisuje wcześniejszy wpis.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisuje się na dzisiaj i nadpisuje wcześniejszy wpis."
+    "Trendy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trends"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Saved for today, replacing any earlier entry."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trendy"
           }
         }
       }
     },
-    "Zapisz": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisz"
+    "Tu zapisujesz dzień i pytasz o to, czego nie widać w liczbach." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is where you log your day and ask about what the numbers don't show."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu zapisujesz dzień i pytasz o to, czego nie widać w liczbach."
           }
         }
       }
     },
-    "Zapisz check-in": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisz check-in"
+    "Twój zwykły poziom z ostatniego tygodnia. Rusza się wolno, więc mówi, w którą stronę naprawdę idziesz — a nie czy akurat dziś było lepiej. Dzisiejszy wynik go nie podbija, więc porównanie z nim jest uczciwe." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your usual level over the past week. It moves slowly, so it tells you which way you're actually heading — not whether today happened to be better. Today's score isn't part of it, so comparing against it is fair."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save check-in"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twój zwykły poziom z ostatniego tygodnia. Rusza się wolno, więc mówi, w którą stronę naprawdę idziesz — a nie czy akurat dziś było lepiej. Dzisiejszy wynik go nie podbija, więc porównanie z nim jest uczciwe."
           }
         }
       }
     },
-    "Zapisz i zaczynamy": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapisz i zaczynamy"
+    "Twoja dzisiejsza forma w jednej liczbie. Liczymy ją od nowa każdego dnia z pomiarów zegarka i tego, co dopisujesz w czacie. Dlatego potrafi skakać — jedną kiepską noc widać od razu." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's shape in a single number. We recalculate it every day from your watch measurements and whatever you add in chat. That's why it jumps around — one bad night shows up immediately."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Save and get started"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twoja dzisiejsza forma w jednej liczbie. Liczymy ją od nowa każdego dnia z pomiarów zegarka i tego, co dopisujesz w czacie. Dlatego potrafi skakać — jedną kiepską noc widać od razu."
           }
         }
       }
     },
-    "Zapytaj o cokolwiek — znam Twoje dane": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapytaj o cokolwiek — znam Twoje dane"
+    "Tym kontem logujesz się przez Apple, więc nie ma tu hasła do zmiany." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You sign in to this account with Apple, so there is no password to change here."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ask me anything — I know your data"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tym kontem logujesz się przez Apple, więc nie ma tu hasła do zmiany."
           }
         }
       }
     },
-    "Zapytaj o cokolwiek…": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zapytaj o cokolwiek…"
+    "Usuń zdjęcie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove photo"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ask me anything…"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Usuń zdjęcie"
           }
         }
       }
     },
-    "Zarejestruj się": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zarejestruj się"
+    "uzupełnij profil" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "complete your profile"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign up"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "uzupełnij profil"
           }
         }
       }
     },
-    "Zebrane dni": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zebrane dni"
+    "VO₂max" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VO₂max"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Days collected"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VO₂max"
           }
         }
       }
     },
-    "Zmiany zapisują się same.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zmiany zapisują się same."
+    "VO₂max %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VO₂max %@"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Changes save themselves."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VO₂max %@"
           }
         }
       }
     },
-    "Zmień hasło": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zmień hasło"
+    "Waga" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Change password"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waga"
           }
         }
       }
     },
-    "Zrób check-in: stres i nastrój": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zrób check-in: stres i nastrój"
+    "waga %@ kg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "weight %@ kg"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Check in: stress and mood"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "waga %@ kg"
           }
         }
       }
     },
-    "Zrób zdjęcie": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zrób zdjęcie"
+    "waga %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "weight %lld"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Take a photo"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "waga %lld"
           }
         }
       }
     },
-    "Zsynchronizuj dane zdrowotne albo dodaj pomiary — wynik pojawi się tutaj.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zsynchronizuj dane zdrowotne albo dodaj pomiary — wynik pojawi się tutaj."
+    "Waga musi mieścić się w zakresie 25–400 kg" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weight must be between 25 and 400 kg"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sync your health data or add measurements — your score will show up here."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waga musi mieścić się w zakresie 25–400 kg"
           }
         }
       }
     },
-    "aktywność %lld": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "aktywność %lld"
+    "WHR (talia/biodra)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WHR (waist/hip)"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "activity %lld"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "WHR (talia/biodra)"
           }
         }
       }
     },
-    "albo": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "albo"
+    "Więcej energii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More energy"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "or"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Więcej energii"
           }
         }
       }
     },
-    "apple health": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "apple health"
+    "Więcej niż jedno źródło dla: %@. Wartości mogą się dublować." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More than one source for: %@. Values may be counted twice."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "apple health"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Więcej niż jedno źródło dla: %@. Wartości mogą się dublować."
           }
         }
       }
     },
-    "bezpieczeństwo": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bezpieczeństwo"
+    "Wiek, płeć, wzrost i waga wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Age, sex, height and weight feed the score directly. Without them we calculate it from half the components."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "security"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wiek, płeć, wzrost i waga wchodzą wprost do wyniku. Bez nich policzymy go z połowy składników."
           }
         }
       }
     },
-    "biodra %@ cm": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "biodra %@ cm"
+    "Wolę nie podawać" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prefer not to say"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "hips %@ cm"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wolę nie podawać"
           }
         }
       }
     },
-    "bpm": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bpm"
+    "Wpisane wartości mają pierwszeństwo — synchronizacja z Apple Health ich nie nadpisze. Obwodu bioder HealthKit nie zna w ogóle, a VO₂max liczy tylko przy marszu, biegu i wędrówce na zewnątrz." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Values you type in win — an Apple Health sync won't overwrite them. HealthKit doesn't know hip circumference at all, and it only measures VO₂max during outdoor walking, running and hiking."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "bpm"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wpisane wartości mają pierwszeństwo — synchronizacja z Apple Health ich nie nadpisze. Obwodu bioder HealthKit nie zna w ogóle, a VO₂max liczy tylko przy marszu, biegu i wędrówce na zewnątrz."
           }
         }
       }
     },
-    "ciało": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ciało"
+    "Wybierz z galerii" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose from library"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "body"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wybierz z galerii"
           }
         }
       }
     },
-    "cm": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cm"
+    "wydolność" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "fitness"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "cm"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wydolność"
           }
         }
       }
     },
-    "co składa się na wynik": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "co składa się na wynik"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "what makes up the score"
-          }
-        }
-      }
-    },
-    "dziś": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "dziś"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "today"
-          }
-        }
-      }
-    },
-    "ile ruchu dzisiaj": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ile ruchu dzisiaj"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "how much movement today"
-          }
-        }
-      }
-    },
-    "jeszcze %lld dni z pomiarami i pojawi się trend": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "jeszcze %lld dzień z pomiarami i pojawi się trend"
+    "Wykres i trend włączą się po %lld dniach z pomiarami." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The chart and trend switch on after %lld day with measurements."
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "jeszcze %lld dni z pomiarami i pojawi się trend"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "jeszcze %lld dni z pomiarami i pojawi się trend"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "jeszcze %lld dni z pomiarami i pojawi się trend"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "The chart and trend switch on after %lld days with measurements."
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld more day with measurements and the trend appears"
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wykres i trend włączą się po %lld dniach z pomiarami."
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld more days with measurements and the trend appears"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wykres i trend włączą się po %lld dniach z pomiarami."
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wykres i trend włączą się po %lld dniu z pomiarami."
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wykres i trend włączą się po %lld dniach z pomiarami."
                 }
               }
             }
           }
         }
-      },
-      "extractionState": "manual"
-    },
-    "kg": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "kg"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "kg"
-          }
-        }
       }
     },
-    "masa beztł. %@ kg": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "masa beztł. %@ kg"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "lean mass %@ kg"
-          }
-        }
-      }
-    },
-    "ml/kg/min": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ml/kg/min"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ml/kg/min"
-          }
-        }
-      }
-    },
-    "ms": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ms"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ms"
-          }
-        }
-      }
-    },
-    "nie zmierzono": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "nie zmierzono"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "not measured"
-          }
-        }
-      }
-    },
-    "ostatnie %lld dni": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "ostatni dzień"
+    "Wykres ostatnich %lld dni" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Chart of the last day"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "ostatnie %lld dni"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "ostatnie %lld dni"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "ostatnie %lld dni"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Chart of the last %lld days"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "last day"
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wykres ostatnich %lld dni"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "last %lld days"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wykres ostatnich %lld dni"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wykres ostatniego dnia"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Wykres ostatnich %lld dni"
                 }
               }
             }
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "talia %@ cm": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "talia %@ cm"
+    "Wylogować z aplikacji?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out of the app?"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "waist %@ cm"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wylogować z aplikacji?"
           }
         }
       }
     },
-    "trend %lld": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "trend %lld"
+    "Wyloguj" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign out"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "trend %lld"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyloguj"
           }
         }
       }
     },
-    "trend pojawi się jutro": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "trend pojawi się jutro"
+    "Wynik" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Score"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "the trend shows up tomorrow"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wynik"
           }
         }
       }
     },
-    "trend z %lld dni": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "trend z %lld dnia"
+    "wynik dnia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "today's score"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "wynik dnia"
+          }
+        }
+      }
+    },
+    "Wynik dnia" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Today's score"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wynik dnia"
+          }
+        }
+      }
+    },
+    "Wysłać link do zmiany hasła na %@?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send a password reset link to %@?"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysłać link do zmiany hasła na %@?"
+          }
+        }
+      }
+    },
+    "Wysłaliśmy link na %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We sent a link to %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysłaliśmy link na %@"
+          }
+        }
+      }
+    },
+    "Wysłaliśmy link ponownie na %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "We sent the link to %@ again."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysłaliśmy link ponownie na %@."
+          }
+        }
+      }
+    },
+    "Wyślij link" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send link"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij link"
+          }
+        }
+      }
+    },
+    "Wyślij link potwierdzający ponownie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send the confirmation link again"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wyślij link potwierdzający ponownie"
+          }
+        }
+      }
+    },
+    "Wysportowana" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Athletic"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysportowana"
+          }
+        }
+      }
+    },
+    "Wystąpił błąd: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Something went wrong: %@"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wystąpił błąd: %@"
+          }
+        }
+      }
+    },
+    "Wysyłam %lld/%lld…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending %1$lld/%2$lld…"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wysyłam %lld/%lld…"
+          }
+        }
+      }
+    },
+    "Wzrost" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Height"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wzrost"
+          }
+        }
+      }
+    },
+    "Wzrost musi mieścić się w zakresie 80–260 cm" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Height must be between 80 and 260 cm"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wzrost musi mieścić się w zakresie 80–260 cm"
+          }
+        }
+      }
+    },
+    "Za dużo prób. Odczekaj chwilę i spróbuj ponownie." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Too many attempts. Wait a moment and try again."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Za dużo prób. Odczekaj chwilę i spróbuj ponownie."
+          }
+        }
+      }
+    },
+    "Za mało danych na trend." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not enough data for a trend."
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Za mało danych na trend."
+          }
+        }
+      }
+    },
+    "zaloguj się" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "sign in"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zaloguj się"
+          }
+        }
+      }
+    },
+    "Zaloguj się" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zaloguj się"
+          }
+        }
+      }
+    },
+    "załóż konto" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "create an account"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "załóż konto"
+          }
+        }
+      }
+    },
+    "Zapisano" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisano"
+          }
+        }
+      }
+    },
+    "Zapisano %lld dni" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Saved %lld day"
                 }
               },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "trend z %lld dni"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "trend z %lld dni"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "trend z %lld dni"
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Saved %lld days"
                 }
               }
             }
           }
         },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld-day trend"
+        "pl" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zapisano %lld dni"
                 }
               },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld-day trend"
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zapisano %lld dni"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zapisano %lld dzień"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Zapisano %lld dni"
                 }
               }
             }
           }
         }
-      },
-      "extractionState": "manual"
+      }
     },
-    "trend — za mało dni": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "trend — za mało dni"
+    "Zapisuje się na dzisiaj i nadpisuje wcześniejszy wpis." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved for today, replacing any earlier entry."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "trend — too few days"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisuje się na dzisiaj i nadpisuje wcześniejszy wpis."
           }
         }
       }
     },
-    "tętno %@ bpm": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tętno %@ bpm"
+    "Zapisz" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "heart rate %@ bpm"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz"
           }
         }
       }
     },
-    "tłuszcz %@%%": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "tłuszcz %@%%"
+    "Zapisz check-in" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save check-in"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "body fat %@%%"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz check-in"
           }
         }
       }
     },
-    "uzupełnij profil": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "uzupełnij profil"
+    "Zapisz i zaczynamy" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save and get started"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "complete your profile"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapisz i zaczynamy"
           }
         }
       }
     },
-    "waga %@ kg": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "waga %@ kg"
+    "Zapytaj o cokolwiek — znam Twoje dane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask me anything — I know your data"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "weight %@ kg"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapytaj o cokolwiek — znam Twoje dane"
           }
         }
       }
     },
-    "waga %lld": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "waga %lld"
+    "Zapytaj o cokolwiek…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask me anything…"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "weight %lld"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zapytaj o cokolwiek…"
           }
         }
       }
     },
-    "wydolność": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "wydolność"
+    "Zarejestruj się" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign up"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "fitness"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zarejestruj się"
           }
         }
       }
     },
-    "wynik dnia": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "wynik dnia"
+    "zbieram dane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "collecting data"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "today's score"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zbieram dane"
           }
         }
       }
     },
-    "zaloguj się": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "zaloguj się"
+    "zdrowie i dane" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "health and data"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "sign in"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zdrowie i dane"
           }
         }
       }
     },
-    "załóż konto": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "załóż konto"
+    "Zebrane dni" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Days collected"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "create an account"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zebrane dni"
           }
         }
       }
     },
-    "zbieram dane": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "zbieram dane"
+    "zebrane wyniki" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "scores so far"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "collecting data"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "zebrane wyniki"
           }
         }
       }
     },
-    "zdrowie i dane": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "zdrowie i dane"
+    "Zmiany zapisują się same." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes save themselves."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "health and data"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmiany zapisują się same."
           }
         }
       }
     },
-    "zebrane wyniki": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "zebrane wyniki"
+    "Zmień hasło" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change password"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "scores so far"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zmień hasło"
           }
         }
       }
     },
-    "Średnia: %@%@": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Średnia: %@%@"
+    "Zrób check-in: stres i nastrój" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check in: stress and mood"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Average: %1$@%2$@"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zrób check-in: stres i nastrój"
           }
         }
       }
     },
-    "Świetna forma. Dziś możesz spokojnie docisnąć trening.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Świetna forma. Dziś możesz spokojnie docisnąć trening."
+    "Zrób zdjęcie" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a photo"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Great shape. You can push the training today."
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zrób zdjęcie"
           }
         }
       }
     },
-    "Źródła danych": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Źródła danych"
+    "Źródła danych" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Data sources"
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Data sources"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Źródła danych"
           }
         }
       }
     },
-    "—": {
-      "shouldTranslate": false
-    },
-    "→ równo z trendem (%lld)": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "→ równo z trendem (%lld)"
+    "Zsynchronizuj dane zdrowotne albo dodaj pomiary — wynik pojawi się tutaj." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync your health data or add measurements — your score will show up here."
           }
         },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "→ level with trend (%lld)"
-          }
-        }
-      }
-    },
-    "↗ %lld ponad trend (%lld)": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↗ %lld ponad trend (%lld)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↗ %1$lld above trend (%2$lld)"
-          }
-        }
-      }
-    },
-    "↘ %lld poniżej trendu (%lld)": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↘ %lld poniżej trendu (%lld)"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "↘ %1$lld below trend (%2$lld)"
-          }
-        }
-      }
-    },
-    "⚠️": {
-      "shouldTranslate": false
-    },
-    "✅ Check-in zapisany — stres %lld/5 • nastrój %lld/5": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "✅ Check-in zapisany — stres %lld/5 • nastrój %lld/5"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "✅ Check-in saved — stress %1$lld/5 • mood %2$lld/5"
-          }
-        }
-      }
-    },
-    "🏃 Aktywność zapisana: %lld min": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🏃 Aktywność zapisana: %lld min"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "🏃 Activity saved: %lld min"
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zsynchronizuj dane zdrowotne albo dodaj pomiary — wynik pojawi się tutaj."
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }

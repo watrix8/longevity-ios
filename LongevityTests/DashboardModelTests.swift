@@ -221,7 +221,7 @@ struct DashboardModelTests {
         {"sleep":82,"regeneration":70,"coverage":0.45}
         """)
         let complete = try makeSnapshot("2026-08-06", 78, components: """
-        {"sleep":82,"vo2max":95,"body":70,"regeneration":88,"metabolic":60,"coverage":1}
+        {"sleep":82,"vo2max":95,"body":70,"regeneration":88,"coverage":1}
         """)
 
         #expect(DashboardViewModel.build(from: [partial], current: partial).note != nil)

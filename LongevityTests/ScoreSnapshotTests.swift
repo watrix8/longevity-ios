@@ -14,8 +14,8 @@ struct ScoreSnapshotTests {
     @Test("Pełny payload v3 dekoduje wszystkie komponenty")
     func fullV3Payload() throws {
         let snapshot = try makeSnapshot("2026-08-06", 78, components: """
-        {"sleep":82,"vo2max":95,"body":70,"regeneration":88,"metabolic":60,
-         "coverage":1,"score_model":"v3_measured"}
+        {"sleep":82,"vo2max":95,"body":70,"regeneration":88,
+         "coverage":1,"score_model":"v3_measured_nolabs"}
         """)
 
         #expect(snapshot.scoreDate == "2026-08-06")
@@ -24,7 +24,7 @@ struct ScoreSnapshotTests {
         #expect(snapshot.components.vo2max == 95)
         #expect(snapshot.components.regeneration == 88)
         #expect(snapshot.components.coveragePercent == 100)
-        #expect(snapshot.components.scoreModel == "v3_measured")
+        #expect(snapshot.components.scoreModel == "v3_measured_nolabs")
     }
 
     /// `components jsonb not null default '{}'` — pusty obiekt musi przejść,
@@ -44,7 +44,7 @@ struct ScoreSnapshotTests {
     @Test("Brakujący komponent zostaje nilem, nie zerem")
     func missingIsNotZero() throws {
         let snapshot = try makeSnapshot("2026-08-06", 82, components: """
-        {"sleep":82,"vo2max":null,"coverage":0.3,"score_model":"v3_measured"}
+        {"sleep":82,"vo2max":null,"coverage":0.3,"score_model":"v3_measured_nolabs"}
         """)
 
         #expect(snapshot.components.vo2max == nil)
@@ -64,12 +64,12 @@ struct ScoreSnapshotTests {
     @Test("Breakdown trzyma kolejność wag z formuły")
     func breakdownOrder() throws {
         let snapshot = try makeSnapshot("2026-08-06", 50, components: """
-        {"sleep":1,"vo2max":2,"body":3,"regeneration":4,"metabolic":5}
+        {"sleep":1,"vo2max":2,"body":3,"regeneration":4}
         """)
 
         #expect(snapshot.components.breakdown.map(\.label)
-            == ["Sen", "VO₂max", "Ciało", "Regeneracja", "Metabolizm"])
-        #expect(snapshot.components.breakdown.map(\.value) == [1, 2, 3, 4, 5])
+            == ["Sen", "VO₂max", "Ciało", "Regeneracja"])
+        #expect(snapshot.components.breakdown.map(\.value) == [1, 2, 3, 4])
     }
 
     @Test("Lista braków wymienia dokładnie nieobliczone komponenty")
@@ -78,7 +78,7 @@ struct ScoreSnapshotTests {
         {"sleep":82,"regeneration":70}
         """)
 
-        #expect(snapshot.components.missing == ["VO₂max", "Ciało", "Metabolizm"])
+        #expect(snapshot.components.missing == ["VO₂max", "Ciało"])
     }
 
     @Test("Pokrycie przelicza się na procenty")
@@ -104,7 +104,7 @@ struct MissingNoteTests {
     @Test("Komplet komponentów nie generuje notki")
     func noNoteWhenComplete() throws {
         let full = try Self.components("""
-        {"sleep":1,"vo2max":2,"body":3,"regeneration":4,"metabolic":5,"coverage":1}
+        {"sleep":1,"vo2max":2,"body":3,"regeneration":4,"coverage":1}
         """)
         #expect(DashboardViewModel.missingNote(full) == nil)
     }
@@ -120,7 +120,7 @@ struct MissingNoteTests {
 
         #expect(note.contains("45%"))
         #expect(note.contains("VO₂max"))
-        #expect(note.contains("Metabolizm"))
+        #expect(note.contains("Ciało"))
     }
 
     @Test("Bez pola coverage notka nadal wymienia braki")
@@ -138,7 +138,7 @@ struct ScorePartsTests {
     private static let payload = """
     {"sleep":84,"regeneration":75,
      "coverage":0.45,
-     "weights":{"sleep":0.3,"vo2max":0.25,"body":0.2,"regeneration":0.15,"metabolic":0.1},
+     "weights":{"sleep":0.33,"vo2max":0.28,"body":0.22,"regeneration":0.17},
      "parts":{
        "sleep":[{"key":"duration","weight":0.6,"value":94},
                 {"key":"deep","weight":0.25,"value":71},
@@ -155,7 +155,7 @@ struct ScorePartsTests {
     @Test("Wiersz komponentu niesie swoją wagę w całym score")
     func carriesWeight() throws {
         let sleep = try #require(try Self.components().breakdown.first { $0.id == "sleep" })
-        #expect(sleep.weight == 0.3)
+        #expect(sleep.weight == 0.33)
         #expect(sleep.value == 84)
     }
 

@@ -44,17 +44,21 @@ struct ScorePartRow: Sendable, Identifiable, Equatable {
     let value: Double?
 }
 
-/// Składniki score v3 — pięć komponentów liczonych z pomiarów.
+/// Składniki score v3 — cztery komponenty liczone z pomiarów.
 ///
 /// Każdy jest OPCJONALNY i to jest istota modelu: komponent bez danych nie
 /// wchodzi do score'u, a wagi pozostałych są przenormowane. Zero i brak to
 /// dwie różne rzeczy, więc nie sprowadzamy ich do wspólnego fallbacku.
+///
+/// Piątym był „metabolic" z markerów krwi i wypadł razem z formułą: badanie
+/// robione raz na pół roku wchodziło do KAŻDEGO kolejnego dnia jako stała.
+/// Snapshoty przeliczono backfillem, więc klucz nie przychodzi już z serwera —
+/// a gdyby przyszedł ze starego wiersza, `Decodable` go po prostu pominie.
 struct ScoreComponents: Decodable, Sendable {
     let sleep: Double?
     let vo2max: Double?
     let body: Double?
     let regeneration: Double?
-    let metabolic: Double?
 
     /// Suma wag komponentów, które miały dane (0–1).
     let coverage: Double?
@@ -66,7 +70,7 @@ struct ScoreComponents: Decodable, Sendable {
     let weights: [String: Double]?
 
     enum CodingKeys: String, CodingKey {
-        case sleep, vo2max, body, regeneration, metabolic, coverage, parts, weights
+        case sleep, vo2max, body, regeneration, coverage, parts, weights
         case scoreModel = "score_model"
     }
 
@@ -98,7 +102,7 @@ struct ScoreComponents: Decodable, Sendable {
 
     // MARK: - Słowniki
 
-    private static let order = ["sleep", "vo2max", "body", "regeneration", "metabolic"]
+    private static let order = ["sleep", "vo2max", "body", "regeneration"]
 
     /// Nazwa komponentu w języku użytkownika. Klucze przychodzą z serwera,
     /// nazwy zostają tutaj — baza nie jest miejscem na napisy dla ludzi.
@@ -108,7 +112,6 @@ struct ScoreComponents: Decodable, Sendable {
         case "vo2max": String(localized: "VO₂max")
         case "body": String(localized: "Ciało")
         case "regeneration": String(localized: "Regeneracja")
-        case "metabolic": String(localized: "Metabolizm")
         default: key
         }
     }
@@ -129,10 +132,6 @@ struct ScoreComponents: Decodable, Sendable {
         case "body_fat": String(localized: "Tkanka tłuszczowa")
         case "resting_heart_rate": String(localized: "Tętno spoczynkowe")
         case "hrv_trend": String(localized: "Trend HRV")
-        case "glucose_fasting": String(localized: "Glukoza na czczo")
-        case "hba1c": String(localized: "HbA1c")
-        case "crp": String(localized: "CRP")
-        case "lipids": String(localized: "Lipidy")
         default: key
         }
     }
@@ -143,7 +142,6 @@ struct ScoreComponents: Decodable, Sendable {
         case "vo2max": vo2max
         case "body": body
         case "regeneration": regeneration
-        case "metabolic": metabolic
         default: nil
         }
     }
