@@ -13,6 +13,10 @@ struct StripGeometry: Equatable {
     static let padTop: CGFloat = 24
     static let padBottom: CGFloat = 22
 
+    /// Liczba slotów na osi X, czyli DNI — nie liczba wartości. Te dwie rzeczy
+    /// rozjeżdżają się o tyle, ile serii wchodzi do skali: wyniki i trend dają
+    /// dwie wartości na dzień. Wzięty stąd krok był o połowę za mały i szereg
+    /// kończył się w połowie karty, choć oś podpisywała „dziś" przy krawędzi.
     let count: Int
 
     private let size: CGSize
@@ -20,9 +24,11 @@ struct StripGeometry: Equatable {
     private let span: Double
     private let step: CGFloat
 
-    init(values: [Double], size: CGSize) {
+    /// `days` opisuje oś X, `values` tylko skalę Y — stąd dwa parametry
+    /// zamiast jednej tablicy.
+    init(days: Int, values: [Double], size: CGSize) {
         self.size = size
-        count = values.count
+        count = days
 
         let rawLo = values.min() ?? 0
         let rawHi = values.max() ?? 100
@@ -70,8 +76,9 @@ struct TrendStrip: View {
 
     @State private var size: CGSize = .zero
 
-    /// Do skali wchodzą i wyniki, i trend — inaczej linia potrafi wyjechać
-    /// poza kadr w dniu z mocnym odchyleniem.
+    /// Do skali PIONOWEJ wchodzą i wyniki, i trend — inaczej linia potrafi
+    /// wyjechać poza kadr w dniu z mocnym odchyleniem. Poziom liczy się z dni,
+    /// nie stąd: tu jest po dwie wartości na dzień, a dni bez pomiaru wypadają.
     private var values: [Double] {
         points.compactMap(\.total) + points.compactMap(\.trend)
     }
@@ -86,7 +93,7 @@ struct TrendStrip: View {
     var body: some View {
         Canvas { context, canvasSize in
             guard points.count > 1 else { return }
-            let g = StripGeometry(values: values, size: canvasSize)
+            let g = StripGeometry(days: points.count, values: values, size: canvasSize)
 
             drawSelectionRule(context, g, canvasSize)
             drawTrendLine(context, g)
@@ -105,7 +112,7 @@ struct TrendStrip: View {
         .gesture(
             DragGesture(minimumDistance: 6)
                 .onChanged { drag in
-                    selection = StripGeometry(values: values, size: size)
+                    selection = StripGeometry(days: points.count, values: values, size: size)
                         .index(atX: drag.location.x)
                 }
                 // Podniesienie palca kasuje wybór: wykres wraca do dziś,
