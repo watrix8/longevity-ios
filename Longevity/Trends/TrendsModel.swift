@@ -110,6 +110,42 @@ struct MetricGroup: Identifiable, Sendable {
     }
 }
 
+/// Jak wartość punktu zamienia się w tekst na karcie.
+///
+/// Sen jest jedyną metryką, której jednostka nie jest dziesiętna: „8,6 h" każe
+/// mnożyć w pamięci przez 60, żeby dowiedzieć się, że to 8 godzin i 36 minut.
+/// Zegarek pokazuje tę wartość w godzinach i minutach i karta robi tak samo.
+enum MetricFormat: Sendable {
+    case decimal
+    /// Wartość w godzinach, pokazywana jako godziny i minuty.
+    case duration
+
+    /// Zaokrąglenie do rozdzielczości, w jakiej wartość i tak się pokaże —
+    /// bez niego średnia niosłaby dokładność, której karta nie wyświetla.
+    func rounded(_ value: Double) -> Double {
+        switch self {
+        case .decimal: (value * 10).rounded() / 10
+        case .duration: (value * 60).rounded() / 60
+        }
+    }
+
+    func text(_ value: Double) -> String {
+        switch self {
+        case .decimal:
+            // Bez zbędnego „.0" na całkowitych wartościach.
+            return value == value.rounded() ? String(Int(value)) : String(format: "%.1f", value)
+        case .duration:
+            // „h" i „min" są takie same po polsku i po angielsku, więc jednostki
+            // zostają w kodzie, a nie w katalogu tłumaczeń.
+            let minutes = Int((value * 60).rounded())
+            let (hours, rest) = (minutes / 60, minutes % 60)
+            if hours == 0 { return "\(rest)min" }
+            if rest == 0 { return "\(hours)h" }
+            return "\(hours)h \(rest)min"
+        }
+    }
+}
+
 /// Jedna karta metryki — odpowiednik `MetricCard` z `app/trends/page.tsx`.
 struct Metric: Identifiable, Sendable {
     let id: String
@@ -120,12 +156,16 @@ struct Metric: Identifiable, Sendable {
     /// Czy wyższa wartość jest lepsza (waga, WHR i tętno spoczynkowe odwrotnie).
     let positiveHigher: Bool
     let role: MetricRole
+    let format: MetricFormat
 
     var last: Double? { points.last?.value }
     var previous: Double? { points.dropLast().last?.value }
     /// Średnia CAŁEGO szeregu, nie trzydziestu dni — przy dłuższym zakresie
     /// obejmuje wszystko, co widać na wykresie.
-    var avgAll: Double? { Self.average(points.map(\.value)) }
+    var avgAll: Double? { Self.average(points.map(\.value), format: format) }
+
+    /// Wartość gotowa na kartę — z jednostką, jeśli format ją niesie.
+    func text(_ value: Double) -> String { format.text(value) }
 
     /// Czy szereg przekracza granicę roku. Wtedy „08-06" przestaje wystarczać,
     /// bo nie wiadomo, o który rok chodzi.
@@ -173,9 +213,9 @@ struct Metric: Identifiable, Sendable {
         return raw == "↗" ? "↘" : (raw == "↘" ? "↗" : "→")
     }
 
-    private static func average(_ values: [Double]) -> Double? {
+    private static func average(_ values: [Double], format: MetricFormat) -> Double? {
         guard !values.isEmpty else { return nil }
-        return (values.reduce(0, +) / Double(values.count) * 10).rounded() / 10
+        return format.rounded(values.reduce(0, +) / Double(values.count))
     }
 
 }
@@ -377,8 +417,13 @@ final class TrendsViewModel {
                    points: scores.map { SeriesPoint(date: $0.scoreDate, value: $0.scoreTotal) }),
 
             // Sen — 30% w v3
-            Metric(id: "sleep_hours", title: String(localized: "Sen"), unit: "h", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
-                   points: series(health) { $0.sleepAsleepMinutes.map { round1(Double($0) / 60) } }),
+            //
+            // Jednostka pusta, bo siedzi w samej wartości („8h 40min") — karta
+            // nie ma jej dopisywać drugi raz. Godziny bez zaokrąglenia do
+            // dziesiątych, bo z 8,6 nie da się już odzyskać 8 h 37 min.
+            Metric(id: "sleep_hours", title: String(localized: "Sen"), unit: "", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
+                   format: .duration,
+                   points: series(health) { $0.sleepAsleepMinutes.map { Double($0) / 60 } }),
             Metric(id: "sleep_deep", title: String(localized: "Sen głęboki"), unit: "%", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
                    points: series(health) {
                        deepSleepShare(deep: $0.sleepDeepMinutes, asleep: $0.sleepAsleepMinutes)
@@ -505,6 +550,7 @@ extension Metric {
         unit: String,
         positiveHigher: Bool,
         role: MetricRole,
+        format: MetricFormat = .decimal,
         points: [SeriesPoint]
     ) {
         self.id = id
@@ -512,6 +558,7 @@ extension Metric {
         self.unit = unit
         self.positiveHigher = positiveHigher
         self.role = role
+        self.format = format
         self.points = points.sorted { $0.date < $1.date }
     }
 }

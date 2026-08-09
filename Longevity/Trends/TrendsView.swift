@@ -169,16 +169,20 @@ struct MetricCardView: View {
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(shown.map { Self.format($0.value) } ?? "—")
+                Text(shown.map { metric.text($0.value) } ?? "—")
                     .font(AtlasFont.display(34))
                     .monospacedDigit()
                     .contentTransition(.numericText())
                     // Placeholder nie może krzyczeć kolorem akcentu — w 34 pt
                     // ochrowy myślnik wygląda jak pasek danych.
                     .foregroundStyle(shown == nil ? Palette.muted : Palette.ochre)
-                Text(metric.unit)
-                    .font(AtlasFont.body(12))
-                    .foregroundStyle(Palette.muted)
+                // Metryki z jednostką w samej wartości (sen: „8h 40min") mają
+                // ją pustą — pusty `Text` zabrałby tu tylko odstęp.
+                if !metric.unit.isEmpty {
+                    Text(metric.unit)
+                        .font(AtlasFont.body(12))
+                        .foregroundStyle(Palette.muted)
+                }
                 Spacer()
                 Text(metric.arrow(at: shownIndex))
                     .font(AtlasFont.body(20))
@@ -211,7 +215,7 @@ struct MetricCardView: View {
             // Jedna średnia, z całego widocznego okna. „Śr. 7 dni" obok niej
             // zmuszała do porównywania dwóch liczb, których karta i tak nie
             // zestawiała ze sobą — od porównania jest strzałka i wykres.
-            Text("Średnia: \(metric.avgAll.map(Self.format) ?? "—")\(unitSuffix)")
+            Text("Średnia: \(metric.avgAll.map(metric.text) ?? "—")\(unitSuffix)")
                 .font(AtlasFont.body(12))
                 .foregroundStyle(Palette.muted)
                 .padding(.top, 12)
@@ -223,13 +227,6 @@ struct MetricCardView: View {
     }
 
     private var unitSuffix: String { metric.unit.isEmpty ? "" : " \(metric.unit)" }
-
-    /// Bez zbędnego ".0" na całkowitych wartościach.
-    private static func format(_ value: Double) -> String {
-        value == value.rounded()
-            ? String(Int(value))
-            : String(format: "%.1f", value)
-    }
 
 }
 
@@ -422,8 +419,9 @@ struct MetricChart: View {
 
             MetricCardView(
                 metric: Metric(
-                    id: "sleep_hours", title: String(localized: "Sen"), unit: "h", positiveHigher: true,
-                    role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30), points: points
+                    id: "sleep_hours", title: String(localized: "Sen"), unit: "", positiveHigher: true,
+                    role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
+                    format: .duration, points: points
                 ),
                 span: span
             )

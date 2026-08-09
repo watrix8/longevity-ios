@@ -270,6 +270,47 @@ struct TrendWindowTests {
     }
 }
 
+@Suite("Format wartości na karcie")
+struct MetricFormatTests {
+    @Test("Liczby dziesiętne bez zbędnego zera po przecinku")
+    func decimalDropsTrailingZero() {
+        #expect(MetricFormat.decimal.text(42) == "42")
+        #expect(MetricFormat.decimal.text(7.26) == "7.3")
+    }
+
+    /// Sedno zmiany: 8,6 h to 8 godzin i 36 minut, a nie „osiem i sześć".
+    @Test("Sen pokazuje godziny i minuty, nie ułamek godziny")
+    func durationSplitsHoursAndMinutes() {
+        #expect(MetricFormat.duration.text(8.6) == "8h 36min")
+        #expect(MetricFormat.duration.text(Double(517) / 60) == "8h 37min")
+    }
+
+    @Test("Pełne godziny i sam kwadrans nie dostają pustej reszty")
+    func durationEdges() {
+        #expect(MetricFormat.duration.text(8) == "8h")
+        #expect(MetricFormat.duration.text(0.75) == "45min")
+        #expect(MetricFormat.duration.text(0) == "0min")
+    }
+
+    /// 59 minut i 40 sekund to na karcie godzina, a nie „0h 60min".
+    @Test("Zaokrąglenie do pełnej minuty przechodzi do godziny")
+    func durationRoundsUpIntoHour() {
+        #expect(MetricFormat.duration.text(Double(3580) / 3600) == "1h")
+    }
+
+    @Test("Średnia czasu zaokrągla się do minuty, nie do dziesiątej godziny")
+    func durationAverageKeepsMinutes() {
+        let points = [7.5, 8.0].enumerated().map {
+            SeriesPoint(date: String(format: "2026-08-%02d", $0.offset + 1), value: $0.element)
+        }
+        let metric = Metric(id: "sleep_hours", title: "Sen", unit: "", positiveHigher: true,
+                            role: .informational, format: .duration, points: points)
+
+        #expect(metric.avgAll == 7.75)
+        #expect(metric.avgAll.map(metric.text) == "7h 45min")
+    }
+}
+
 @Suite("Etykiety dat na wykresie")
 @MainActor
 struct AxisLabelTests {
