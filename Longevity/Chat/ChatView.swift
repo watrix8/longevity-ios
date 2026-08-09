@@ -83,12 +83,7 @@ struct ChatView: View {
     private var header: some View {
         HStack {
             ScreenTitle(text: "Asystent")
-
             Spacer()
-
-            if model.isBusy {
-                ProgressView().tint(Palette.pine).scaleEffect(0.8)
-            }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
@@ -148,9 +143,15 @@ struct ChatView: View {
                 ForEach(model.messages) { message in
                     bubble(for: message).id(message.id)
                 }
+
+                if model.isAwaitingReply {
+                    TypingBubble()
+                        .transition(.opacity)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 16)
+            .animation(.easeOut(duration: 0.2), value: model.isAwaitingReply)
         }
         // Otwarcie na najnowszej wiadomości.
         .defaultScrollAnchor(.bottom, for: .initialOffset)

@@ -28,6 +28,10 @@ final class ChatViewModel {
     /// Blokuje composer na czas zapytania — asystent i wizja potrafią chwilę zająć.
     private(set) var isBusy = false
 
+    /// Czekanie na pierwszy znak odpowiedzi. Gdy tekst zacznie płynąć, sam
+    /// jest najlepszym sygnałem, że coś się dzieje — wskaźnik znika.
+    private(set) var isAwaitingReply = false
+
     var draft = ""
 
     /// Ustawiane przez „Opisz słowami" — bez tego opis posiłku poleciałby do
@@ -179,7 +183,11 @@ final class ChatViewModel {
         whenEmpty emptyMessage: String
     ) async {
         isBusy = true
-        defer { isBusy = false }
+        isAwaitingReply = true
+        defer {
+            isBusy = false
+            isAwaitingReply = false
+        }
 
         var bubble: Int?
         var reply = ""
@@ -195,6 +203,7 @@ final class ChatViewModel {
                     // ramka czekająca na model wygląda jak usterka.
                     append(.assistant(reply))
                     bubble = messages.count - 1
+                    isAwaitingReply = false
                 }
             }
 

@@ -144,6 +144,45 @@ enum AssistantMarkdown {
     }
 }
 
+/// Trzy pulsujące kropki w miejscu, gdzie zaraz pojawi się odpowiedź.
+///
+/// Kręciołek w nagłówku ekranu mówił, że coś się dzieje, ale nie mówił gdzie —
+/// w czacie oczekiwanie należy do rozmowy, nie do paska tytułu. Dymek stoi
+/// tam, gdzie za chwilę stanie tekst, więc odpowiedź nie „wskakuje" znikąd.
+struct TypingBubble: View {
+    @State private var pulsing = false
+
+    var body: some View {
+        HStack {
+            HStack(spacing: 5) {
+                ForEach(0..<3, id: \.self) { index in
+                    Circle()
+                        .fill(Palette.tick)
+                        .frame(width: 7, height: 7)
+                        .opacity(pulsing ? 1 : 0.3)
+                        .scaleEffect(pulsing ? 1 : 0.72)
+                        // Opóźnienie na kropkę robi falę zamiast mrugania
+                        // trzema naraz.
+                        .animation(
+                            .easeInOut(duration: 0.6)
+                                .repeatForever()
+                                .delay(Double(index) * 0.18),
+                            value: pulsing
+                        )
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 15)
+            .background(Palette.card, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Palette.line, lineWidth: 1))
+
+            Spacer(minLength: 40)
+        }
+        .onAppear { pulsing = true }
+        .accessibilityLabel(Text("Asystent pisze odpowiedź"))
+    }
+}
+
 /// Odpowiedź asystenta złożona z bloków — każdy z własnym odstępem
 /// i, przy listach, wcięciem wiszącym.
 ///
