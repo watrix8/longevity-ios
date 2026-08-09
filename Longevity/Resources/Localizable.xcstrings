@@ -26,59 +26,6 @@
     "%lld": {
       "shouldTranslate": false
     },
-    "%lld dni z pomiarami z ostatnich 30": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld dzień z pomiarami z ostatnich 30"
-                }
-              },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld dni z pomiarami z ostatnich 30"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld dni z pomiarami z ostatnich 30"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld dni z pomiarami z ostatnich 30"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld day with data out of the last 30"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld days with data out of the last 30"
-                }
-              }
-            }
-          }
-        }
-      },
-      "extractionState": "manual"
-    },
     "%lld min": {
       "localizations": {
         "pl": {
@@ -126,59 +73,6 @@
           }
         }
       }
-    },
-    "%lld z 30 dni z pomiarami": {
-      "localizations": {
-        "pl": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld z 30 dni z pomiarami"
-                }
-              },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld z 30 dni z pomiarami"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld z 30 dni z pomiarami"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld z 30 dni z pomiarami"
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld of 30 days with data"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld of 30 days with data"
-                }
-              }
-            }
-          }
-        }
-      },
-      "extractionState": "manual"
     },
     "%lld%%": {
       "shouldTranslate": false
@@ -1728,22 +1622,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Connected"
-          }
-        }
-      }
-    },
-    "Przeciągnij po wykresie, żeby odczytać dzień.": {
-      "localizations": {
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Przeciągnij po wykresie, żeby odczytać dzień."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Drag across the chart to read a day."
           }
         }
       }
@@ -3844,9 +3722,6 @@
           }
         }
       }
-    },
-    "↳": {
-      "shouldTranslate": false
     },
     "⚠️": {
       "shouldTranslate": false

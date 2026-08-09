@@ -210,17 +210,12 @@ struct DashboardView: View {
                 Spacer()
                 // Data pojawia się dopiero pod palcem — bez niej nie wiadomo,
                 // którą kropkę czyta wielka liczba nad wykresem. Poza
-                // przeciąganiem slot zajmuje licznik pokrycia: stoi przy
-                // wykresie, który opisuje, zamiast przy nazwie appki.
+                // przeciąganiem slot zostaje pusty: licznik pokrycia mówił
+                // o trzydziestu dniach przy wykresie, który pokazuje czternaście.
                 if let index = selectedDay, data.points.indices.contains(index) {
                     Text(TrendStrip.longDay(data.points[index].date))
                         .font(AtlasFont.mono(10.5))
                         .foregroundStyle(Palette.ochreInk)
-                } else {
-                    Text("\(data.coverageDays) z 30 dni z pomiarami")
-                        .font(AtlasFont.mono(10.5))
-                        .foregroundStyle(Palette.tick)
-                        .accessibilityLabel("\(data.coverageDays) dni z pomiarami z ostatnich 30")
                 }
             }
 
@@ -239,11 +234,6 @@ struct DashboardView: View {
                 )
             }
             .padding(.top, 2)
-
-            Text("Przeciągnij po wykresie, żeby odczytać dzień.")
-                .font(AtlasFont.mono(9.5))
-                .foregroundStyle(Palette.tick)
-                .padding(.top, 8)
         }
         .padding(.horizontal, 14)
         .padding(.top, 15)
