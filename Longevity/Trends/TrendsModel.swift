@@ -416,40 +416,40 @@ final class TrendsViewModel {
             Metric(id: "score", title: String(localized: "Longevity Score"), unit: "/100", positiveHigher: true, role: .total,
                    points: scores.map { SeriesPoint(date: $0.scoreDate, value: $0.scoreTotal) }),
 
-            // Sen — 30% w v3
+            // Sen — 33% w v3
             //
             // Jednostka pusta, bo siedzi w samej wartości („8h 40min") — karta
             // nie ma jej dopisywać drugi raz. Godziny bez zaokrąglenia do
             // dziesiątych, bo z 8,6 nie da się już odzyskać 8 h 37 min.
-            Metric(id: "sleep_hours", title: String(localized: "Sen"), unit: "", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
+            Metric(id: "sleep_hours", title: String(localized: "Sen"), unit: "", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.33),
                    format: .duration,
                    points: series(health) { $0.sleepAsleepMinutes.map { Double($0) / 60 } }),
-            Metric(id: "sleep_deep", title: String(localized: "Sen głęboki"), unit: "%", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
+            Metric(id: "sleep_deep", title: String(localized: "Sen głęboki"), unit: "%", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.33),
                    points: series(health) {
                        deepSleepShare(deep: $0.sleepDeepMinutes, asleep: $0.sleepAsleepMinutes)
                    }),
             Metric(id: "sleep_regularity", title: String(localized: "Regularność pory snu (SRI)"), unit: "", positiveHigher: true,
-                   role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
+                   role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.33),
                    points: series(health) { $0.sleepRegularityIndex }),
             Metric(id: "sleep_consistency", title: String(localized: "Równa długość snu"), unit: "/100", positiveHigher: true,
-                   role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30), points: consistencyPoints),
+                   role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.33), points: consistencyPoints),
 
-            // Wydolność — 25%
-            Metric(id: "vo2max", title: String(localized: "VO₂max"), unit: "ml/kg/min", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "vo2max"), weight: 0.25),
+            // Wydolność — 28%
+            Metric(id: "vo2max", title: String(localized: "VO₂max"), unit: "ml/kg/min", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "vo2max"), weight: 0.28),
                    points: series(health) { $0.vo2max }),
 
-            // Skład ciała — 20%
-            Metric(id: "weight", title: String(localized: "Waga"), unit: "kg", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.20),
+            // Skład ciała — 22%
+            Metric(id: "weight", title: String(localized: "Waga"), unit: "kg", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.22),
                    points: weights.map { SeriesPoint(date: $0.measuredAt, value: $0.weightKg) }),
-            Metric(id: "whr", title: String(localized: "WHR (talia/biodra)"), unit: "", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.20),
+            Metric(id: "whr", title: String(localized: "WHR (talia/biodra)"), unit: "", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.22),
                    points: series(health) { waistToHipRatio(waist: $0.waistCm, hip: $0.hipCm) }),
             Metric(id: "body_fat", title: String(localized: "Tkanka tłuszczowa"), unit: "%", positiveHigher: false,
-                   role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.20), points: series(health) { $0.bodyFatPct }),
+                   role: .feeds(component: ScoreComponents.label(forComponent: "body"), weight: 0.22), points: series(health) { $0.bodyFatPct }),
 
-            // Regeneracja — 15%
-            Metric(id: "resting_hr", title: String(localized: "Tętno spoczynkowe"), unit: "bpm", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15),
+            // Regeneracja — 17%
+            Metric(id: "resting_hr", title: String(localized: "Tętno spoczynkowe"), unit: "bpm", positiveHigher: false, role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.17),
                    points: series(health) { $0.restingHeartRate }),
-            Metric(id: "hrv", title: String(localized: "HRV (SDNN)"), unit: "ms", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15),
+            Metric(id: "hrv", title: String(localized: "HRV (SDNN)"), unit: "ms", positiveHigher: true, role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.17),
                    points: series(health) { $0.hrvSdnnMs }),
 
             // Poza wynikiem — v3 tego nie punktuje, ale opisuje dzień.

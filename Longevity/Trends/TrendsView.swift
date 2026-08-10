@@ -425,7 +425,7 @@ struct MetricChart: View {
             MetricCardView(
                 metric: Metric(
                     id: "sleep_hours", title: String(localized: "Sen"), unit: "", positiveHigher: true,
-                    role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.30),
+                    role: .feeds(component: ScoreComponents.label(forComponent: "sleep"), weight: 0.33),
                     format: .duration, points: points
                 ),
                 span: span
@@ -434,7 +434,7 @@ struct MetricChart: View {
                 metric: Metric(
                     id: "resting_hr", title: String(localized: "Tętno spoczynkowe"), unit: "bpm",
                     positiveHigher: false,
-                    role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.15),
+                    role: .feeds(component: ScoreComponents.label(forComponent: "regeneration"), weight: 0.17),
                     points: points.map { SeriesPoint(date: $0.date, value: $0.value * 6.4) }
                 ),
                 span: span
